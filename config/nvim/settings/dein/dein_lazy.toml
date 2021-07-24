@@ -1,0 +1,14 @@
+[[plugins]]
+repo = 'tyru/open-browser.vim'
+
+[[plugins]]
+repo = 'kannokanno/previm'
+hook_source = '''
+  let g:previm_open_cmd = 'open -a "Google Chrome"'
+'''
+
+[[plugins]]
+hook_source = '''
+  set statusline^=%{coc#status()}
+'''
+repo = 'neoclide/coc.nvim'
