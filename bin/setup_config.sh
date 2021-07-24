@@ -1,1 +1,2 @@
-ln -d ../config ~/.config
+cd ~
+ln -s dotfiles/config .config
