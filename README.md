@@ -1,4 +1,4 @@
-# Dotfiles
+# Dot Files
 
 Welcome to my world. This is a collection of configurations.
 
@@ -6,5 +6,11 @@ Welcome to my world. This is a collection of configurations.
 
 Here are some details about my setup:
 
-- Shell: fish
+- Shell: Fish
 - Editor: Neovim
+
+## Fish
+
+- plugins manager: fisher
+- theme: bobthefish
+- Almost default setting.
