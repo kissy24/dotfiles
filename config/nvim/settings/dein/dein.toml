@@ -12,14 +12,21 @@ repo = 'vim-airline/vim-airline'
 depends = ['vim-airline-themes']
 hook_add = '''
   let g:airline_theme = 'tomorrow'
-  set laststatus=2
-  set showtabline=1
-  let g:airline_powerline_fonts = 1
+  let g:airline_powerline_fonts = 0
   let g:airline#extensions#tabline#enabled = 1
+  nmap <C-p> <Plug>AirlineSelectPrevTab
+  nmap <C-n> <Plug>AirlineSelectNextTab
   '''
 
 [[plugins]]
 repo = 'vim-airline/vim-airline-themes'
+
+[[plugins]]
+repo = 'neoclide/coc.nvim'
+rev = 'release'
+hook_source = '''
+  set statusline^=%{coc#status()}
+'''
 
 [[plugins]]
 repo = 'scrooloose/nerdtree'
