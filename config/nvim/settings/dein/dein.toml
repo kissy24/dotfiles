@@ -2,17 +2,18 @@
 repo = 'Shougo/dein.vim'
 
 [[plugins]]
-repo = 'joshdick/onedark.vim'
+repo = 'Mofiqul/vscode.nvim'
 hook_add = '''
-  au MyAutoCmd VimEnter * nested colorscheme onedark
+  let g:vscode_style = 'dark'
+  colorscheme vscode
 '''
 
 [[plugins]]
 repo = 'vim-airline/vim-airline'
 depends = ['vim-airline-themes']
 hook_add = '''
-  let g:airline_theme = 'tomorrow'
-  let g:airline_powerline_fonts = 0
+  let g:airline_theme = 'minimalist'
+  let g:airline_powerline_fonts = 1
   let g:airline#extensions#tabline#enabled = 1
   nmap <C-p> <Plug>AirlineSelectPrevTab
   nmap <C-n> <Plug>AirlineSelectNextTab
@@ -32,6 +33,12 @@ hook_source = '''
 repo = 'scrooloose/nerdtree'
 hook_add = '''
   nnoremap <silent><C-e> :NERDTreeToggle<CR>
+  '''
+
+[[plugins]]
+repo = 'ryanoasis/vim-devicons'
+hook_add = '''
+  let g:webdevicons_enable_nerdtree = 1
   '''
 
 [[plugins]]
