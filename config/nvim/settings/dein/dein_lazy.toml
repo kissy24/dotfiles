@@ -6,3 +6,15 @@ repo = 'kannokanno/previm'
 hook_source = '''
   let g:previm_open_cmd = 'open -a "Google Chrome"'
 '''
+
+[[plugins]]
+repo = 'cespare/vim-toml'
+on_ft = ['toml']
+
+[[plugins]]
+repo = 'rcmdnk/vim-markdown'
+on_ft = ['markdown']
+
+[[plgins]]
+repo = 'posva/vim-vue'
+on_ft = ['vue']
