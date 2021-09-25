@@ -1,6 +1,8 @@
+# pkg管理
 [[plugins]]
 repo = 'Shougo/dein.vim'
 
+# ColorScheme
 [[plugins]]
 repo = 'Mofiqul/vscode.nvim'
 hook_add = '''
@@ -8,6 +10,7 @@ hook_add = '''
   colorscheme vscode
 '''
 
+# StatusLine追加
 [[plugins]]
 repo = 'vim-airline/vim-airline'
 depends = ['vim-airline-themes']
@@ -19,9 +22,11 @@ hook_add = '''
   nmap <C-n> <Plug>AirlineSelectNextTab
   '''
 
+# StatusLineのColorTheme
 [[plugins]]
 repo = 'vim-airline/vim-airline-themes'
 
+# LSP
 [[plugins]]
 repo = 'neoclide/coc.nvim'
 rev = 'release'
@@ -29,6 +34,7 @@ hook_source = '''
   set statusline^=%{coc#status()}
 '''
 
+# ファイラー
 [[plugins]]
 repo = 'scrooloose/nerdtree'
 hook_add = '''
@@ -36,10 +42,8 @@ hook_add = '''
   '''
 
 [[plugins]]
-repo = 'ryanoasis/vim-devicons'
-hook_add = '''
-  let g:webdevicons_enable_nerdtree = 1
-  '''
+repo = 'Xuyuanp/nerdtree-git-plugin'
+depends = ['vim-fugitive']
 
 [[plugins]]
 repo = 'tpope/vim-fugitive'
@@ -52,23 +56,11 @@ hook_add = '''
 '''
 
 [[plugins]]
-repo = 'Xuyuanp/nerdtree-git-plugin'
-depends = ['vim-fugitive']
-
-[[plugins]]
 repo = 'airblade/vim-gitgutter'
-
-[[plugins]]
-repo = 'ryanoasis/vim-devicons'
 
 [[plugins]]
 repo = 'sheerun/vim-polyglot'
 
+# 括弧補完
 [[plugins]]
-repo = 'cespare/vim-toml'
-
-[[plugins]]
-repo = 'rcmdnk/vim-markdown'
-
-[[plugins]]
-repo = 'chrisbra/vim-zsh'
+repo = 'cohama/lexima.vim'

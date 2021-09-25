@@ -13,7 +13,8 @@
     "python",
     "markdown",
     "javascript",
-    "json"
+    "json",
+    "toml"
   ],
   "python.linting.flake8Enabled": true,
   "python.formatting.provider": "black",
