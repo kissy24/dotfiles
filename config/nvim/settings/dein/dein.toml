@@ -30,8 +30,9 @@ repo = 'vim-airline/vim-airline-themes'
 [[plugins]]
 repo = 'neoclide/coc.nvim'
 rev = 'release'
+merged = '0'
 hook_source = '''
-  set statusline^=%{coc#status()}
+  source ~/.config/nvim/settings/set_coc.vim
 '''
 
 # ファイラー
