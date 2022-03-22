@@ -13,4 +13,10 @@ Here are some details about my setup:
 
 - plugins manager: fisher
 - theme: bobthefish
-- Almost default setting.
+- Almost default setting
+
+## Neovim
+
+- plugins manager: dein
+- language server protocol: coc-nvim
+- target programming languages: python, go
