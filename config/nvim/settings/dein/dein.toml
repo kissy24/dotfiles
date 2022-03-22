@@ -26,11 +26,12 @@ hook_add = '''
 [[plugins]]
 repo = 'vim-airline/vim-airline-themes'
 
-# LSP
+# coc nvim
 [[plugins]]
 repo = 'neoclide/coc.nvim'
 rev = 'release'
 merged = '0'
+build = 'coc#util#install()'
 hook_source = '''
   source ~/.config/nvim/settings/set_coc.vim
 '''
