@@ -60,3 +60,5 @@ set showtabline=2
 set hidden
 " コマンド・検索パターンの履歴
 set history=1000
+" クリップボード追加オプション
+set clipboard+=unnamedplus
