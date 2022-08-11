@@ -17,6 +17,7 @@ Here are some details about my setup:
 
 ## Neovim
 
-- plugins manager: dein
-- language server protocol: coc-nvim
-- target programming languages: python, go
+- PluginsManager: [packer.nvim](https://github.com/wbthomason/packer.nvim)
+- ColorScheme: [nightfox.nvim](https://github.com/EdenEast/nightfox.nvim)(nordfox)
+- LanguageServerProtocol: coc-nvim
+- Languages: Python, Go
