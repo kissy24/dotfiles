@@ -52,3 +52,4 @@ vim.o.splitright = true
 vim.o.hidden = true
 vim.o.history = 1000
 vim.opt.clipboard:append({ unnamedeplus = true })
+vim.o.mouse = ""
