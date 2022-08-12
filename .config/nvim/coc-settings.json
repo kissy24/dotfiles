@@ -1,22 +1,26 @@
 {
-  "languageserver": {
-    "golang": {
-      "command": "gopls",
-      "rootPatterns": ["go.mod"],
-      "disableWorkspaceFolders": true,
-      "filetypes": ["go"]
-    }
-  },
-  "coc.preferences.extensionUpdateCheck": "daily",
-  "coc.preferences.formatOnType": true,
-  "coc.preferences.formatOnSaveFiletypes": [
-    "python",
-    "markdown",
-    "javascript",
-    "json",
-    "toml"
-  ],
-  "python.linting.flake8Enabled": true,
-  "python.formatting.provider": "black",
-  "python.jediEnabled": false
+    "languageserver": {
+        "golang": {
+            "command": "gopls",
+            "rootPatterns": [
+                "go.mod"
+            ],
+            "disableWorkspaceFolders": true,
+            "filetypes": [
+                "go"
+            ]
+        }
+    },
+    "coc.preferences.extensionUpdateCheck": "daily",
+    "coc.preferences.formatOnType": true,
+    "coc.preferences.formatOnSaveFiletypes": [
+        "python",
+        "markdown",
+        "javascript",
+        "json",
+        "toml"
+    ],
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "black",
+    "python.jediEnabled": false
 }
