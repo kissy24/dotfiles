@@ -9,6 +9,13 @@
             "filetypes": [
                 "go"
             ]
+        },
+        "lua": {
+            "command": "lua-lsp",
+            "filetypes": ["lua"],
+            "diagnostics": {
+                "globals": [ "vim", "use" ]
+            }
         }
     },
     "coc.preferences.extensionUpdateCheck": "daily",
@@ -18,6 +25,7 @@
         "markdown",
         "javascript",
         "json",
+        "lua",
         "toml"
     ],
     "python.linting.flake8Enabled": true,
