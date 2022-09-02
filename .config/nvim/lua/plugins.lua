@@ -1,6 +1,6 @@
 vim.cmd [[packadd packer.nvim]]
 
-require "packer".startup(function()
+require "packer".startup(function(use)
     use({ "wbthomason/packer.nvim", opt = true })
 
     -- LSP
@@ -29,6 +29,8 @@ require "packer".startup(function()
         requires = { "kyazdani42/nvim-web-devicons", opt = true }
     })
 
+
+    -- Markdown
     use({
     "iamcco/markdown-preview.nvim",
     run = function() vim.fn["mkdp#util#install"]() end,
