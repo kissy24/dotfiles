@@ -1,3 +1,5 @@
 dein/
 configstore/
 coc/
+wslu/
+.config/nvim/plugin/
