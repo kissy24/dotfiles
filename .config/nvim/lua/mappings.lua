@@ -8,6 +8,12 @@ vim.keymap.set("n", "<C-j>", "<C-w>j")
 vim.keymap.set("n", "<C-k>", "<C-w>k")
 vim.keymap.set("n", "<C-l>", "<C-w>l")
 
+-- terminal mode
+vim.keymap.set("n", "tx", "<cmd>belowright new<CR><cmd>terminal<CR>", { silent = true})
+vim.cmd [[autocmd TermOpen * :startinsert]]
+vim.cmd [[autocmd TermOpen * setlocal norelativenumber]]
+vim.cmd [[autocmd TermOpen * setlocal nonumber]]
+
 -- nvim-tree
 vim.keymap.set("n", "<C-e>", ":NvimTreeToggle<cr>", { silent = true })
 
