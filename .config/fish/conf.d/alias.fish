@@ -1,2 +1,2 @@
-alias python="python3.9" 
+alias python="python3.11" 
 alias pip="python -m pip"
