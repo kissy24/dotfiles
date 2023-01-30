@@ -9,13 +9,6 @@
             "filetypes": [
                 "go"
             ]
-        },
-        "lua": {
-            "command": "lua-lsp",
-            "filetypes": ["lua"],
-            "diagnostics": {
-                "globals": [ "vim", "use" ]
-            }
         }
     },
     "coc.preferences.extensionUpdateCheck": "daily",
@@ -30,5 +23,6 @@
     ],
     "python.linting.flake8Enabled": true,
     "python.formatting.provider": "black",
-    "python.jediEnabled": false
+    "python.jediEnabled": false,
+    "Lua.telemetry.enable": false
 }
