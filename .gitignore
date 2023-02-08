@@ -2,4 +2,5 @@ dein/
 configstore/
 coc/
 wslu/
-.config/nvim/plugin/
+nvim/plugin/
+fish/functions
