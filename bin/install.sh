@@ -5,10 +5,25 @@ cat <<EOS
 │                          │
 └──────────────────────────┘
 EOS
+
 set -u
-BASEDIR=$(dirname $0)
+
+BASEDIR=$HOME/dotfiles
+FISH=$HOME/.config/fish
+NVIM=$HOME/.config/nvim
+
 cd $BASEDIR
-ln -s ~/dotfiles/.fish ~/.config/fish
-printf "fish shell Done\n"
-ln -s ~/dotfiles/.nvim ~/.config/nvim
+
+if [ -d $FISH] ; then
+rm $FISH
+mkdir $FISH
+fi
+ln -s $BASEDIR/fish $FISH
+printf "Fish Done\n"
+
+if [ -d $NVIM] ; then
+rm $NVIM
+mkdir $NVIM
+fi
+ln -s $BASEDIR/nvim $NVIM
 printf "Neovim Done\n"
