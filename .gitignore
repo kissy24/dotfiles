@@ -4,3 +4,5 @@ coc/
 wslu/
 nvim/plugin/
 fish/functions
+fish/completions
+fish_variables
