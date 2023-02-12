@@ -1,0 +1,46 @@
+{
+    "editor.fontSize": 14,
+    "editor.fontFamily": "HackGen35Nerd",
+    "editor.minimap.enabled": false,
+    "editor.fontLigatures": true,
+    "editor.formatOnSave": true,
+    "editor.bracketPairColorization.enabled": true,
+    "editor.glyphMargin": false,
+    "editor.inlineSuggest.enabled": true,
+    "explorer.confirmDragAndDrop": false,
+    "extensions.ignoreRecommendations": true,
+    "terminal.integrated.fontFamily": "HackGen35Nerd",
+    "terminal.integrated.fontSize": 13,
+    "terminal.integrated.defaultProfile.osx": "fish",
+    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "workbench.colorTheme": "GitHub Dark Dimmed",
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.editor.enablePreview": false,
+    "workbench.layoutControl.enabled": false,
+    "workbench.startupEditor": "none",
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "python.linting.lintOnSave": true,
+    "python.linting.flake8Args": [
+        "--max-line-length=125",
+        "--ignore=E203,W503,W504"
+    ],
+    "python.formatting.provider": "black",
+    "go.toolsManagement.autoUpdate": true,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "vim.useSystemClipboard": true,
+    "vim.insertModeKeyBindings": [
+        {
+            "before": [
+                "j",
+                "j"
+            ],
+            "after": [
+                "<Esc>"
+            ]
+        }
+    ],
+    "vim.hlsearch": true
+}
