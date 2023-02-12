@@ -11,9 +11,11 @@ Here are some details about my setup:
 
 ## Fish
 
-- PluginsManager: fisher
+- PluginsManager: [fisher](https://github.com/jorgebucaran/fisher)
 - Theme: bobthefish
-- Almost default setting
+- FuzzyFinder:
+  - [fzf](https://github.com/jethrokuan/fzf)
+  - [peco](https://github.com/oh-my-fish/plugin-peco)
 
 ## Neovim
 
@@ -24,3 +26,8 @@ Here are some details about my setup:
 - Statusline: [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
 - LanguageServerProtocol: [coc.nvim](https://github.com/neoclide/coc.nvim)
   - Languages: Python, Go
+
+## VSCode
+
+It is used when the vscode cannot be entered with a personal account.
+Backup of settings.json.
