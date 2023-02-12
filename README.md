@@ -2,6 +2,8 @@
 
 Welcome to my world. This is a collection of configurations.
 
+![GitHub](https://img.shields.io/github/license/kissy24/dotfiles)
+
 ## Setup
 
 Here are some details about my setup:
