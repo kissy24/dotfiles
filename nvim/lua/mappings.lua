@@ -15,7 +15,7 @@ vim.cmd [[autocmd TermOpen * setlocal norelativenumber]]
 vim.cmd [[autocmd TermOpen * setlocal nonumber]]
 
 -- nvim-tree
-vim.keymap.set("n", "<C-e>", ":NvimTreeToggle<cr>", { silent = true })
+vim.keymap.set("n", "<A-e>", ":NvimTreeToggle<cr>", { silent = true })
 
 -- Telescope
 vim.keymap.set("n", "ff", "<cmd>lua require('telescope.builtin').find_files()<cr>")
