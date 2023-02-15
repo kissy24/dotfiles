@@ -1,7 +1,4 @@
 # --- bobthefish settings ---
-# vi mode
-fish_vi_key_bindings
-set -g theme_display_vi yes
 # font 依存をなくす
 set -g theme_powerline_fonts no
 set -g theme_nerd_fonts yes
