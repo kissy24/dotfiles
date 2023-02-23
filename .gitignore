@@ -6,3 +6,4 @@ nvim/plugin/
 fish/functions
 fish/completions
 fish_variables
+.DS_Store
