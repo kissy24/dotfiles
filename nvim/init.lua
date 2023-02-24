@@ -2,7 +2,8 @@
 require("mappings")
 require("options")
 require("plugins")
-require('lualine').setup()
+require("coc")
+require("lualine").setup()
 require("nvim-tree").setup()
 
 -- Commands
