@@ -16,14 +16,14 @@ cd $BASEDIR
 
 if [ -d $FISH] ; then
 rm $FISH
-mkdir $FISH
 fi
+mkdir -p $FISH
 ln -s $BASEDIR/fish $FISH
 printf "Fish Done\n"
 
 if [ -d $NVIM] ; then
 rm $NVIM
-mkdir $NVIM
 fi
+mkdir -p $NVIM
 ln -s $BASEDIR/nvim $NVIM
 printf "Neovim Done\n"
