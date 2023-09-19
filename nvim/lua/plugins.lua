@@ -4,7 +4,7 @@ require "packer".startup(function(use)
     use({ "wbthomason/packer.nvim", opt = true })
 
     -- LSP
-    use({'neoclide/coc.nvim', branch = 'release'})
+    use({ 'neoclide/coc.nvim', branch = 'release' })
 
     -- ColorScheme
     use("EdenEast/nightfox.nvim")
@@ -18,7 +18,8 @@ require "packer".startup(function(use)
 
     -- FuzzyFinder
     use({
-        'nvim-telescope/telescope.nvim', tag = '0.1.0',
+        'nvim-telescope/telescope.nvim',
+        tag = '0.1.0',
         requires = { { 'nvim-lua/plenary.nvim' } }
     })
 
@@ -32,8 +33,8 @@ require "packer".startup(function(use)
 
     -- Markdown
     use({
-    "iamcco/markdown-preview.nvim",
-    run = function() vim.fn["mkdp#util#install"]() end,
+        "iamcco/markdown-preview.nvim",
+        run = function() vim.fn["mkdp#util#install"]() end,
     })
 
     use({
@@ -43,3 +44,10 @@ require "packer".startup(function(use)
         ft = { "markdown" }
     })
 end)
+
+require("coc")
+require("lualine").setup()
+require("nvim-tree").setup()
+
+vim.cmd [[autocmd BufWritePost plugins.lua PackerCompile]]
+vim.cmd("colorscheme nordfox")
