@@ -45,7 +45,8 @@ require "packer".startup(function(use)
     })
 end)
 
-require("coc")
+require("plugins.coc")
+require("plugins.mappings")
 require("lualine").setup()
 require("nvim-tree").setup()
 
