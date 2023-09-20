@@ -1,4 +1,4 @@
-# Dot Files
+# dotfiles
 
 Welcome to my world. This is a collection of configurations.
 
@@ -9,7 +9,7 @@ Welcome to my world. This is a collection of configurations.
 Here are some details about my setup:
 
 - Shell: Fish
-- Editor: Neovim
+- Editor: Neovim, VSCode
 
 ## Fish
 
@@ -21,7 +21,7 @@ Here are some details about my setup:
 
 ## Neovim
 
-- PluginsManager: [packer.nvim](https://github.com/wbthomason/packer.nvim)
+- PluginsManager: [lazy.nvim](https://github.com/folke/lazy.nvim)
 - ColorScheme: [nightfox.nvim](https://github.com/EdenEast/nightfox.nvim)(nordfox)
 - FileExplorer: [nvim-tree.lua](https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/option.lua)
 - FuzzyFinder: [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
