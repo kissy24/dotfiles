@@ -55,9 +55,8 @@ local plugins = {
         ft = { "markdown" }
     },
 }
-local opts = {defaults = {lazy = false,}}
 
-require("lazy").setup(plugins, opts)
+require("lazy").setup(plugins)
 
 require("plugins.coc")
 require("plugins.mappings")
