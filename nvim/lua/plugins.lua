@@ -54,13 +54,18 @@ local plugins = {
         setup = function() vim.g.mkdp_filetypes = { "markdown" } end,
         ft = { "markdown" }
     },
+
+    -- Git
+    "lewis6991/gitsigns.nvim",
 }
 
 require("lazy").setup(plugins)
 
 require("plugins.coc")
 require("plugins.mappings")
+
 require("lualine").setup()
 require("nvim-tree").setup()
+require('gitsigns').setup()
 
 vim.cmd("colorscheme nordfox")
