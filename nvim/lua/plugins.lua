@@ -1,54 +1,67 @@
-vim.cmd [[packadd packer.nvim]]
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable", -- latest stable release
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
 
-require "packer".startup(function(use)
-    use({ "wbthomason/packer.nvim", opt = true })
+local plugins = {
+    -- Installer
+    { "folke/lazy.nvim" },
 
     -- LSP
-    use({ 'neoclide/coc.nvim', branch = 'release' })
+    { 'neoclide/coc.nvim', branch = 'release' },
 
     -- ColorScheme
-    use("EdenEast/nightfox.nvim")
+    "EdenEast/nightfox.nvim",
 
     -- FileExplorer
-    use({
+    {
         "kyazdani42/nvim-tree.lua",
         requires = { "kyazdani42/nvim-web-devicons" },
         tag = "nightly"
-    })
+    },
 
     -- FuzzyFinder
-    use({
+    {
         'nvim-telescope/telescope.nvim',
         tag = '0.1.0',
         requires = { { 'nvim-lua/plenary.nvim' } }
-    })
+    },
 
     -- Statusline
-    use({
+    {
         "nvim-lualine/lualine.nvim",
         after = colorscheme,
         requires = { "kyazdani42/nvim-web-devicons", opt = true }
-    })
-
+    },
 
     -- Markdown
-    use({
+    {
         "iamcco/markdown-preview.nvim",
         run = function() vim.fn["mkdp#util#install"]() end,
-    })
+    },
 
-    use({
+    {
         "iamcco/markdown-preview.nvim",
         run = "cd app && npm install",
         setup = function() vim.g.mkdp_filetypes = { "markdown" } end,
         ft = { "markdown" }
-    })
-end)
+    },
+}
+local opts = {defaults = {lazy = false,}}
+
+require("lazy").setup(plugins, opts)
 
 require("plugins.coc")
 require("plugins.mappings")
 require("lualine").setup()
 require("nvim-tree").setup()
 
-vim.cmd [[autocmd BufWritePost plugins.lua PackerCompile]]
 vim.cmd("colorscheme nordfox")
