@@ -16,7 +16,7 @@ local plugins = {
     { "folke/lazy.nvim" },
 
     -- LSP
-    { 'neoclide/coc.nvim', branch = 'release' },
+    { "neoclide/coc.nvim", branch = "release" },
 
     -- ColorScheme
     "EdenEast/nightfox.nvim",
@@ -30,9 +30,13 @@ local plugins = {
 
     -- FuzzyFinder
     {
-        'nvim-telescope/telescope.nvim',
-        tag = '0.1.0',
-        requires = { { 'nvim-lua/plenary.nvim' } }
+        "nvim-telescope/telescope.nvim",
+        tag = "0.1.5",
+        requires = { "nvim-lua/plenary.nvim" }
+    },
+
+    {
+        "nvim-lua/plenary.nvim"
     },
 
     -- Statusline
@@ -40,6 +44,11 @@ local plugins = {
         "nvim-lualine/lualine.nvim",
         after = colorscheme,
         requires = { "kyazdani42/nvim-web-devicons", opt = true }
+    },
+
+    -- Treesitter
+    {
+        "nvim-treesitter/nvim-treesitter",
     },
 
     -- Markdown
@@ -56,6 +65,7 @@ local plugins = {
     },
 
     -- Git
+    "dinhhuy258/git.nvim",
     "lewis6991/gitsigns.nvim",
 }
 
@@ -66,6 +76,7 @@ require("plugins.mappings")
 
 require("lualine").setup()
 require("nvim-tree").setup()
+require('git').setup()
 require('gitsigns').setup()
 
 vim.cmd("colorscheme nordfox")
