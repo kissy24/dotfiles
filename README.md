@@ -3,6 +3,7 @@
 Welcome to my world. This is a collection of configurations.
 
 ![GitHub](https://img.shields.io/github/license/kissy24/dotfiles)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/kissy24/dotfiles)
 
 ## Setup
 
@@ -29,7 +30,3 @@ Here are some details about my setup:
 - LanguageServerProtocol: [coc.nvim](https://github.com/neoclide/coc.nvim)
   - Languages: Python, Go
 
-## VSCode
-
-It is used when the vscode cannot be entered with a personal account.
-Backup of settings.json.

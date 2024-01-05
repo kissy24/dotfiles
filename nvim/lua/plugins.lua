@@ -13,7 +13,7 @@ vim.opt.rtp:prepend(lazypath)
 
 local plugins = {
     -- Installer
-    { "folke/lazy.nvim" },
+    "folke/lazy.nvim",
 
     -- LSP
     { "neoclide/coc.nvim", branch = "release" },
@@ -35,9 +35,7 @@ local plugins = {
         requires = { "nvim-lua/plenary.nvim" }
     },
 
-    {
-        "nvim-lua/plenary.nvim"
-    },
+    "nvim-lua/plenary.nvim",
 
     -- Statusline
     {
@@ -47,22 +45,15 @@ local plugins = {
     },
 
     -- Treesitter
-    {
-        "nvim-treesitter/nvim-treesitter",
-    },
+    "nvim-treesitter/nvim-treesitter",
 
     -- Markdown
     {
         "iamcco/markdown-preview.nvim",
-        run = function() vim.fn["mkdp#util#install"]() end,
-    },
-
-    {
-        "iamcco/markdown-preview.nvim",
-        run = "cd app && npm install",
-        setup = function() vim.g.mkdp_filetypes = { "markdown" } end,
-        ft = { "markdown" }
-    },
+        cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+        ft = { "markdown" },
+        build = function() vim.fn["mkdp#util#install"]() end,
+    }, 
 
     -- Git
     "dinhhuy258/git.nvim",
