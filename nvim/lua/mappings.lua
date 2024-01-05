@@ -27,4 +27,4 @@ vim.cmd [[autocmd TermOpen * setlocal nonumber]]
 vim.keymap.set("n", "ch", "<cmd>checkhealth<CR>")
 
 -- Lazy
-vim.keymap.set("n", "lh", "<cmd>Lazy home<CR>")
+vim.keymap.set("n", "Lh", "<cmd>Lazy home<CR>")
