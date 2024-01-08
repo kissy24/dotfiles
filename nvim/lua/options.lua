@@ -19,8 +19,8 @@ vim.o.number = true
 vim.o.title = true
 vim.o.cursorline = true
 vim.o.list = true
-vim.o.nowrap = true
-vim.o.noshowmode = true
+vim.o.wrap = false
+vim.o.showmode = false
 
 -- Tab
 vim.o.expandtab = true
@@ -33,9 +33,9 @@ vim.o.autoindent = true
 vim.o.smartindent = true
 
 -- Swap, Backup
-vim.o.noswapfile = true
-vim.o.nowritebackup = true
-vim.o.nobackup = true
+vim.o.swapfile = false
+vim.o.writebackup = false
+vim.o.backup = false
 
 -- Search
 vim.o.hlsearch = true
