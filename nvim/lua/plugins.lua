@@ -16,16 +16,26 @@ local plugins = {
     "folke/lazy.nvim",
 
     -- LSP
-    { "neoclide/coc.nvim", branch = "release" },
+    { 
+        "neoclide/coc.nvim",
+        branch = "release",
+        config = function() require("plugins.coc") end,
+    },
 
     -- ColorScheme
-    "EdenEast/nightfox.nvim",
+    {
+        "projekt0n/github-nvim-theme",
+        lazy = false, -- make sure we load this during startup if it is your main colorscheme
+        priority = 1000, -- make sure to load this before all the other start plugins
+        config = function() require("github-theme").setup({}) vim.cmd("colorscheme github_dark_dimmed") end,
+    },
 
     -- FileExplorer
     {
         "kyazdani42/nvim-tree.lua",
         requires = { "kyazdani42/nvim-web-devicons" },
-        tag = "nightly"
+        tag = "nightly",
+        config = function() require("nvim-tree").setup() end,
     },
 
     -- FuzzyFinder
@@ -41,7 +51,8 @@ local plugins = {
     {
         "nvim-lualine/lualine.nvim",
         after = colorscheme,
-        requires = { "kyazdani42/nvim-web-devicons", opt = true }
+        requires = { "kyazdani42/nvim-web-devicons", opt = true },
+        config = function() require("lualine").setup() end,
     },
 
     -- Treesitter
@@ -56,18 +67,16 @@ local plugins = {
     }, 
 
     -- Git
-    "dinhhuy258/git.nvim",
-    "lewis6991/gitsigns.nvim",
+    {
+        "dinhhuy258/git.nvim",
+        config = function() require('git').setup() end,
+    },
+
+    {
+        "lewis6991/gitsigns.nvim",
+        config = function() require('gitsigns').setup() end,
+    }
 }
 
 require("lazy").setup(plugins)
-
-require("plugins.coc")
 require("plugins.mappings")
-
-require("lualine").setup()
-require("nvim-tree").setup()
-require('git').setup()
-require('gitsigns').setup()
-
-vim.cmd("colorscheme nordfox")
