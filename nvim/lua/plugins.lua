@@ -59,7 +59,8 @@ local plugins = {
     {
         "nvim-treesitter/nvim-treesitter",
          build = ":TSUpdate"
-    }
+    },
+
     -- Markdown
     {
         "iamcco/markdown-preview.nvim",
