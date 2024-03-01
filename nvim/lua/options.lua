@@ -19,6 +19,7 @@ vim.o.number = true
 vim.o.title = true
 vim.o.cursorline = true
 vim.o.list = true
+vim.o.listchars = "tab:»･,trail:･,space:･"
 vim.o.wrap = false
 vim.o.showmode = false
 
