@@ -15,14 +15,17 @@
     "coc.preferences.formatOnType": true,
     "coc.preferences.formatOnSaveFiletypes": [
         "python",
+        "go",
         "markdown",
         "javascript",
         "json",
         "lua",
         "toml"
     ],
-    "python.linting.flake8Enabled": true,
-    "python.formatting.provider": "black",
     "python.jediEnabled": false,
+    "python.formatting.provider": "ruff",
+    "python.linting.ruffEnabled": true,
+    "pyright.enable": true,
+    "ruff.autoFixOnSave": true,
     "Lua.telemetry.enable": false
 }
