@@ -1,13 +1,13 @@
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable", -- latest stable release
-    lazypath,
-  })
+    vim.fn.system({
+        "git",
+        "clone",
+        "--filter=blob:none",
+        "https://github.com/folke/lazy.nvim.git",
+        "--branch=stable", -- latest stable release
+        lazypath,
+    })
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -16,7 +16,7 @@ local plugins = {
     "folke/lazy.nvim",
 
     -- LSP
-    { 
+    {
         "neoclide/coc.nvim",
         branch = "release",
         config = function() require("plugins.coc") end,
@@ -25,9 +25,12 @@ local plugins = {
     -- ColorScheme
     {
         "projekt0n/github-nvim-theme",
-        lazy = false, -- make sure we load this during startup if it is your main colorscheme
+        lazy = false,    -- make sure we load this during startup if it is your main colorscheme
         priority = 1000, -- make sure to load this before all the other start plugins
-        config = function() require("github-theme").setup({}) vim.cmd("colorscheme github_dark_dimmed") end,
+        config = function()
+            require("github-theme").setup({})
+            vim.cmd("colorscheme github_dark_dimmed")
+        end,
     },
 
     -- FileExplorer
@@ -35,7 +38,8 @@ local plugins = {
         "kyazdani42/nvim-tree.lua",
         requires = { "kyazdani42/nvim-web-devicons" },
         tag = "nightly",
-        config = function() require("nvim-tree").setup() end,
+        -- If you don't use nvim-tree.lua ↓
+        -- config = function() require("nvim-tree").setup() end,
     },
 
     -- FuzzyFinder
@@ -58,7 +62,7 @@ local plugins = {
     -- Treesitter
     {
         "nvim-treesitter/nvim-treesitter",
-         build = ":TSUpdate"
+        build = ":TSUpdate"
     },
 
     -- Markdown
@@ -67,7 +71,7 @@ local plugins = {
         cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
         ft = { "markdown" },
         build = function() vim.fn["mkdp#util#install"]() end,
-    }, 
+    },
 
     -- Git
     {
@@ -82,4 +86,5 @@ local plugins = {
 }
 
 require("lazy").setup(plugins)
+require("plugins.nvim-tree")
 require("plugins.mappings")
