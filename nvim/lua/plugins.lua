@@ -38,8 +38,31 @@ local plugins = {
         "kyazdani42/nvim-tree.lua",
         requires = { "kyazdani42/nvim-web-devicons" },
         tag = "nightly",
-        -- If you don't use nvim-tree.lua ↓
-        -- config = function() require("nvim-tree").setup() end,
+        config = function() require("nvim-tree").setup() end,
+    },
+
+    -- Tab
+    {
+        'romgrk/barbar.nvim',
+        dependencies = {
+            'lewis6991/gitsigns.nvim',     -- OPTIONAL: for git status
+            'nvim-tree/nvim-web-devicons', -- OPTIONAL: for file icons
+        },
+        init = function() vim.g.barbar_auto_setup = false end,
+        opts = {
+            -- lazy.nvim will automatically call setup for you. put your options here, anything missing will use the default:
+            -- animation = true,
+            -- insert_at_start = true,
+            -- …etc.
+        },
+        version = '^1.0.0', -- optional: only update when a new 1.x version is released
+    },
+
+    -- Terminal
+    {
+        "akinsho/toggleterm.nvim",
+        version = "*",
+        opts = { --[[ things you want to change go here]] }
     },
 
     -- FuzzyFinder
@@ -82,9 +105,29 @@ local plugins = {
     {
         "lewis6991/gitsigns.nvim",
         config = function() require('gitsigns').setup() end,
+    },
+
+    -- Note
+    {
+        'gsuuon/note.nvim',
+        opts = {
+            -- Spaces are note roots. These directories should contain a `./notes` directory (will be made if not).
+            -- Defaults to { '~' }.
+            spaces = {
+                '~',
+                -- '~/projects/foo'
+            },
+
+            -- Set keymap = false to disable keymapping
+            -- keymap = {
+            --   prefix = '<leader>n'
+            -- }
+        },
+        cmd = 'Note',
+        ft = 'note'
     }
+
 }
 
 require("lazy").setup(plugins)
-require("plugins.nvim-tree")
 require("plugins.mappings")
