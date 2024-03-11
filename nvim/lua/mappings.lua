@@ -16,13 +16,6 @@ vim.keymap.set('n', 'sv', ':vsplit<Return><C-w>w')
 vim.keymap.set("n", "pp", "\"0p")
 vim.keymap.set("n", "PP", "\"0P")
 
--- Terminal mode
-vim.keymap.set("n", "tm", "<cmd>belowright new<CR><cmd>terminal<CR>", { silent = true })
-vim.keymap.set("t", "<ESC>", "<C-\\><C-n>")
-vim.cmd [[autocmd TermOpen * :startinsert]]
-vim.cmd [[autocmd TermOpen * setlocal norelativenumber]]
-vim.cmd [[autocmd TermOpen * setlocal nonumber]]
-
 -- Check health
 vim.keymap.set("n", "ch", "<cmd>checkhealth<CR>")
 
