@@ -19,3 +19,4 @@ vim.keymap.set('n', '<Space>l', '<Cmd>BufferNext<CR>', opts)
 
 -- Toggleterm
 vim.keymap.set('n', 'tm', '<cmd>ToggleTerm<cr>')
+vim.keymap.set("t", "<ESC>", "<C-\\><C-n>")
