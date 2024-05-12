@@ -1,0 +1,43 @@
+{
+    "editor.fontSize": 14,
+    "editor.fontFamily": "HackGen35 Console NF",
+    "editor.minimap.enabled": false,
+    "editor.fontLigatures": true,
+    "editor.formatOnSave": true,
+    "editor.bracketPairColorization.enabled": true,
+    "editor.glyphMargin": false,
+    "editor.inlineSuggest.enabled": true,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+    "extensions.ignoreRecommendations": true,
+    "terminal.integrated.fontFamily": "HackGen35 Console NF",
+    "terminal.integrated.fontSize": 13,
+    "terminal.integrated.defaultProfile.osx": "fish",
+    "terminal.integrated.enableMultiLinePasteWarning": "never",
+    "workbench.colorTheme": "GitHub Dark Dimmed",
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.editor.enablePreview": false,
+    "workbench.layoutControl.enabled": false,
+    "workbench.startupEditor": "none",
+    "go.toolsManagement.autoUpdate": true,
+    "git.confirmSync": false,
+    "vim.useSystemClipboard": true,
+    "vim.insertModeKeyBindings": [
+        {
+            "before": [
+                "j",
+                "j"
+            ],
+            "after": [
+                "<Esc>"
+            ]
+        }
+    ],
+    "vim.hlsearch": true,
+    "vim.incsearch": true,
+    "vim.useCtrlKeys": true,
+    "[markdown]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": true
+    }
+}
