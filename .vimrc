@@ -31,8 +31,8 @@ set noshowmode
 set expandtab
 set smarttab
 set shiftround
-set shiftwidth = 4
-set showtabline = 2
+set shiftwidth=4
+set showtabline=2
 
 " Indent
 set autoindent
