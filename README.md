@@ -9,6 +9,7 @@ Welcome to my world. This is a collection of configurations.
 
 Here are some details about my setup:
 
+- OS : Windows, Ubuntu
 - Shell: Fish
 - Editor: Neovim, VSCode
 
