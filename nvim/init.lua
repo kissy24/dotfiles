@@ -81,4 +81,6 @@ vim.keymap.set("n", "PP", "\"0P")
 -- ### Check health
 vim.keymap.set("n", "ch", "<cmd>checkhealth<CR>")
 
+-- ## Plugin
+
 require("plugins")
