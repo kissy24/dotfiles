@@ -1,3 +1,6 @@
+-- Lazy
+vim.keymap.set("n", "Lh", "<cmd>Lazy home<CR>")
+
 -- nvim-tree
 vim.keymap.set("n", "tr", "<cmd>NvimTreeToggle<cr>", { silent = true })
 
