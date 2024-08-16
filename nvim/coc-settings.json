@@ -1,31 +1,9 @@
 {
-    "languageserver": {
-        "golang": {
-            "command": "gopls",
-            "rootPatterns": [
-                "go.mod"
-            ],
-            "disableWorkspaceFolders": true,
-            "filetypes": [
-                "go"
-            ]
-        }
-    },
-    "coc.preferences.extensionUpdateCheck": "daily",
-    "coc.preferences.formatOnType": true,
-    "coc.preferences.formatOnSaveFiletypes": [
-        "python",
-        "go",
-        "markdown",
-        "javascript",
-        "json",
-        "lua",
-        "toml"
-    ],
-    "python.jediEnabled": false,
-    "python.formatting.provider": "ruff",
-    "python.linting.ruffEnabled": true,
-    "pyright.enable": true,
-    "ruff.autoFixOnSave": true,
-    "Lua.telemetry.enable": false
+  "coc.preferences.extensionUpdateCheck": "daily",
+  "coc.preferences.formatOnType": true,
+  "coc.preferences.formatOnSave": true,
+  "python.formatting.provider": "ruff",
+  "python.linting.ruffEnabled": true,
+  "pyright.enable": true,
+  "ruff.autoFixOnSave": true
 }

@@ -11,6 +11,7 @@ local plugins = {
     {
         "neoclide/coc.nvim",
         branch = "release",
+        build = ":CocUpdateSync",
         config = function() require("plugins.coc") end,
     },
 
