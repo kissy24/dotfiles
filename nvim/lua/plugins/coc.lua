@@ -181,3 +181,18 @@ keyset("n", "<space>j", ":<C-u>CocNext<cr>", opts)
 keyset("n", "<space>k", ":<C-u>CocPrev<cr>", opts)
 -- Resume latest coc list
 keyset("n", "<space>p", ":<C-u>CocListResume<cr>", opts)
+
+-- Extensions
+vim.g.coc_global_extensions = {
+    "coc-lua",
+    "coc-json",
+    "coc-tsserver",
+    "coc-css",
+    "coc-yaml",
+    "coc-rust-analyzer",
+    "coc-go",
+    "coc-sh",
+    "coc-prettier",
+    "coc-pyright",
+    "@yaegassy/coc-ruff"
+}
