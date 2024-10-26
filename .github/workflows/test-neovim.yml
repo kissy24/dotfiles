@@ -16,7 +16,7 @@ jobs:
       - name: チェックアウトリポジトリ
         uses: actions/checkout@v3
         with:
-          path: $HOME
+          path: $HOME/dotfiles
 
       - name: 必要なパッケージをインストール
         run: |
