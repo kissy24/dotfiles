@@ -44,6 +44,11 @@ jobs:
 
       - name: シンボリックリンク確認
         run: |
+          # デバッグ用にシンボリックリンクとフォルダ構造を表示
+          echo "NVIM: $NVIM"
+          echo "BASEDIR: $BASEDIR"
+          tree $CONFDIR
+          ls -l $CONFDIR
           # シンボリックリンクが正しく作成されているか確認
           if [ -L "$NVIM" ] && [ "$(readlink -f $NVIM)" = "$BASEDIR/nvim" ]; then
             echo "シンボリックリンクは正常に作成されました。"
