@@ -34,8 +34,8 @@ jobs:
           mkdir -p $BASEDIR/nvim
 
           # スクリプトの実行
-          chmod +x $CONFDIR/bin/setup-neovim.sh
-          $CONFDIR/bin/setup-neovim.sh
+          chmod +x $BASEDIR/bin/setup-neovim.sh
+          $BASEDIR/bin/setup-neovim.sh
 
       - name: インストール確認
         run: |
