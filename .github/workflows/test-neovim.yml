@@ -27,12 +27,9 @@ jobs:
           CONFDIR: $HOME/.config
           NVIM: $HOME/.config/nvim
         run: |
-          # テスト用のダミーnvimフォルダ作成
-          mkdir -p $BASEDIR/nvim
-
           # スクリプトの実行
-          chmod +x $BASEDIR/bin/setup-neovim.sh
-          $BASEDIR/bin/setup-neovim.sh
+          chmod +x $BASEDIR/bin/setup-nvim.sh
+          $BASEDIR/bin/setup-nvim.sh
 
       - name: インストール確認
         run: |
