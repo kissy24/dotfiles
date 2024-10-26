@@ -23,13 +23,10 @@ jobs:
 
       - name: スクリプト実行テスト
         env:
-          BASEDIR: $GITHUB_WORKSPACE/dotfiles
+          BASEDIR: $GITHUB_WORKSPACE
           CONFDIR: $HOME/.config
           NVIM: $HOME/.config/nvim
         run: |
-          # テスト用のディレクトリを作成
-          mkdir -p $BASEDIR
-
           # テスト用のダミーnvimフォルダ作成
           mkdir -p $BASEDIR/nvim
 
