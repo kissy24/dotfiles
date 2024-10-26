@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BASEDIR=$HOME/workspace/dotfiles
+BASEDIR=$HOME/dotfiles
 CONFDIR=$HOME/.config
 NVIM=$CONFDIR/nvim
 

@@ -23,7 +23,7 @@ jobs:
 
       - name: スクリプト実行テスト
         env:
-          BASEDIR: $GITHUB_WORKSPACE/workspace/dotfiles
+          BASEDIR: $GITHUB_WORKSPACE/dotfiles
           CONFDIR: $HOME/.config
           NVIM: $HOME/.config/nvim
         run: |
