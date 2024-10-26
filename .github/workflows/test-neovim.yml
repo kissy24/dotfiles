@@ -1,0 +1,60 @@
+name: Test Neovim Setup Script
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: チェックアウトリポジトリ
+        uses: actions/checkout@v3
+
+      - name: 必要なパッケージをインストール
+        run: |
+          sudo apt update
+          sudo apt install -y tree
+
+      - name: スクリプト実行テスト
+        env:
+          BASEDIR: ${{ github.workspace }}/workspace/dotfiles
+          CONFDIR: $HOME/.config
+          NVIM: $HOME/.config/nvim
+        run: |
+          # テスト用のディレクトリを作成
+          mkdir -p $BASEDIR
+
+          # テスト用のダミーnvimフォルダ作成
+          mkdir -p $BASEDIR/nvim
+
+          # スクリプトの実行
+          chmod +x ./setup-neovim.sh
+          ./setup-neovim.sh
+
+      - name: インストール確認
+        run: |
+          # nvimがインストールされていることを確認
+          if ! command -v nvim &> /dev/null; then
+            echo "nvimはインストールされていません。"
+            exit 1
+          fi
+          echo "nvimはインストールされています。"
+
+      - name: シンボリックリンク確認
+        run: |
+          # シンボリックリンクが正しく作成されているか確認
+          if [ -L "$NVIM" ] && [ "$(readlink -f $NVIM)" = "$BASEDIR/nvim" ]; then
+            echo "シンボリックリンクは正常に作成されました。"
+          else
+            echo "シンボリックリンクの作成に失敗しました。"
+            exit 1
+          fi
+
+      - name: ディレクトリ構造の確認
+        run: tree $HOME/.config
