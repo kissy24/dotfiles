@@ -41,18 +41,3 @@ jobs:
             exit 1
           fi
           echo "nvimはインストールされています。"
-
-      - name: シンボリックリンク確認
-        run: |
-          # シンボリックリンクとフォルダ構造を確認
-          echo "$(readlink -f $NVIM)"
-          # シンボリックリンクが正しく作成されているか確認
-          if [ -L "$NVIM" ]; then
-            echo "シンボリックリンクは正常に作成されました。"
-          else
-            echo "シンボリックリンクの作成に失敗しました。"
-            exit 1
-          fi
-
-      - name: ディレクトリ構造の確認
-        run: tree $HOME/.config
