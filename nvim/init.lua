@@ -1,3 +1,3 @@
-require("config.options")
-require("config.mappings")
-require("config.lazy")
+require("base.options")
+require("base.mappings")
+require("base.lazy")
