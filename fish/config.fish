@@ -1,4 +1,6 @@
 # uv completion
-uv generate-shell-completion fish | source
+if type -q uv
+    uv generate-shell-completion fish | source
+end
 # starship 
 starship init fish | source
