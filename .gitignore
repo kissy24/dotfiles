@@ -2,8 +2,8 @@ configstore/
 coc/
 wslu/
 nvim/plugin/
-fish/functions
-fish/completions
-fish/conf.d
+.config/fish/functions
+.config/fish/completions
+.config/fish/conf.d
 fish_variables
 .DS_Store
