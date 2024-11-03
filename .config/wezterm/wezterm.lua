@@ -6,7 +6,11 @@ config.color_scheme = "Catppuccin Macchiato"
 
 -- フォント設定
 config.font = wezterm.font("HackGen35 Console NF", { weight = "Regular", italic = false })
-config.font_size = 10.5
+if wezterm.target_triple:find("darwin") then
+    config.font_size = 13.5
+else
+    config.font_size = 10.5
+end
 
 -- WSL Ubuntu 20.04 をデフォルトシェルとして設定
 if wezterm.target_triple:find("windows") then
