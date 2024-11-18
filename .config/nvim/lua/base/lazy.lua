@@ -20,9 +20,6 @@ local plugins = {
         "catppuccin/nvim",
         name = "catppuccin",
         priority = 1000, -- make sure to load this before all the other start plugins
-        config = function()
-            vim.cmd.colorscheme "catppuccin-macchiato"
-        end,
     },
 
     -- FileExplorer
@@ -107,4 +104,6 @@ local plugins = {
 }
 
 require("lazy").setup(plugins)
+require("catppuccin").setup({ term_colors = true, transparent_background = true })
+vim.cmd.colorscheme("catppuccin-mocha")
 vim.keymap.set("n", "Lh", "<cmd>Lazy home<CR>")
