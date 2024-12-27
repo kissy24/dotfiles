@@ -104,6 +104,5 @@ local plugins = {
 }
 
 require("lazy").setup(plugins)
-require("catppuccin").setup({ term_colors = true, transparent_background = true })
 vim.cmd.colorscheme("catppuccin-mocha")
 vim.keymap.set("n", "Lh", "<cmd>Lazy home<CR>")

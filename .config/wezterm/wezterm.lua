@@ -21,7 +21,7 @@ end
 config.hide_tab_bar_if_only_one_tab = true
 
 -- ウィンドウの設定
-config.window_background_opacity = 0.7
+-- config.window_background_opacity = 0.7
 config.initial_cols = 150
 config.initial_rows = 45
 
