@@ -17,12 +17,12 @@ if wezterm.target_triple:find("windows") then
     config.default_prog = { "wsl.exe", "~", "-d", "Ubuntu-20.04" }
 end
 
--- タブバーの表示オプション
-local HEADER = ""
-local SYMBOL_COLOR = { '#ffb2cc', '#a4a4a4' }
-local FONT_COLOR = { '#dddddd', '#888888' }
-local BACK_COLOR = '#2d2d2d'
-local HOVER_COLOR = '#434343'
+-- タブバーの表示オプション(catpputin-mocha の設定を参考にした)
+local HEADER = " "
+local SYMBOL_COLOR = { '#89b4fa', '#9399b2' }
+local FONT_COLOR = { '#cba6f7', '#9399b2' }
+local BACK_COLOR = '#1e1e2e'
+local HOVER_COLOR = '#45475a'
 
 wezterm.on('format-tab-title', function(tab, tabs, panes, config, hover, max_width)
     local index = tab.is_active and 1 or 2
