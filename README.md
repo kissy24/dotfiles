@@ -9,8 +9,9 @@ Welcome to my world. This is a collection of configurations.
 
 Here are some details about my setup:
 
-- OS : Windows, Ubuntu
-- Shell: Fish
+- OS: Windows, Ubuntu, MacOS
+- Shell: Fish, Zsh
+- Terminal: Wezterm, Starship
 - Editor: Neovim, VSCode
 
 ## Fish
@@ -23,11 +24,23 @@ Here are some details about my setup:
 
 ## Neovim
 
-- PluginsManager: [lazy.nvim](https://github.com/folke/lazy.nvim)
-- ColorScheme: [nightfox.nvim](https://github.com/EdenEast/nightfox.nvim)(nordfox)
-- FileExplorer: [nvim-tree.lua](https://github.com/yutkat/dotfiles/blob/main/.config/nvim/lua/rc/option.lua)
-- FuzzyFinder: [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
-- Statusline: [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)
-- LanguageServerProtocol: [coc.nvim](https://github.com/neoclide/coc.nvim)
-  - Languages: Python, Go
+```
+  Loaded (10)
+    ● catppuccin 0.03ms  start
+    ● coc.nvim 4.61ms  start
+    ● git.nvim 0.95ms  start
+    ● gitsigns.nvim 2.19ms  start
+    ● lazy.nvim 4.05ms  init.lua
+    ● lualine.nvim 6.68ms  start
+    ● markdown-preview.nvim 0.22ms  markdown
+    ● nvim-tree.lua 37.07ms  tr
+    ● nvim-treesitter 6.11ms  start
+    ● nvim-web-devicons 0.33ms 󰢱 nvim-web-devicons  nvim-tree.lua
 
+  Not Loaded (5)
+    ○ barbar.nvim  <Space>l  <Space>h
+    ○ lazygit.nvim  LazyGit  LazyGitConfig  LazyGitCurrentFile  LazyGitFilter  LazyGitFilterCurrentFile  <leader>lg
+    ○ plenary.nvim  lazygit.nvim  telescope.nvim
+    ○ telescope.nvim  fn  fg  fb  ff
+    ○ toggleterm.nvim  <ESC> (t)  tm
+```
