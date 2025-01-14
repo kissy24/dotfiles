@@ -100,6 +100,33 @@ local plugins = {
         cmd = { "LazyGit", "LazyGitConfig", "LazyGitCurrentFile", "LazyGitFilter", "LazyGitFilterCurrentFile" },
         dependencies = { "nvim-lua/plenary.nvim" },
         keys = { { "<leader>lg", "<cmd>LazyGit<cr>", desc = "LazyGit" } },
+    },
+
+    -- Noice
+    {
+        "folke/noice.nvim",
+        event = "VeryLazy",
+        opts = {},
+        dependencies = {
+            "MunifTanjim/nui.nvim",
+            "rcarriga/nvim-notify",
+        }
+    },
+
+    -- Help
+    {
+        "folke/which-key.nvim",
+        event = "VeryLazy",
+        opts = {},
+        keys = {
+            {
+                "<leader>?",
+                function()
+                    require("which-key").show({ global = false })
+                end,
+                desc = "Buffer Local Keymaps (which-key)",
+            },
+        },
     }
 }
 
