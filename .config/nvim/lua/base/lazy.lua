@@ -19,7 +19,22 @@ local plugins = {
     {
         "catppuccin/nvim",
         name = "catppuccin",
-        priority = 1000, -- make sure to load this before all the other start plugins
+        priority = 1000,
+    },
+
+    {
+        "folke/tokyonight.nvim",
+        lazy = false,
+        priority = 1000,
+        opts = {},
+    },
+
+    {
+        'projekt0n/github-nvim-theme',
+        name = 'github-theme',
+        lazy = false,
+        priority = 1000,
+        opts = {},
     },
 
     -- FileExplorer
@@ -131,6 +146,7 @@ local plugins = {
 }
 
 require("lazy").setup(plugins)
-require("catppuccin").setup({ term_colors = true, transparent_background = true })
-vim.cmd.colorscheme("catppuccin-mocha")
+-- require("catppuccin").setup({ term_colors = true, transparent_background = true })
+vim.cmd.colorscheme("tokyonight-moon")
+-- vim.cmd.colorscheme("github_dark_dimmed")
 vim.keymap.set("n", "Lh", "<cmd>Lazy home<CR>")

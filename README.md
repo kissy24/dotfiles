@@ -25,22 +25,28 @@ Here are some details about my setup:
 ## Neovim
 
 ```
-  Loaded (10)
-    ● catppuccin 0.03ms  start
-    ● coc.nvim 4.61ms  start
-    ● git.nvim 0.95ms  start
-    ● gitsigns.nvim 2.19ms  start
-    ● lazy.nvim 4.05ms  init.lua
-    ● lualine.nvim 6.68ms  start
-    ● markdown-preview.nvim 0.22ms  markdown
-    ● nvim-tree.lua 37.07ms  tr
-    ● nvim-treesitter 6.11ms  start
-    ● nvim-web-devicons 0.33ms 󰢱 nvim-web-devicons  nvim-tree.lua
+  Loaded (15)
+    ● catppuccin 0.04ms  start
+    ● coc.nvim 3.95ms  start
+    ● git.nvim 0.96ms  start
+    ● github-theme 1.5ms  start
+    ● gitsigns.nvim 1.98ms  start
+    ● lazy.nvim 2.76ms  init.lua
+    ● lualine.nvim 4.34ms  start
+    ● noice.nvim 2.42ms  VeryLazy
+    ● nui.nvim 0.65ms  noice.nvim
+    ● nvim-notify 0.56ms  noice.nvim
+    ● nvim-tree.lua 52.43ms  tr
+    ● nvim-treesitter 3.81ms  start
+    ● nvim-web-devicons 0.28ms 󰢱 nvim-web-devicons  nvim-tree.lua
+    ● tokyonight.nvim 0.92ms  start
+    ● which-key.nvim 0.91ms  VeryLazy
 
-  Not Loaded (5)
-    ○ barbar.nvim  <Space>l  <Space>h
-    ○ lazygit.nvim  LazyGit  LazyGitConfig  LazyGitCurrentFile  LazyGitFilter  LazyGitFilterCurrentFile  <leader>lg
+  Not Loaded (6)
+    ○ barbar.nvim  <Space>h  <Space>l
+    ○ lazygit.nvim  LazyGitConfig  LazyGitCurrentFile  LazyGitFilter  LazyGitFilterCurrentFile  LazyGit  <leader>lg
+    ○ markdown-preview.nvim  markdown  MarkdownPreviewToggle  MarkdownPreview  MarkdownPreviewStop  md
     ○ plenary.nvim  lazygit.nvim  telescope.nvim
-    ○ telescope.nvim  fn  fg  fb  ff
-    ○ toggleterm.nvim  <ESC> (t)  tm
+    ○ telescope.nvim  fg  fn  ff  fb
+    ○ toggleterm.nvim  tm  <ESC> (t)
 ```
