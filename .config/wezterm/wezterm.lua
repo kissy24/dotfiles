@@ -2,7 +2,8 @@ local wezterm = require 'wezterm'
 local config = wezterm.config_builder()
 
 -- カラースキームの設定
-config.color_scheme = "Catppuccin Mocha"
+-- config.color_scheme = "Catppuccin Mocha"
+config.color_scheme = "Tokyo Night Moon"
 
 -- フォント設定
 config.font = wezterm.font("HackGen35 Console NF", { weight = "Regular", italic = false })
@@ -39,7 +40,7 @@ wezterm.on('format-tab-title', function(tab, tabs, panes, config, hover, max_wid
 end)
 
 -- ウィンドウの設定
-config.window_background_opacity = 0.95
+-- config.window_background_opacity = 0.95
 config.initial_cols = 150
 config.initial_rows = 45
 -- config.window_decorations = "TITLE"
