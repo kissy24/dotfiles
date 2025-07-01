@@ -8,6 +8,9 @@ github = "zsh-users/zsh-autosuggestions"
 [plugins.zsh-syntax-highlighting]
 github = "zsh-users/zsh-syntax-highlighting"
 
+[plugins.zsh-history-substring-search]
+github = "zsh-users/zsh-history-substring-search"
+
 # 便利ツール
 [plugins.fzf]
 github = "junegunn/fzf"
