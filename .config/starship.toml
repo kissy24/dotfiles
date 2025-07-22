@@ -1,26 +1,26 @@
 format = """
-[](fg:#7aa2f7)\
+[](fg:#77bdfb)\
 $os\
-[ ](fg:#7aa2f7 bg:#1a1b26)\
+[ ](fg:#77bdfb bg:#161b22)\
 $directory\
 $git_branch\
 $git_status\
 $git_metrics\
-[](fg:#1a1b26)\
+[](fg:#161b22)\
 $character\
 """
 
 right_format = """
-[](fg:#1a1b26)\
+[](fg:#161b22)\
 $cmd_duration\
-[](fg:#9ece6a bg:#1a1b26)\
+[](fg:#cea5fb bg:#161b22)\
 $time\
-[](fg:#9ece6a)\
+[](fg:#cea5fb)\
 """
 
 [os]
 format = "[$symbol]($style)"
-style = 'fg:#1a1b26 bg:#7aa2f7'
+style = 'fg:#161b22 bg:#77bdfb'
 disabled = false
 
 [os.symbols]
@@ -31,21 +31,21 @@ Ubuntu = " " # nf-linux-ubuntu
 truncation_length = 4
 truncation_symbol = ' ' # nf-fa-folder_open
 truncate_to_repo = false
-home_symbol = ' ~' # nf-costum-home
-style = 'fg:#7aa2f7 bg:#1a1b26'
+home_symbol = '~' # nf-costum-home
+style = 'fg:#77bdfb bg:#161b22'
 read_only = ' 󰌾 ' # nf-md-lock
-read_only_style = 'fg:#f7768e bg:#1a1b26'
+read_only_style = 'fg:#f7768e bg:#161b22'
 format = '[$path]($style)[$read_only]($read_only_style)'
 
 [git_branch]
-symbol = ' ' # nf-fa-github_alt, nf-fa-code_fork
+symbol = '' # nf-fa-github_alt, nf-fa-code_fork
 truncation_length = 4
 truncation_symbol = ''
-style = 'fg:#7aa2f7 bg:#1a1b26'
-format = '[  $symbol $branch(:$remote_branch)]($style)' # nf-pl-left_soft_divider
+style = 'fg:#77bdfb bg:#161b22'
+format = '[  $symbol $branch (:$remote_branch)]($style)' # nf-pl-left_soft_divider
 
 [git_status]
-style = 'fg:#e0af68 bg:#1a1b26'
+style = 'fg:#faa356 bg:#161b22'
 conflicted = '='
 ahead = '⇡${count}'
 behind = '⇣${count}'
@@ -56,12 +56,12 @@ stashed = '$'
 modified = '!${count}'
 renamed = '»'
 deleted = '✘'
-format = '([\[$all_status$ahead_behind\]]($style))'
+format = '([\[$all_status$ahead_behind\] ]($style))'
 
 [git_metrics]
-added_style = 'fg:#9ece6a bg:#1a1b26'
-deleted_style = 'fg:#9ece6a bg:#1a1b26'
-format = '[+$added/-$deleted]($deleted_style)'
+added_style = 'fg:#7ce38b bg:#161b22'
+deleted_style = 'fg:#7ce38b bg:#161b22'
+format = '[+$added/-$deleted ]($deleted_style)'
 disabled = false
 
 [character]
@@ -70,12 +70,12 @@ error_symbol = ''
 
 [cmd_duration]
 min_time = 1
-style = 'fg:#e0af68 bg:#1a1b26'
+style = 'fg:#fa7970 bg:#161b22'
 format = "[ $duration ]($style)" # nf-pl-right_soft_divider, nf-mdi-clock
 
 [time]
 disabled = false
-style = 'fg:#1a1b26 bg:#9ece6a'
+style = 'fg:#161b22 bg:#cea5fb'
 format = '[ $time]($style)' # nf-pl-right_soft_divider, nf-fa-clock_o
 time_format = '%T'
 utc_time_offset = '+9'
