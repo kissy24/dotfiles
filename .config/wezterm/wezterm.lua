@@ -3,7 +3,8 @@ local config = wezterm.config_builder()
 
 -- カラースキームの設定
 -- config.color_scheme = "Catppuccin Mocha"
-config.color_scheme = "Tokyo Night Moon"
+-- config.color_scheme = "Tokyo Night Moon"
+config.color_scheme = "GitHub Dark"
 
 -- フォント設定
 config.font = wezterm.font("HackGen35 Console NF", { weight = "Regular", italic = false })
