@@ -15,18 +15,18 @@ truncation_length = 4
 truncation_symbol = ' '
 truncate_to_repo = true
 home_symbol = '~'
-style = 'fg:#77bdfb'
+style = 'fg:#7aa2f7'
 read_only = ' 󰌾 '
-read_only_style = 'fg:#f7768e'
+read_only_style = 'fg:#7aa2f7'
 
 [git_branch]
 symbol = '' # nf-fa-github_alt, nf-fa-code_fork
 truncation_length = 4
 truncation_symbol = ''
-style = 'fg:#77bdfb'
+style = 'fg:#f7768e'
 
 [git_status]
-style = 'fg:#faa356'
+style = 'fg:#ff9e64'
 conflicted = '='
 ahead = '⇡${count}'
 behind = '⇣${count}'
@@ -39,26 +39,26 @@ renamed = '»'
 deleted = '✘'
 
 [git_metrics]
-added_style = 'fg:#7ce38b'
-deleted_style = 'fg:#7ce38b'
+added_style = 'fg:#9ece6a'
+deleted_style = 'fg:#9ece6a'
 format = '([+$added/]($added_style))([-$deleted]($deleted_style) )'
 disabled = false
 
 [character]
 success_symbol = '[❯](bold #9ece6a)'
-error_symbol = '[❯](bold red)'
+error_symbol = '[❯](bold #f7768e)'
 
 [fill]
 symbol = ' '
 
 [cmd_duration]
 min_time = 1
-style = 'fg:#fa7970'
+style = 'fg:#e0af68'
 format = "[ $duration ]($style)" # nf-pl-right_soft_divider, nf-mdi-clock
 
 [time]
 disabled = false
-style = 'fg:#161b22'
+style = 'fg:#9aa5ce'
 format = '[ $time ]($style)' # nf-pl-right_soft_divider, nf-fa-clock_o
 time_format = '%T'
 utc_time_offset = '+9'
