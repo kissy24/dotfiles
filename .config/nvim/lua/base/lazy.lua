@@ -147,6 +147,6 @@ local plugins = {
 
 require("lazy").setup(plugins)
 -- require("catppuccin").setup({ term_colors = true, transparent_background = true })
--- vim.cmd.colorscheme("tokyonight-moon")
-vim.cmd.colorscheme("github_dark_dimmed")
+vim.cmd.colorscheme("tokyonight-moon")
+-- vim.cmd.colorscheme("github_dark_dimmed")
 vim.keymap.set("n", "Lh", "<cmd>Lazy home<CR>")
