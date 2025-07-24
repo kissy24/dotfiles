@@ -41,7 +41,7 @@ local plugins = {
     {
         "kyazdani42/nvim-tree.lua",
         requires = { "kyazdani42/nvim-web-devicons" },
-        tag = "nightly",
+        version = "*",
         opts = {},
         keys = { { "tr", "<cmd>NvimTreeToggle<cr>", mode = "n", { silent = true } } }
     },
@@ -103,6 +103,14 @@ local plugins = {
         ft = { "markdown" },
         build = function() vim.fn["mkdp#util#install"]() end,
         keys = { { "md", "<Plug>MarkdownPreviewToggle", mode = "n" } }
+    },
+
+    {
+        "MeanderingProgrammer/render-markdown.nvim",
+        dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+        ---@module "render-markdown"
+        ---@type render.md.UserConfig
+        opts = {},
     },
 
     -- Git
