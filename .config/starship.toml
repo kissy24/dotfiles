@@ -20,8 +20,8 @@ read_only = ' 󰌾 '
 read_only_style = 'fg:#7aa2f7'
 
 [git_branch]
-symbol = '' # nf-fa-github_alt, nf-fa-code_fork
-truncation_length = 4
+symbol = ''
+truncation_length = 16
 truncation_symbol = ''
 style = 'fg:#f7768e'
 
