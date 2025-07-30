@@ -1,4 +1,6 @@
 # ~/.zshrc
+autoload -Uz compinit
+compinit
 
 # 履歴ファイルの設定
 HISTFILE=~/.zsh_history
