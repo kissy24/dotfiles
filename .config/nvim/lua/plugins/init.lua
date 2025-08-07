@@ -93,5 +93,7 @@ return {
                 desc = "Buffer Local Keymaps (which-key)",
             },
         },
-    }
+    },
+
+    { "windwp/nvim-autopairs", config = true, lazy = false },
 }
