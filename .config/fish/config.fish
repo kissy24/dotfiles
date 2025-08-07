@@ -8,3 +8,9 @@ if test (uname) = "Darwin"
 end
 # starship 
 starship init fish | source
+
+# bun
+if test -x "$HOME/.bun"
+    set --export BUN_INSTALL "$HOME/.bun"
+    set --export PATH $BUN_INSTALL/bin $PATH
+end
