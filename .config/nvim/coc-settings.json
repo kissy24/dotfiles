@@ -1,9 +1,0 @@
-{
-  "coc.preferences.extensionUpdateCheck": "daily",
-  "coc.preferences.formatOnType": true,
-  "coc.preferences.formatOnSave": true,
-  "python.formatting.provider": "ruff",
-  "python.linting.ruffEnabled": true,
-  "pyright.enable": true,
-  "ruff.autoFixOnSave": true
-}
