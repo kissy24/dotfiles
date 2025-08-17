@@ -1,0 +1,63 @@
+{
+    "editor.fontSize": 14,
+    "editor.fontFamily": "HackGen35 Console NF",
+    "editor.minimap.enabled": false,
+    "editor.fontLigatures": true,
+    "editor.formatOnSave": true,
+    "editor.bracketPairColorization.enabled": true,
+    "editor.glyphMargin": false,
+    "editor.inlineSuggest.enabled": true,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+    "extensions.ignoreRecommendations": true,
+    "terminal.integrated.fontFamily": "HackGen35 Console NF",
+    "terminal.integrated.fontSize": 13,
+    "terminal.integrated.defaultProfile.osx": "fish",
+    "terminal.integrated.enableMultiLinePasteWarning": "never",
+    "workbench.colorTheme": "GitHub Dark Dimmed",
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.editor.enablePreview": false,
+    "workbench.startupEditor": "none",
+    "go.toolsManagement.autoUpdate": true,
+    "git.confirmSync": false,
+    "vim.useSystemClipboard": true,
+    "vim.insertModeKeyBindings": [
+        {
+            "before": [
+                "j",
+                "j"
+            ],
+            "after": [
+                "<Esc>"
+            ]
+        }
+    ],
+    "vim.hlsearch": true,
+    "vim.incsearch": true,
+    "vim.useCtrlKeys": true,
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        },
+    },
+    "[markdown]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": true
+    },
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "workbench.activityBar.location": "top",
+    "extensions.experimental.affinity": {
+        "asvetliakov.vscode-neovim": 1
+    },
+    "roo-cline.allowedCommands": [
+        "npm test",
+        "npm install",
+        "tsc",
+        "git log",
+        "git diff",
+        "git show"
+    ],
+    "chat.commandCenter.enabled": false,
+}
