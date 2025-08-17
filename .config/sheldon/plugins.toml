@@ -15,9 +15,6 @@ github = "zsh-users/zsh-history-substring-search"
 [plugins.fzf]
 github = "junegunn/fzf"
 
-[plugins.zoxide]
-github = "ajeetdsouza/zoxide"
-
 # 補完機能
 [plugins.zsh-completions]
 github = "zsh-users/zsh-completions"
@@ -35,16 +32,3 @@ dir = "plugins/colored-man-pages"
 [plugins.extract]
 github = "ohmyzsh/ohmyzsh"
 dir = "plugins/extract"
-
-# 高度な設定例
-[plugins.z]
-github = "rupa/z"
-apply = ["source"]
-
-# 特定のファイルを読み込む場合
-[plugins.custom-aliases]
-inline = '''
-alias ll='ls -la'
-alias la='ls -A'
-alias l='ls -CF'
-'''
