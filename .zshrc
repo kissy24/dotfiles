@@ -33,10 +33,11 @@ setopt AUTO_PUSHD       # cd で自動的に pushd
 setopt PUSHD_IGNORE_DUPS # 重複するディレクトリをスタックに積まない
 
 # Alias
-alias d='dirs -v'
-alias ll='ls -la'
-alias la='ls -A'
-alias l='ls -CF'
+alias d="dirs -v"
+alias ls="ls -F --color=auto"
+alias ll="ls -alFh --color=auto"
+alias la="ls -aF --color=auto"
+alias l="ls -lFh --color=auto"
 
 # パッケージマネージャーの
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
