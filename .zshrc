@@ -39,7 +39,12 @@ alias ll="ls -alFh --color=auto"
 alias la="ls -aF --color=auto"
 alias l="ls -lFh --color=auto"
 
-# パッケージマネージャーの
+# Vim Mode
+export KEYTIMEOUT=20
+bindkey -v
+bindkey -M viins 'jj' vi-cmd-mode
+
+# パッケージマネージャー
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     alias pkgupd='sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt autoclean'
 elif [[ "$OSTYPE" == "darwin"* ]]; then
