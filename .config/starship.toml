@@ -21,7 +21,7 @@ read_only_style = 'fg:#7aa2f7'
 
 [git_branch]
 symbol = ''
-truncation_length = 16
+truncation_length = 32
 truncation_symbol = ''
 style = 'fg:#f7768e'
 
