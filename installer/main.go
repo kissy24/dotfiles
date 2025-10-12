@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	runtime "runtime"
+	"runtime"
 	"time"
 )
 
