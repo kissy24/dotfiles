@@ -64,8 +64,9 @@ func installDependenciesMacOS() error {
 
 	packages := []string{"go", "neovim", "node"}
 	fmt.Println("Installing packages with Homebrew:", packages)
-	args := append([]string{"install"}, packages...)
-	if err := runCommand("brew", args...); err != nil {
+	cmdSlice := []string{"brew", "install"}
+	cmdSlice = append(cmdSlice, packages...)
+	if err := runCommand(cmdSlice[0], cmdSlice[1:]...); err != nil {
 		return fmt.Errorf("failed to install packages with brew: %w", err)
 	}
 
@@ -88,11 +89,11 @@ func installDependenciesLinux() error {
 		return fmt.Errorf("failed to update apt: %w", err)
 	}
 
-	// Note: package names might differ across distributions.
 	packages := []string{"golang-go", "neovim", "nodejs", "npm"}
 	fmt.Println("Installing packages with apt:", packages)
-	args := append([]string{"install", "-y"}, packages...)
-	if err := runCommand("sudo", "apt", args...); err != nil {
+	cmdSlice := []string{"sudo", "apt", "install", "-y"}
+	cmdSlice = append(cmdSlice, packages...)
+	if err := runCommand(cmdSlice[0], cmdSlice[1:]...); err != nil {
 		return fmt.Errorf("failed to install packages with apt: %w", err)
 	}
 
