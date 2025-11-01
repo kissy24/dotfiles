@@ -42,19 +42,27 @@ install_for_ubuntu() {
 }
 
 create_symlinks() {
-    declare -A DOTFILES
-    DOTFILES=( 
-        ["$REPO_ROOT/.zshrc"]="$HOME/.zshrc" 
-        ["$REPO_ROOT/.config/starship.toml"]="$HOME/.config/starship.toml" 
-        ["$REPO_ROOT/.config/nvim"]="$HOME/.config/nvim" 
-        ["$REPO_ROOT/.config/wezterm"]="$HOME/.config/wezterm" 
-        ["$REPO_ROOT/.config/sheldon"]="$HOME/.config/sheldon" 
-        ["$REPO_ROOT/.config/lazygit"]="$HOME/.config/lazygit" 
+    local dotfile_sources=(
+        "$REPO_ROOT/.zshrc"
+        "$REPO_ROOT/.config/starship.toml"
+        "$REPO_ROOT/.config/nvim"
+        "$REPO_ROOT/.config/wezterm"
+        "$REPO_ROOT/.config/sheldon"
+        "$REPO_ROOT/.config/lazygit"
+    )
+    local dotfile_dests=(
+        "$HOME/.zshrc"
+        "$HOME/.config/starship.toml"
+        "$HOME/.config/nvim"
+        "$HOME/.config/wezterm"
+        "$HOME/.config/sheldon"
+        "$HOME/.config/lazygit"
     )
 
     echo "Creating symlinks..."
-    for src in "${!DOTFILES[@]}"; do
-        dest="${DOTFILES[$src]}"
+    for i in "${!dotfile_sources[@]}"; do
+        src="${dotfile_sources[$i]}"
+        dest="${dotfile_dests[$i]}"
         mkdir -p "$(dirname "$dest")"
         if [ -e "$dest" ] || [ -L "$dest" ]; then
             if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
