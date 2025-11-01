@@ -8,6 +8,3 @@ brew "sheldon"
 # Dev Tools
 brew "neovim"
 brew "lazygit"
-
-# Terminal
-brew "wezterm"

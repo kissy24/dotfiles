@@ -14,8 +14,6 @@ install_for_macos() {
         echo "Error: Homebrew is not installed. Please install it first." >&2
         exit 1
     fi
-    echo "Tapping wez/wezterm to ensure it is available..."
-    brew tap wez/wezterm
     brew bundle --verbose --file "$SCRIPT_DIR/Brewfile"
 }
 
@@ -41,15 +39,6 @@ install_for_ubuntu() {
     echo "Installing sheldon..."
     curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh | bash -s -- --repo rossmacarthur/sheldon --to /usr/local/bin
 
-    echo "Installing wezterm..."
-    WEZTERM_DEB=$(curl -s https://api.github.com/repos/wez/wezterm/releases/latest | grep "browser_download_url.*ubuntu22.04.deb" | cut -d '"' -f 4)
-    if [ -n "$WEZTERM_DEB" ]; then
-        curl -Lo wezterm.deb "$WEZTERM_DEB"
-        sudo apt install -y ./wezterm.deb
-        rm wezterm.deb
-    else
-        echo "Warning: Could not find wezterm .deb package for Ubuntu 22.04. Skipping." >&2
-    fi
 }
 
 create_symlinks() {
