@@ -1,0 +1,12 @@
+# Core
+git
+curl
+build-essential
+
+# Shells & Prompts
+starship
+
+# Dev Tools
+neovim
+
+# Note: lazygit, sheldon, and wezterm are installed via other methods in install.sh
