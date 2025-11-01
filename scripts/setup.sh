@@ -14,7 +14,9 @@ install_for_macos() {
         echo "Error: Homebrew is not installed. Please install it first." >&2
         exit 1
     fi
-    brew bundle --file "$SCRIPT_DIR/Brewfile"
+    echo "Tapping wez/wezterm to ensure it is available..."
+    brew tap wez/wezterm
+    brew bundle --verbose --file "$SCRIPT_DIR/Brewfile"
 }
 
 install_for_ubuntu() {
