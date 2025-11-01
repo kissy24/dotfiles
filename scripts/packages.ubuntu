@@ -4,7 +4,6 @@ curl
 build-essential
 
 # Shells & Prompts
-starship
 
 # Dev Tools
 neovim
