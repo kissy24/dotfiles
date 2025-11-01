@@ -10,4 +10,5 @@ brew "neovim"
 brew "lazygit"
 
 # Terminal
+tap "wez/wezterm"
 brew "wezterm"
