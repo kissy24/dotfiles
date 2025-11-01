@@ -1,0 +1,15 @@
+tap "homebrew/bundle"
+
+# Core
+brew "git"
+
+# Shells & Prompts
+brew "starship"
+brew "sheldon"
+
+# Dev Tools
+brew "neovim"
+brew "lazygit"
+
+# Terminal
+brew "wezterm"
