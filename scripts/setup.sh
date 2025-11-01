@@ -24,7 +24,7 @@ install_for_ubuntu() {
     sudo apt update
     
     echo "Installing packages from packages.ubuntu..."
-    xargs sudo apt install -y < "$SCRIPT_DIR/packages.ubuntu"
+    grep -vE '^\s*#|^\s*$' "$SCRIPT_DIR/packages.ubuntu" | xargs sudo apt install -y
 
     echo "Installing lazygit..."
     LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[0-9.]+')
