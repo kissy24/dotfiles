@@ -2,7 +2,6 @@
 git
 curl
 build-essential
-cargo
 
 # Dev Tools
 neovim

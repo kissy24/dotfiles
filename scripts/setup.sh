@@ -26,6 +26,9 @@ install_for_ubuntu() {
     echo "Installing packages from packages.ubuntu..."
     grep -vE '^\s*#|^\s*$' "$SCRIPT_DIR/packages.ubuntu" | xargs sudo apt install -y
 
+    echo "Installing Rust toolchain via rustup..."
+    curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y
+
     echo "Installing starship..."
     curl -sS https://starship.rs/install.sh | sh -s -- -y
 
@@ -99,6 +102,11 @@ elif [ "$OS" = "Linux" ]; then
         exit 1
     fi
     install_for_ubuntu
+fi
+
+# If on Linux, rustup will have installed cargo to ~/.cargo/bin. Add it to the PATH for this session.
+if [ "$OS" = "Linux" ]; then
+    export PATH="$HOME/.cargo/bin:$PATH"
 fi
 
 # 3. Create symlinks
