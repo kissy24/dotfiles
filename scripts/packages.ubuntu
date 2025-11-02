@@ -3,6 +3,10 @@ git
 curl
 build-essential
 
+# Build dependencies for cargo packages
+pkg-config
+libssl-dev
+
 # Dev Tools
 neovim
 
