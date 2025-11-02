@@ -3,7 +3,7 @@ brew "git"
 
 # Shells & Prompts
 brew "starship"
-brew "sheldon"
+brew "rust"
 
 # Dev Tools
 brew "neovim"
