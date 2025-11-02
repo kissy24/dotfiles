@@ -36,8 +36,6 @@ install_for_ubuntu() {
     sudo install lazygit /usr/local/bin
     rm lazygit.tar.gz lazygit
 
-    echo "Installing sheldon..."
-    curl --proto '=https' -fLsS https://rossmacarthur.github.io/install/crate.sh | bash -s -- --repo rossmacarthur/sheldon --to /usr/local/bin
 
 }
 
@@ -109,6 +107,14 @@ create_symlinks
 
 # 4. Post-installation steps
 echo "--- Running post-installation steps ---"
+
+if command -v cargo &> /dev/null; then
+    echo "Installing/Updating sheldon via cargo..."
+    cargo install sheldon
+else
+    echo "Warning: cargo not found. Skipping sheldon installation." >&2
+fi
+
 if command -v nvim &> /dev/null; then
     echo "Syncing Neovim plugins..."
     nvim --headless -c 'Lazy sync' -c 'qa'

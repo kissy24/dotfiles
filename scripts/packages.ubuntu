@@ -2,10 +2,9 @@
 git
 curl
 build-essential
-
-# Shells & Prompts
+cargo
 
 # Dev Tools
 neovim
 
-# Note: lazygit, sheldon, and wezterm are installed via other methods in install.sh
+# Note: lazygit and starship are installed via other methods in install.sh
