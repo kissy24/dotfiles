@@ -16,7 +16,36 @@ install_for_macos() {
     fi
     
     echo "Installing packages via Homebrew..."
-    brew install git starship rust neovim lazygit
+    brew install git starship rust lazygit node
+
+    echo "Installing Neovim (nightly) for macOS..."
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    
+    (
+        cd "$temp_dir"
+        echo "Downloading Neovim..."
+        curl -LO https://github.com/neovim/neovim/releases/download/nightly/nvim-macos-x86_64.tar.gz
+        
+        echo "Extracting Neovim..."
+        tar xzf nvim-macos-x86_64.tar.gz
+        
+        echo "Installing Neovim to /usr/local..."
+        sudo rsync -a --delete nvim-macos-x86_64/ /usr/local/
+    )
+    
+    echo "Cleaning up..."
+    rm -rf "$temp_dir"
+    
+    echo "Neovim installation complete."
+
+    echo "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    # The 'uv' installer places the binary in ~/.cargo/bin or ~/.local/bin
+    # Ensure ~/.local/bin is in PATH for subsequent commands if needed,
+    # but typically the user's shell config handles this for new sessions.
+    # If you need 'uv' immediately in this script, uncomment the next line:
+    # source "$HOME/.local/bin/env"
 }
 
 install_for_ubuntu() {
@@ -26,7 +55,17 @@ install_for_ubuntu() {
     sudo apt update
     
     echo "Installing packages via apt..."
-    sudo apt install -y git curl build-essential pkg-config libssl-dev neovim
+    sudo apt install -y git curl build-essential pkg-config libssl-dev nodejs npm
+
+    echo "Installing and configuring latest Node.js via n..."
+    sudo npm install -g n
+    sudo n stable
+    sudo apt purge -y nodejs npm
+
+    echo "Installing Neovim (latest) for Linux..."
+    curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
+    chmod u+x nvim-linux-x86_64.appimage
+    sudo mv nvim-linux-x86_64.appimage /usr/local/bin/nvim
 
     echo "Installing Rust toolchain via rustup..."
     curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y
@@ -41,6 +80,13 @@ install_for_ubuntu() {
     sudo install lazygit /usr/local/bin
     rm lazygit.tar.gz lazygit
 
+    echo "Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    # The 'uv' installer places the binary in ~/.cargo/bin or ~/.local/bin
+    # Ensure ~/.local/bin is in PATH for subsequent commands if needed,
+    # but typically the user's shell config handles this for new sessions.
+    # If you need 'uv' immediately in this script, uncomment the next line:
+    # source "$HOME/.local/bin/env"
 
 }
 
