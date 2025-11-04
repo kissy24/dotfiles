@@ -14,7 +14,9 @@ install_for_macos() {
         echo "Error: Homebrew is not installed. Please install it first." >&2
         exit 1
     fi
-    brew bundle --verbose --file "$SCRIPT_DIR/Brewfile"
+    
+    echo "Installing packages via Homebrew..."
+    brew install git starship rust neovim lazygit
 }
 
 install_for_ubuntu() {
@@ -23,8 +25,8 @@ install_for_ubuntu() {
     echo "Updating apt repositories..."
     sudo apt update
     
-    echo "Installing packages from packages.ubuntu..."
-    grep -vE '^\s*#|^\s*$' "$SCRIPT_DIR/packages.ubuntu" | xargs sudo apt install -y
+    echo "Installing packages via apt..."
+    sudo apt install -y git curl build-essential pkg-config libssl-dev neovim
 
     echo "Installing Rust toolchain via rustup..."
     curl --proto '=https' -sSf https://sh.rustup.rs | sh -s -- -y
