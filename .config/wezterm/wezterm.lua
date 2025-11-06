@@ -3,13 +3,13 @@ local config = wezterm.config_builder()
 
 -- WSL Ubuntu をデフォルトシェルとして設定
 if wezterm.target_triple:find("windows") then
-    config.default_prog = { "wsl.exe", "~", "-d", "Ubuntu-20.04" }
+    config.default_prog = { "wsl.exe", "~", "-d", "Ubuntu-24.04" }
 end
 
 -- カラースキームの設定
-config.color_scheme = "Tokyo Night Moon"
+-- config.color_scheme = "Tokyo Night Moon"
 -- config.color_scheme = "Catppuccin Mocha"
--- config.color_scheme = "GitHub Dark"
+config.color_scheme = "Github Dark (Gogh)"
 
 -- フォント設定
 config.font = wezterm.font("HackGen35 Console NF", { weight = "Bold", italic = false })
@@ -22,19 +22,19 @@ config.use_ime = true
 
 -- タブバーの表示オプション(catpputin-mocha の設定を参考にした)
 local HEADER = " "
-local SYMBOL_COLOR = { '#89b4fa', '#9399b2' }
-local FONT_COLOR = { '#cba6f7', '#9399b2' }
-local BACK_COLOR = '#1e2030'
-local HOVER_COLOR = '#2f334d'
+local SYMBOL_COLOR = { '#6CA4F8', '#4D4D4D' }
+local FONT_COLOR = { '#E3B341', '#4D4D4D' }
+local BACK_COLOR = '#101216'
+local HOVER_COLOR = '#101216'
 
 -- ウィンドウの設定
--- config.window_background_opacity = 0.95
+config.window_background_opacity = 0.99
 config.initial_cols = 140
 config.initial_rows = 40
 config.window_decorations = "TITLE | RESIZE"
 config.window_frame = {
-    inactive_titlebar_bg = "#222436",
-    active_titlebar_bg = "#222436",
+    inactive_titlebar_bg = "#101216",
+    active_titlebar_bg = "#101216",
 }
 config.show_new_tab_button_in_tab_bar = false
 
