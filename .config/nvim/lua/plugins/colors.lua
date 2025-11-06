@@ -10,9 +10,9 @@ return {
         "folke/tokyonight.nvim",
         lazy = false,
         priority = 1000,
-        config = function()
-            vim.cmd([[colorscheme tokyonight-moon]])
-        end,
+        -- config = function()
+        --     vim.cmd([[colorscheme tokyonight-moon]])
+        -- end,
     },
 
     {
@@ -21,8 +21,19 @@ return {
         lazy = false,
         priority = 1000,
         opts = {},
+        config = function()
+            vim.cmd([[colorscheme github_dark_dimmed]])
+        end,
+    },
+
+    {
+        'rebelot/kanagawa.nvim',
+        name = 'kanagawa',
+        lazy = false,
+        priority = 1000,
+        opts = {},
         -- config = function()
-        --     vim.cmd([[colorscheme github_dark_dimmed]])
+        --     vim.cmd([[colorscheme kanagawa-dragon]])
         -- end,
     },
 }
