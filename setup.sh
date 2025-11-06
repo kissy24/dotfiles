@@ -4,7 +4,7 @@ set -eu
 # Main setup script for the dotfiles repository.
 
 SCRIPT_DIR=$(dirname "$0")
-REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR" && pwd)
 
 # --- Helper Functions ---
 
