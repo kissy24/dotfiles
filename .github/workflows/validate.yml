@@ -21,11 +21,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Make scripts executable
-        run: chmod +x ./scripts/*.sh
+      - name: Make setup.sh executable
+        run: chmod +x ./setup.sh
 
       - name: Run setup script
-        run: ./scripts/setup.sh
+        run: ./setup.sh
 
       - name: Verify installation and symlinks
         run: |
