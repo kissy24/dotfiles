@@ -181,5 +181,5 @@ return {
         },
     },
 
-    { "windwp/nvim-autopairs",           config = true,           lazy = false },
+    { "windwp/nvim-autopairs", config = true, lazy = false },
 }
