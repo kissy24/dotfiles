@@ -12,11 +12,11 @@ end
 config.color_scheme = "Github Dark (Gogh)"
 
 -- フォント設定
-config.font = wezterm.font("HackGen35 Console NF", { weight = "Bold", italic = false })
+config.font = wezterm.font("HackGen Console NF", { weight = "Bold", italic = false })
 if wezterm.target_triple:find("darwin") then
     config.font_size = 13.5
 else
-    config.font_size = 10.5
+    config.font_size = 13
 end
 config.use_ime = true
 
@@ -28,7 +28,7 @@ local BACK_COLOR = '#101216'
 local HOVER_COLOR = '#101216'
 
 -- ウィンドウの設定
-config.window_background_opacity = 0.99
+config.window_background_opacity = 0.90
 config.initial_cols = 140
 config.initial_rows = 40
 config.window_decorations = "TITLE | RESIZE"
