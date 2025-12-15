@@ -28,6 +28,7 @@ vim.o.breakindent = true
 vim.o.showmode = false
 vim.o.termguicolors = true
 vim.o.pumblend = 30
+vim.o.winblend = 30
 
 -- 1.3.Tab
 vim.o.expandtab = true

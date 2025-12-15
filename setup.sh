@@ -16,7 +16,7 @@ install_for_macos() {
     fi
     
     echo "Installing packages via Homebrew..."
-    brew install git starship rust lazygit node
+    brew install git starship rust lazygit node ripgrep fd
 
     echo "Installing Neovim (nightly) for macOS..."
     local temp_dir
@@ -55,7 +55,7 @@ install_for_ubuntu() {
     sudo apt update
     
     echo "Installing packages via apt..."
-    sudo apt install -y git curl build-essential pkg-config libssl-dev nodejs npm
+    sudo apt install -y git curl build-essential pkg-config libssl-dev nodejs npm ripgrep fd-find
 
     echo "Installing and configuring latest Node.js via n..."
     sudo npm install -g n

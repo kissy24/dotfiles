@@ -20,8 +20,12 @@ return {
         name = 'github-theme',
         lazy = false,
         priority = 1000,
-        opts = {},
         config = function()
+            require('github-theme').setup({
+                options = {
+                    transparent = true,
+                }
+            })
             vim.cmd([[colorscheme github_dark_dimmed]])
         end,
     },
