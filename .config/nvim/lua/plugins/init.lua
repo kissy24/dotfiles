@@ -1,50 +1,22 @@
 return {
-    -- Tab
-    {
-        'romgrk/barbar.nvim',
-        dependencies = {
-            'lewis6991/gitsigns.nvim',
-            'nvim-tree/nvim-web-devicons',
-        },
-        event = "BufReadPre",
-        init = function() vim.g.barbar_auto_setup = false end,
-        opts = {},
-        keys = {
-            { "<Space>h", "<Cmd>BufferPrevious<CR>", mode = "n", { silent = true } },
-            { "<Space>l", "<Cmd>BufferNext<CR>",     mode = "n", { silent = true } },
-        }
-    },
-
-    -- Terminal
     {
         "akinsho/toggleterm.nvim",
         version = "*",
-        opts = {},
+        opts = {
+            direction = "float",
+            float_opts = {
+                border = "rounded",
+                width = math.floor(vim.o.columns * 0.8),
+                height = math.floor(vim.o.lines * 0.7),
+                winblend = 0,
+            },
+        },
         keys = {
             { "tm",    "<cmd>ToggleTerm<cr>", mode = "n" },
             { "<ESC>", "<C-\\><C-n>",         mode = "t" },
         }
     },
 
-
-    -- Markdown
-    {
-        "iamcco/markdown-preview.nvim",
-        cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
-        ft = { "markdown" },
-        build = function() vim.fn["mkdp#util#install"]() end,
-        keys = { { "md", "<Plug>MarkdownPreviewToggle", mode = "n" } }
-    },
-
-    {
-        'MeanderingProgrammer/render-markdown.nvim',
-        dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
-        ---@module 'render-markdown'
-        ---@type render.md.UserConfig
-        opts = {},
-    },
-
-    -- Noice
     {
         "folke/noice.nvim",
         event = "VeryLazy",
@@ -66,7 +38,6 @@ return {
         }
     },
 
-    -- Help
     {
         "folke/which-key.nvim",
         event = "VeryLazy",
@@ -83,5 +54,6 @@ return {
     },
 
     { "windwp/nvim-autopairs", config = true, lazy = false },
+
     { "monaqa/dial.nvim" },
 }

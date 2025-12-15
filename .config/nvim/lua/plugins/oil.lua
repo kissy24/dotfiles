@@ -1,4 +1,3 @@
--- e.g. ~/.config/nvim/lua/plugins/oil.lua
 return {
     "stevearc/oil.nvim",
     ---@module 'oil'
@@ -7,8 +6,8 @@ return {
         view_options = { show_hidden = true },
         float = {
             padding = 2,
-            max_width = 80,
-            max_height = 30,
+            max_width = math.floor(vim.o.columns * 0.8),
+            max_height = math.floor(vim.o.lines * 0.7),
             border = "rounded",
             win_options = {
                 winblend = 10,     -- 半透明（浮遊感）
