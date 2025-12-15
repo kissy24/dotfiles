@@ -36,7 +36,7 @@ vim.o.relativenumber = true
 vim.o.expandtab = true
 vim.o.shiftround = true
 vim.o.shiftwidth = 4
-vim.o.showtabline = 2
+vim.o.showtabline = 0
 
 -- 1.4.Indent
 vim.o.autoindent = true

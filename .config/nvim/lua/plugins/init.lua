@@ -6,9 +6,9 @@ return {
             'lewis6991/gitsigns.nvim',
             'nvim-tree/nvim-web-devicons',
         },
+        event = "BufReadPre",
         init = function() vim.g.barbar_auto_setup = false end,
         opts = {},
-        version = '^1.0.0', -- optional: only update when a new 1.x version is released
         keys = {
             { "<Space>h", "<Cmd>BufferPrevious<CR>", mode = "n", { silent = true } },
             { "<Space>l", "<Cmd>BufferNext<CR>",     mode = "n", { silent = true } },
@@ -51,7 +51,18 @@ return {
         opts = {},
         dependencies = {
             "MunifTanjim/nui.nvim",
-            "rcarriga/nvim-notify",
+            {
+                "rcarriga/nvim-notify",
+                config = function()
+                    require("notify").setup({
+                        -- notify.nvim のオプション
+                        background_colour = "#000000",
+                        stages = "fade_in_slide_out",
+                        timeout = 3000,
+                        -- ここに他の notify オプション追加可能
+                    })
+                end,
+            },
         }
     },
 
@@ -72,4 +83,5 @@ return {
     },
 
     { "windwp/nvim-autopairs", config = true, lazy = false },
+    { "monaqa/dial.nvim" },
 }
