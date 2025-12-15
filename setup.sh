@@ -93,6 +93,7 @@ install_for_ubuntu() {
 create_symlinks() {
     local dotfile_sources=(
         "$REPO_ROOT/.zshrc"
+        "$REPO_ROOT/.tmux.conf"
         "$REPO_ROOT/.config/starship.toml"
         "$REPO_ROOT/.config/nvim"
         "$REPO_ROOT/.config/wezterm"
@@ -101,6 +102,7 @@ create_symlinks() {
     )
     local dotfile_dests=(
         "$HOME/.zshrc"
+        "$HOME/.tmux.conf"
         "$HOME/.config/starship.toml"
         "$HOME/.config/nvim"
         "$HOME/.config/wezterm"
