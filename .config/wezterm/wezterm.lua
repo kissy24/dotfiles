@@ -29,8 +29,8 @@ local HOVER_COLOR = '#101216'
 
 -- ウィンドウの設定
 config.window_background_opacity = 0.90
-config.initial_cols = 140
-config.initial_rows = 40
+config.initial_cols = 190
+config.initial_rows = 50
 config.window_decorations = "TITLE | RESIZE"
 config.window_frame = {
     inactive_titlebar_bg = "#101216",
