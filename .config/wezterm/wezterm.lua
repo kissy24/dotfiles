@@ -28,7 +28,8 @@ local BACK_COLOR = '#101216'
 local HOVER_COLOR = '#101216'
 
 -- ウィンドウの設定
-config.window_background_opacity = 0.90
+config.window_background_opacity = 0.75
+config.macos_window_background_blur = 20
 config.initial_cols = 190
 config.initial_rows = 50
 config.window_decorations = "TITLE | RESIZE"
@@ -50,8 +51,8 @@ config.audible_bell = "Disabled"
 
 -- ホットキー設定
 config.keys = {
-    { key = "C", mods = "CTRL|SHIFT", action = wezterm.action.CopyTo("Clipboard") },
-    { key = "V", mods = "CTRL|SHIFT", action = wezterm.action.PasteFrom("Clipboard") },
+    { key = "C", mods = "CTRL", action = wezterm.action.CopyTo("Clipboard") },
+    { key = "V", mods = "CTRL", action = wezterm.action.PasteFrom("Clipboard") },
 }
 
 -- wezterm on
