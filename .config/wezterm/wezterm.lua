@@ -7,8 +7,6 @@ if wezterm.target_triple:find("windows") then
 end
 
 -- カラースキームの設定
--- config.color_scheme = "Tokyo Night Moon"
--- config.color_scheme = "Catppuccin Mocha"
 config.color_scheme = "Github Dark (Gogh)"
 
 -- フォント設定
@@ -22,20 +20,22 @@ config.use_ime = true
 
 -- タブバーの表示オプション(catpputin-mocha の設定を参考にした)
 local HEADER = " "
-local SYMBOL_COLOR = { '#6CA4F8', '#4D4D4D' }
-local FONT_COLOR = { '#E3B341', '#4D4D4D' }
-local BACK_COLOR = '#101216'
-local HOVER_COLOR = '#101216'
+local SYMBOL_COLOR = { '#6CA4F8', 'none' }
+local FONT_COLOR = { '#E3B341', 'none' }
+local BACK_COLOR = 'none'
+local HOVER_COLOR = 'none'
 
 -- ウィンドウの設定
 config.window_background_opacity = 0.75
+config.win32_system_backdrop = 'Acrylic'
 config.macos_window_background_blur = 20
 config.initial_cols = 190
 config.initial_rows = 50
-config.window_decorations = "TITLE | RESIZE"
+config.window_decorations = "RESIZE"
+config.show_new_tab_button_in_tab_bar = false
 config.window_frame = {
-    inactive_titlebar_bg = "#101216",
-    active_titlebar_bg = "#101216",
+    inactive_titlebar_bg = "none",
+    active_titlebar_bg = "none",
 }
 config.show_new_tab_button_in_tab_bar = false
 
