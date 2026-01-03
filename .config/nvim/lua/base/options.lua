@@ -30,7 +30,7 @@ vim.o.showmode = false
 vim.o.termguicolors = true
 vim.o.pumblend = 30
 vim.o.winblend = 30
-vim.o.relativenumber = true
+-- vim.o.relativenumber = true
 
 -- 1.3.Tab
 vim.o.expandtab = true
@@ -61,7 +61,7 @@ vim.o.splitright = true
 -- 1.8.Other
 vim.o.hidden = true
 vim.o.history = 1000
-vim.opt.clipboard:append({ unnamedeplus = true })
+vim.opt.clipboard = "unnamedplus"
 vim.o.mouse = ""
 
 if vim.fn.has('wsl') == 1 then
