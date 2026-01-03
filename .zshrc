@@ -57,6 +57,11 @@ fi
 . "$HOME/.local/bin/env"
 . "$HOME/.cargo/env"
 
+# 特定のPathを通す
+[ -d "$HOME/.npm-global/bin" ] && export PATH="$HOME/.npm-global/bin:$PATH"
+[ -d "$HOME/bin" ] && export PATH="$HOME/bin:$PATH"
+
+
 # uv completion
 if command -v uv &> /dev/null; then
     eval "$(uv generate-shell-completion zsh)"
@@ -77,3 +82,4 @@ fi
 eval "$(starship init zsh)"
 eval "$(sheldon source)"
 eval "$(zoxide init zsh)"
+
