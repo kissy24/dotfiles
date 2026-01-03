@@ -20,22 +20,14 @@ return {
     {
         "folke/noice.nvim",
         event = "VeryLazy",
-        opts = {},
         dependencies = {
             "MunifTanjim/nui.nvim",
             {
                 "rcarriga/nvim-notify",
-                config = function()
-                    require("notify").setup({
-                        -- notify.nvim のオプション
-                        background_colour = "#000000",
-                        stages = "fade_in_slide_out",
-                        timeout = 3000,
-                        -- ここに他の notify オプション追加可能
-                    })
-                end,
+                opts = { background_colour = "#000000" },
             },
-        }
+        },
+        opts = {},
     },
 
     {
