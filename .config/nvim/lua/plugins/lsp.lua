@@ -7,6 +7,9 @@ return {
             "williamboman/mason-lspconfig.nvim",
             "hrsh7th/nvim-cmp",
             "hrsh7th/cmp-nvim-lsp",
+            "hrsh7th/cmp-buffer",
+            "hrsh7th/cmp-path",
+            "hrsh7th/cmp-cmdline",
             "L3MON4D3/LuaSnip",
             "saadparwaiz1/cmp_luasnip",
             "j-hui/fidget.nvim",
@@ -27,6 +30,9 @@ return {
                 },
             })
 
+            -- 共通のcapabilitiesを設定
+            local capabilities = require("cmp_nvim_lsp").default_capabilities()
+
             -- mason-lspconfig の設定
             require("mason-lspconfig").setup({
                 ensure_installed = {
@@ -39,6 +45,55 @@ return {
                     "pyright", -- Python
                     "gopls", -- Go
                 },
+                handlers = {
+                    -- デフォルトハンドラ (設定が不要なサーバー用)
+                    function(server_name)
+                        require("lspconfig")[server_name].setup({
+                            capabilities = capabilities,
+                        })
+                    end,
+
+                    -- Lua LSP (lua_ls) の個別設定
+                    ["lua_ls"] = function()
+                        require("lspconfig").lua_ls.setup({
+                            capabilities = capabilities,
+                            settings = {
+                                Lua = {
+                                    runtime = {
+                                        version = "LuaJIT",
+                                    },
+                                    workspace = {
+                                        checkThirdParty = false,
+                                        library = {
+                                            vim.env.VIMRUNTIME,
+                                        },
+                                    },
+                                    diagnostics = {
+                                        globals = { "vim" },
+                                    },
+                                },
+                            },
+                        })
+                    end,
+
+                    -- Go LSP (gopls) の個別設定
+                    ["gopls"] = function()
+                        require("lspconfig").gopls.setup({
+                            capabilities = capabilities,
+                            settings = {
+                                gopls = {
+                                    completeUnimported = true,
+                                    usePlaceholders = true,
+                                    analyses = {
+                                        unusedparams = true,
+                                        shadow = true,
+                                    },
+                                    staticcheck = true,
+                                },
+                            },
+                        })
+                    end,
+                },
             })
 
             -- LSPのキーマップ設定
@@ -46,8 +101,12 @@ return {
                 callback = function(args)
                     local bufnr = args.buf
                     local client = vim.lsp.get_client_by_id(args.data.client_id)
+                    
                     -- LSP機能を有効にするバッファのオプションを設定
-                    vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
+                    -- omnifuncはlspconfigが自動的に設定することが多いが、明示的に設定しても良い
+                    if client.server_capabilities.completionProvider then
+                        vim.bo[bufnr].omnifunc = "v:lua.vim.lsp.omnifunc"
+                    end
 
                     -- キーマップ設定
                     local opts = { noremap = true, silent = true, buffer = bufnr }
@@ -76,112 +135,16 @@ return {
                             end,
                         })
                     end
+                    
+                    -- lsp_signature の設定 (アタッチ時)
+                    require("lsp_signature").on_attach({
+                        bind = true,
+                        handler_opts = {
+                            border = "rounded"
+                        }
+                    }, bufnr)
                 end,
             })
-
-            -- 共通のcapabilitiesを設定
-            local capabilities = require("cmp_nvim_lsp").default_capabilities()
-
-            -- Lua LSP (lua_ls) の設定
-            vim.lsp.config.lua_ls = {
-                cmd = { "lua-language-server" },
-                filetypes = { "lua" },
-                root_markers = { ".luarc.json", ".luarc.jsonc", ".luacheckrc", ".stylua.toml", "stylua.toml", "selene.toml", "selene.yml", ".git" },
-                capabilities = capabilities,
-                settings = {
-                    Lua = {
-                        runtime = {
-                            version = "LuaJIT",
-                        },
-                        workspace = {
-                            checkThirdParty = false,
-                            library = {
-                                vim.env.VIMRUNTIME,
-                            },
-                        },
-                        diagnostics = {
-                            globals = { "vim" },
-                        },
-                    },
-                },
-            }
-
-            -- Python LSP (pyright) の設定
-            vim.lsp.config.pyright = {
-                cmd = { "pyright-langserver", "--stdio" },
-                filetypes = { "python" },
-                root_markers = { "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt", "Pipfile", "pyrightconfig.json", ".git" },
-                capabilities = capabilities,
-            }
-
-            -- Go LSP (gopls) の設定
-            vim.lsp.config.gopls = {
-                cmd = { "gopls" },
-                filetypes = { "go", "gomod", "gowork", "gotmpl" },
-                root_markers = { "go.work", "go.mod", ".git" },
-                capabilities = capabilities,
-                settings = {
-                    gopls = {
-                        completeUnimported = true,
-                        usePlaceholders = true,
-                        analyses = {
-                            unusedparams = true,
-                            shadow = true,
-                        },
-                        staticcheck = true,
-                    },
-                },
-            }
-
-            -- Markdown LSP (marksman) の設定
-            vim.lsp.config.marksman = {
-                cmd = { "marksman", "server" },
-                filetypes = { "markdown", "markdown.mdx" },
-                root_markers = { ".marksman.toml", ".git" },
-                capabilities = capabilities,
-            }
-
-            -- HTML LSP (html) の設定
-            vim.lsp.config.html = {
-                cmd = { "vscode-html-language-server", "--stdio" },
-                filetypes = { "html", "templ" },
-                root_markers = { "package.json", ".git" },
-                capabilities = capabilities,
-            }
-
-            -- CSS LSP (cssls) の設定
-            vim.lsp.config.cssls = {
-                cmd = { "vscode-css-language-server", "--stdio" },
-                filetypes = { "css", "scss", "less" },
-                root_markers = { "package.json", ".git" },
-                capabilities = capabilities,
-            }
-
-            -- JSON LSP (jsonls) の設定
-            vim.lsp.config.jsonls = {
-                cmd = { "vscode-json-language-server", "--stdio" },
-                filetypes = { "json", "jsonc" },
-                root_markers = { "package.json", ".git" },
-                capabilities = capabilities,
-            }
-
-            -- TypeScript/JavaScript LSP (ts_ls) の設定
-            vim.lsp.config.ts_ls = {
-                cmd = { "typescript-language-server", "--stdio" },
-                filetypes = { "javascript", "javascriptreact", "javascript.jsx", "typescript", "typescriptreact", "typescript.tsx" },
-                root_markers = { "package.json", "tsconfig.json", "jsconfig.json", ".git" },
-                capabilities = capabilities,
-            }
-
-            -- LSPサーバーを有効化
-            vim.lsp.enable("lua_ls")
-            vim.lsp.enable("pyright")
-            vim.lsp.enable("gopls")
-            vim.lsp.enable("marksman")
-            vim.lsp.enable("html")
-            vim.lsp.enable("cssls")
-            vim.lsp.enable("jsonls")
-            vim.lsp.enable("ts_ls")
 
             -- nvim-cmp の設定
             local cmp = require("cmp")
@@ -203,10 +166,12 @@ return {
                 sources = cmp.config.sources({
                     { name = 'nvim_lsp' },
                     { name = 'luasnip' },
+                }, {
+                    { name = 'buffer' },
                 }),
             })
 
-            -- コマンドライン補完 (任意)
+            -- コマンドライン補完
             cmp.setup.cmdline({ '/', '?' }, {
                 mapping = cmp.mapping.preset.cmdline(),
                 sources = {
@@ -222,7 +187,7 @@ return {
                 })
             })
 
-            -- LSPの進捗表示 (fidget.nvim を使う場合)
+            -- LSPの進捗表示
             require("fidget").setup({})
         end,
     },
