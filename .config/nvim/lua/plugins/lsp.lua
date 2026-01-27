@@ -188,7 +188,13 @@ return {
             })
 
             -- LSPの進捗表示
-            require("fidget").setup({})
+            require("fidget").setup({
+                notification = {
+                    window = {
+                        avoid = { "NvimTree" },
+                    },
+                },
+            })
         end,
     },
 }
