@@ -38,6 +38,7 @@ alias ls="ls -F --color=auto"
 alias ll="ls -alFh --color=auto"
 alias la="ls -aF --color=auto"
 alias l="ls -lFh --color=auto"
+alias lg="lazygit"
 alias tx="tmux new-session \; split-window -h \; select-pane -L \; resize-pane -x 70%"
 
 
