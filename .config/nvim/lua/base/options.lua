@@ -19,7 +19,7 @@ vim.g.loaded_netrwFileHandlers = 1
 -- 1.2.Display
 vim.o.number = true
 vim.o.title = true
--- vim.o.cursorline = true
+vim.o.cursorline = true
 -- vim.o.cursorcolumn = true
 vim.o.list = true
 vim.o.listchars = "tab:»･,trail:･,space:･"
