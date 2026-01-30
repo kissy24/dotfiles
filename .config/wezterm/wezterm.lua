@@ -26,7 +26,7 @@ local BACK_COLOR = 'none'
 local HOVER_COLOR = 'none'
 
 -- ウィンドウの設定
-config.window_background_opacity = 0.75
+config.window_background_opacity = 0.8
 config.win32_system_backdrop = 'Acrylic'
 config.macos_window_background_blur = 20
 config.initial_cols = 180
