@@ -36,14 +36,14 @@ return {
             -- mason-lspconfig の設定
             require("mason-lspconfig").setup({
                 ensure_installed = {
-                    "lua_ls", -- Lua
-                    "ts_ls", -- TypeScript/JavaScript
-                    "html", -- HTML
-                    "cssls", -- CSS
-                    "jsonls", -- JSON
+                    "lua_ls",   -- Lua
+                    "ts_ls",    -- TypeScript/JavaScript
+                    "html",     -- HTML
+                    "cssls",    -- CSS
+                    "jsonls",   -- JSON
                     "marksman", -- Markdown
-                    "pyright", -- Python
-                    "gopls", -- Go
+                    "pyright",  -- Python
+                    "gopls",    -- Go
                 },
                 handlers = {
                     -- デフォルトハンドラ (設定が不要なサーバー用)
@@ -101,7 +101,7 @@ return {
                 callback = function(args)
                     local bufnr = args.buf
                     local client = vim.lsp.get_client_by_id(args.data.client_id)
-                    
+
                     -- LSP機能を有効にするバッファのオプションを設定
                     -- omnifuncはlspconfigが自動的に設定することが多いが、明示的に設定しても良い
                     if client.server_capabilities.completionProvider then
@@ -125,17 +125,37 @@ return {
                     vim.keymap.set('n', ']d', vim.diagnostic.goto_next, opts)
                     vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, opts)
 
-                    -- 保存時に自動フォーマット
-                    if client and client.supports_method("textDocument/formatting") then
+                    -- 保存時に import を整理してからフォーマットする（LSP が対応していれば）
+                    if client then
+                        local group = vim.api.nvim_create_augroup("LspFormatAndOrganize_" .. bufnr, { clear = true })
                         vim.api.nvim_create_autocmd("BufWritePre", {
-                            group = vim.api.nvim_create_augroup("Format_" .. bufnr, { clear = true }),
+                            group = group,
                             buffer = bufnr,
                             callback = function()
-                                vim.lsp.buf.format({ bufnr = bufnr })
+                                -- 1) source.organizeImports を要求して適用（対応していれば）
+                                local params = vim.lsp.util.make_range_params()
+                                params.context = { only = { "source.organizeImports" } }
+
+                                local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params, 1000)
+                                for _, res in pairs(results or {}) do
+                                    for _, r in pairs(res.result or {}) do
+                                        if r.edit then
+                                            vim.lsp.util.apply_workspace_edit(r.edit, "utf-8")
+                                        elseif r.command then
+                                            vim.lsp.buf.execute_command(r.command)
+                                        end
+                                    end
+                                end
+
+                                -- 2) その後フォーマット（必要なら同期で）
+                                if client.supports_method and client.supports_method("textDocument/formatting") then
+                                    vim.lsp.buf.format({ bufnr = bufnr })
+                                end
                             end,
                         })
                     end
-                    
+
+
                     -- lsp_signature の設定 (アタッチ時)
                     require("lsp_signature").on_attach({
                         bind = true,
@@ -161,7 +181,8 @@ return {
                     ['<C-f>'] = cmp.mapping.scroll_docs(4),
                     ['<C-Space>'] = cmp.mapping.complete(),
                     ['<C-e>'] = cmp.mapping.abort(),
-                    ['<CR>'] = cmp.mapping.confirm({ select = true }),
+                    ['<CR>'] = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
+
                 }),
                 sources = cmp.config.sources({
                     { name = 'nvim_lsp' },
@@ -198,3 +219,4 @@ return {
         end,
     },
 }
+
