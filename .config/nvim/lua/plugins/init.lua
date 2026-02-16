@@ -53,9 +53,7 @@ return {
         "kissy24/render-md.nvim",
         dependencies = { "nvim-treesitter/nvim-treesitter" },
         config = function()
-            require("render-md").setup({
-                -- オプション設定（任意）
-            })
+            require("render-md").setup({})
         end
     }
 }
