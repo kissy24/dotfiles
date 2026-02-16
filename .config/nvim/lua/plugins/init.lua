@@ -48,4 +48,14 @@ return {
     { "windwp/nvim-autopairs", config = true, lazy = false },
 
     { "monaqa/dial.nvim" },
+
+    {
+        "kissy24/render-md.nvim",
+        dependencies = { "nvim-treesitter/nvim-treesitter" },
+        config = function()
+            require("render-md").setup({
+                -- オプション設定（任意）
+            })
+        end
+    }
 }
