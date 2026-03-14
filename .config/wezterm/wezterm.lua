@@ -12,7 +12,7 @@ config.color_scheme = "Github Dark (Gogh)"
 -- フォント設定
 config.font = wezterm.font("HackGen Console NF")
 if wezterm.target_triple:find("darwin") then
-    config.font_size = 13
+    config.font_size = 13.5
 else
     config.font_size = 11
 end
@@ -32,7 +32,6 @@ config.macos_window_background_blur = 20
 config.initial_cols = 180
 config.initial_rows = 47
 config.window_decorations = "RESIZE"
-config.show_new_tab_button_in_tab_bar = false
 config.show_new_tab_button_in_tab_bar = false
 
 -- カーソルスタイルをバーに設定
