@@ -20,7 +20,6 @@ vim.g.loaded_netrwFileHandlers = 1
 vim.o.number = true
 vim.o.title = true
 vim.o.cursorline = true
--- vim.o.cursorcolumn = true
 vim.o.list = true
 vim.o.listchars = "tab:»･,trail:･,space:･"
 vim.o.wrap = true
@@ -30,7 +29,7 @@ vim.o.showmode = false
 vim.o.termguicolors = true
 vim.o.pumblend = 30
 vim.o.winblend = 30
--- vim.o.relativenumber = true
+vim.o.winbar = "%f"
 
 -- 1.3.Tab
 vim.o.expandtab = true

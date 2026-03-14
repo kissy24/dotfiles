@@ -50,11 +50,11 @@ return {
     { "monaqa/dial.nvim" },
 
     {
-        "kissy24/render-md.nvim",
-        dependencies = { "nvim-treesitter/nvim-treesitter" },
-        config = function()
-            require("render-md").setup({})
-        end
+        'MeanderingProgrammer/render-markdown.nvim',
+        dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' }, -- if you use the mini.nvim suite
+        ---@module 'render-markdown'
+        ---@type render.md.UserConfig
+        opts = {},
     },
 
     {
