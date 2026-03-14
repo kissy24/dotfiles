@@ -10,11 +10,11 @@ end
 config.color_scheme = "Github Dark (Gogh)"
 
 -- フォント設定
-config.font = wezterm.font("HackGen Console NF", { weight = "Bold", italic = false })
+config.font = wezterm.font("HackGen Console NF")
 if wezterm.target_triple:find("darwin") then
-    config.font_size = 13.5
-else
     config.font_size = 13
+else
+    config.font_size = 11
 end
 config.use_ime = true
 
