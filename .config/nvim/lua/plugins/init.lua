@@ -55,5 +55,12 @@ return {
         config = function()
             require("render-md").setup({})
         end
+    },
+
+    {
+        "kissy24/render-csv.nvim",
+        config = function()
+            require("render-csv").setup({})
+        end
     }
 }
