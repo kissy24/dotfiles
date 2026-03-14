@@ -21,7 +21,7 @@ return {
                 lualine_y = { 'progress' },
                 lualine_z = { 'location' },
             },
-            extensions = { 'nvim-tree', 'lazy', 'mason', 'trouble', 'toggleterm', 'oil' }
+            extensions = { 'nvim-tree', 'lazy', 'mason', 'trouble', 'toggleterm' }
         }
         require('lualine').setup(config)
     end,
