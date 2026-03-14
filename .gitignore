@@ -8,3 +8,4 @@ nvim/plugin/
 .config/gh/
 fish_variables
 .DS_Store
+lazy-lock.json
