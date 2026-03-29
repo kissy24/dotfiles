@@ -16,7 +16,7 @@ install_for_macos() {
     fi
     
     echo "Installing packages via Homebrew..."
-    brew install git starship rust lazygit node ripgrep fd
+    brew install git starship rust lazygit node ripgrep fd gh tmux zoxide fzf go
 
     echo "Installing Neovim (nightly) for macOS..."
     local temp_dir
@@ -41,11 +41,6 @@ install_for_macos() {
 
     echo "Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    # The 'uv' installer places the binary in ~/.cargo/bin or ~/.local/bin
-    # Ensure ~/.local/bin is in PATH for subsequent commands if needed,
-    # but typically the user's shell config handles this for new sessions.
-    # If you need 'uv' immediately in this script, uncomment the next line:
-    # source "$HOME/.local/bin/env"
 }
 
 install_for_ubuntu() {
@@ -55,7 +50,20 @@ install_for_ubuntu() {
     sudo apt update
     
     echo "Installing packages via apt..."
-    sudo apt install -y git curl build-essential pkg-config libssl-dev nodejs npm ripgrep fd-find
+    sudo apt install -y git curl build-essential pkg-config libssl-dev nodejs npm ripgrep fd-find tmux zoxide fzf golang-go
+
+    echo "Installing GitHub CLI (gh)..."
+    if ! command -v gh &> /dev/null; then
+        (
+            type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+            sudo mkdir -p -m 755 /etc/apt/keyrings
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
+            sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.list > /dev/null
+            sudo apt update
+            sudo apt install gh -y
+        )
+    fi
 
     echo "Installing and configuring latest Node.js via n..."
     sudo npm install -g n
@@ -82,12 +90,6 @@ install_for_ubuntu() {
 
     echo "Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    # The 'uv' installer places the binary in ~/.cargo/bin or ~/.local/bin
-    # Ensure ~/.local/bin is in PATH for subsequent commands if needed,
-    # but typically the user's shell config handles this for new sessions.
-    # If you need 'uv' immediately in this script, uncomment the next line:
-    # source "$HOME/.local/bin/env"
-
 }
 
 create_symlinks() {
@@ -99,6 +101,7 @@ create_symlinks() {
         "$REPO_ROOT/.config/wezterm"
         "$REPO_ROOT/.config/sheldon"
         "$REPO_ROOT/.config/lazygit"
+        "$REPO_ROOT/.config/gh"
     )
     local dotfile_dests=(
         "$HOME/.zshrc"
@@ -108,12 +111,19 @@ create_symlinks() {
         "$HOME/.config/wezterm"
         "$HOME/.config/sheldon"
         "$HOME/.config/lazygit"
+        "$HOME/.config/gh"
     )
 
     echo "Creating symlinks..."
     for i in "${!dotfile_sources[@]}"; do
         src="${dotfile_sources[$i]}"
         dest="${dotfile_dests[$i]}"
+        
+        if [ ! -e "$src" ]; then
+            echo "- Skipping $src (does not exist in repo)"
+            continue
+        fi
+
         mkdir -p "$(dirname "$dest")"
         if [ -e "$dest" ] || [ -L "$dest" ]; then
             if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
@@ -165,6 +175,11 @@ create_symlinks
 
 # 4. Post-installation steps
 echo "--- Running post-installation steps ---"
+
+if ! command -v bun &> /dev/null; then
+    echo "Installing bun..."
+    curl -fsSL https://bun.sh/install | bash
+fi
 
 if command -v cargo &> /dev/null; then
     echo "Installing/Updating sheldon via cargo..."
