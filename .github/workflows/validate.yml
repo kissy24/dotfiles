@@ -44,13 +44,25 @@ jobs:
           # Bun install might need manual PATH update in CI, skipping strict check here
 
           echo "Verifying symlinks..."
-          test -L "$HOME/.zshrc"
-          test -L "$HOME/.config/nvim"
-          test -L "$HOME/.config/gh"
-          test -L "$HOME/.config/wezterm"
+          verify_link() {
+            if [ -L "$1" ]; then
+              echo "✓ Link exists: $1 -> $(readlink "$1")"
+            else
+              echo "✗ Link missing: $1"
+              return 1
+            fi
+          }
+
+          verify_link "$HOME/.zshrc"
+          verify_link "$HOME/.tmux.conf"
+          verify_link "$HOME/.config/starship.toml"
+          verify_link "$HOME/.config/nvim"
+          verify_link "$HOME/.config/wezterm"
+          verify_link "$HOME/.config/sheldon"
+          verify_link "$HOME/.config/lazygit"
+          verify_link "$HOME/.config/gh"
 
           echo "Setup verification successful!"
-
       - name: Run uninstall script
         run: echo "y" | ./uninstall.sh
 
