@@ -25,7 +25,10 @@ jobs:
         run: chmod +x ./setup.sh ./uninstall.sh
 
       - name: Run setup script
-        run: ./setup.sh
+        run: |
+          ./setup.sh | tee setup_log.txt
+          echo "Listing .config to see if everything is there:"
+          ls -laR .config
 
       - name: Verify installation and symlinks
         run: |
@@ -41,7 +44,6 @@ jobs:
           command -v fzf
           command -v go
           command -v uv
-          # Bun install might need manual PATH update in CI, skipping strict check here
 
           echo "Verifying symlinks..."
           verify_link() {
@@ -49,6 +51,9 @@ jobs:
               echo "✓ Link exists: $1 -> $(readlink "$1")"
             else
               echo "✗ Link missing: $1"
+              if grep -q "Skipping.*$(basename "$1")" setup_log.txt; then
+                echo "  (Setup script skipped this link. Check the source directory exists in repo.)"
+              fi
               return 1
             fi
           }

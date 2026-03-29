@@ -119,8 +119,8 @@ create_symlinks() {
         src="${dotfile_sources[$i]}"
         dest="${dotfile_dests[$i]}"
         
-        if [ ! -e "$src" ]; then
-            echo "- Skipping $src (does not exist in repo)"
+        if [ ! -e "$src" ] && [ ! -d "$src" ]; then
+            echo "- Skipping $src (source not found in $REPO_ROOT)"
             continue
         fi
 
