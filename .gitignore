@@ -5,7 +5,8 @@ nvim/plugin/
 .config/fish/functions
 .config/fish/completions
 .config/fish/conf.d
-.config/gh/
+# .config/gh/ is now allowed, but sensitive files should be ignored if needed
+.config/gh/hosts.yml
 fish_variables
 .DS_Store
 lazy-lock.json
