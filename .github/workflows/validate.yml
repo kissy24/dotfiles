@@ -21,8 +21,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Make setup.sh executable
-        run: chmod +x ./setup.sh
+      - name: Make scripts executable
+        run: chmod +x ./setup.sh ./uninstall.sh
 
       - name: Run setup script
         run: ./setup.sh
@@ -35,9 +35,33 @@ jobs:
           command -v starship
           command -v lazygit
           command -v sheldon
-          
+          command -v gh
+          command -v tmux
+          command -v zoxide
+          command -v fzf
+          command -v go
+          command -v uv
+          # Bun install might need manual PATH update in CI, skipping strict check here
+
           echo "Verifying symlinks..."
           test -L "$HOME/.zshrc"
           test -L "$HOME/.config/nvim"
-          
-          echo "Verification successful!"
+          test -L "$HOME/.config/gh"
+          test -L "$HOME/.config/wezterm"
+
+          echo "Setup verification successful!"
+
+      - name: Run uninstall script
+        run: echo "y" | ./uninstall.sh
+
+      - name: Verify uninstallation and cleanup
+        run: |
+          set -e
+          echo "Verifying symlinks are removed..."
+          ! test -L "$HOME/.zshrc"
+          ! test -L "$HOME/.config/nvim"
+
+          # Note: We don't strictly check for tool removal of all packages 
+          # because some might be pre-installed in GitHub Runner images (like git, curl, etc.)
+
+          echo "Uninstallation verification successful!"
