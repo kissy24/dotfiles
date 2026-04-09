@@ -1,5 +1,4 @@
 return {
-    { "dinhhuy258/git.nvim",     opts = {} },
     { "lewis6991/gitsigns.nvim", opts = {} },
     {
         "sindrets/diffview.nvim",
