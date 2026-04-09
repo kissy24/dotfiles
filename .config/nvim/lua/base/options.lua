@@ -27,8 +27,6 @@ vim.o.textwidth = 120
 vim.o.breakindent = true
 vim.o.showmode = false
 vim.o.termguicolors = true
-vim.o.pumblend = 30
-vim.o.winblend = 30
 vim.o.winbar = "%f"
 
 -- 1.3.Tab
