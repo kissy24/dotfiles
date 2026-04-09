@@ -1,7 +1,7 @@
 default_install_hook_types: [pre-commit, commit-msg]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: end-of-file-fixer
       - id: trailing-whitespace
@@ -12,7 +12,7 @@ repos:
         stages: [pre-commit]
       - id: check-added-large-files
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
+    rev: v0.15.9
     hooks:
       - id: ruff
         types_or: [python, pyi]
@@ -21,7 +21,7 @@ repos:
         types_or: [python, pyi]
         stages: [pre-commit]
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v3.6.0
+    rev: v4.4.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
