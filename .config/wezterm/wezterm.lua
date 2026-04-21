@@ -20,8 +20,8 @@ config.use_ime = true
 
 -- タブバーの表示オプション(catpputin-mocha の設定を参考にした)
 local HEADER = " "
-local SYMBOL_COLOR = { '#58a6ff', 'none' }
-local FONT_COLOR = { '#c9d1d9', 'none' }
+local SYMBOL_COLOR = { '#58a6ff', '#484f58' }
+local FONT_COLOR = { '#c9d1d9', '#8b949e' }
 local BACK_COLOR = 'none'
 local HOVER_COLOR = 'none'
 
