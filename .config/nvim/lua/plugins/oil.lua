@@ -1,21 +1,12 @@
-{
+return {
   'stevearc/oil.nvim',
-  ---@module 'oil'
-  ---@type oil.SetupOpts
+  dependencies = { "nvim-tree/nvim-web-devicons" },
   opts = {
-    -- Default explorer
     default_file_explorer = true,
-    -- Id is used for windows or buffers to identify it as oil
-    columns = {
-      "icon",
-      -- "permissions",
-      -- "size",
-      -- "mtime",
-    },
-    -- Buffer-local options to use for oil buffers
+    columns = { "icon" },
     win_options = {
       wrap = false,
-      signcolumn = "no",
+      signcolumn = "yes",
       cursorcolumn = false,
       foldcolumn = "0",
       spell = false,
@@ -23,38 +14,40 @@
       conceallevel = 3,
       concealcursor = "nvic",
     },
-    -- Send deleted files to the trash instead of permanently deleting them
     delete_to_trash = true,
-    -- Skip the confirmation popup for simple operations (:w)
     skip_confirm_for_simple_edits = true,
-    -- Selecting a new window will focus it
     view_options = {
-      -- Show files and directories that start with "."
       show_hidden = true,
-      -- This function defines what is considered a "hidden" file
-      is_hidden_file = function(name, bufnr)
-        return vim.startswith(name, ".")
-      end,
-      -- This function defines what will never be shown, even when `show_hidden` is set
-      is_always_hidden_file = function(name, bufnr)
-        return false
-      end,
     },
-    -- Configuration for the floating window in oil.open_float
-    float = {
-      -- Padding around the floating window
-      padding = 2,
-      max_width = 0,
-      max_height = 0,
-      border = "rounded",
-      win_options = {
-        winblend = 0,
-      },
-    },
-    -- Keymaps for nvim-tree like feel
     keymaps = {
       ["g?"] = "actions.show_help",
-      ["<CR>"] = "actions.select",
+      -- Enterの挙動をカスタマイズ
+      ["<CR>"] = {
+        desc = "Open file in the window to the right",
+        callback = function()
+          local oil = require("oil")
+          local entry = oil.get_cursor_entry()
+          if not entry then
+            return
+          end
+
+          if entry.type == "directory" then
+            -- ディレクトリならそのままoil内で展開
+            oil.select()
+          else
+            -- ファイルなら右側のウィンドウに移動して開く
+            local path = oil.get_current_dir() .. entry.name
+            vim.cmd("wincmd l") -- 右のウィンドウへ移動
+            
+            -- もし移動先もoilバッファだった（＝右側にウィンドウがなかった）場合はsplitを作る
+            if vim.bo.filetype == "oil" then
+              vim.cmd("vsplit")
+            end
+            
+            vim.cmd("edit " .. vim.fn.fnameescape(path))
+          end
+        end,
+      },
       ["<C-s>"] = "actions.select_vsplit",
       ["<C-h>"] = "actions.select_split",
       ["<C-t>"] = "actions.select_tab",
@@ -72,10 +65,32 @@
       ["g\\"] = "actions.toggle_trash",
     },
   },
-  dependencies = { "nvim-tree/nvim-web-devicons" },
-  -- Optional: Keymap to open oil
   keys = {
-    { "-", "<cmd>Oil<cr>", desc = "Open parent directory" },
-    { "<leader>e", "<cmd>Oil --float<cr>", desc = "Open oil (float)" },
+    {
+      "<leader>e",
+      function()
+        local oil = require("oil")
+        local found_win = nil
+        
+        -- 全てのウィンドウをチェックして oil バッファを探す
+        for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+          local buf = vim.api.nvim_win_get_buf(win)
+          if vim.bo[buf].filetype == "oil" then
+            found_win = win
+            break
+          end
+        end
+
+        if found_win then
+          -- oil バッファが見つかったらそのウィンドウを閉じる
+          vim.api.nvim_win_close(found_win, true)
+        else
+          -- 見つからなければ新しくサイドバーとして開く
+          vim.cmd("topleft vsplit | vertical resize 30")
+          oil.open()
+        end
+      end,
+      desc = "Toggle Oil sidebar",
+    },
   },
 }
