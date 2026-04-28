@@ -13,4 +13,4 @@ require("lazy").setup({
         hererocks = false,
     },
 })
-vim.keymap.set("n", "Lh", "<cmd>Lazy home<CR>")
+vim.keymap.set("n", "<leader>lh", "<cmd>Lazy home<CR>")
