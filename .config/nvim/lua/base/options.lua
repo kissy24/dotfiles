@@ -56,6 +56,8 @@ vim.o.splitbelow = true
 vim.o.splitright = true
 
 -- 1.8.Other
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
 vim.o.hidden = true
 vim.o.history = 1000
 vim.opt.clipboard = "unnamedplus"
