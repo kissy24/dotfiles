@@ -10,12 +10,12 @@ vim.keymap.set("n", "<C-k>", "<C-w>k")
 vim.keymap.set("n", "<C-l>", "<C-w>l")
 
 -- 2.3.Split
-vim.keymap.set('n', 'ss', ':split<Return><C-w>w')
-vim.keymap.set('n', 'sv', ':vsplit<Return><C-w>w')
+vim.keymap.set('n', '<leader>ss', ':split<Return><C-w>w')
+vim.keymap.set('n', '<leader>sv', ':vsplit<Return><C-w>w')
 
 -- 2.4.YankRegister
 vim.keymap.set("n", "pp", "\"0p")
 vim.keymap.set("n", "PP", "\"0P")
 
 -- 2.5.CheckHealth
-vim.keymap.set("n", "ch", "<cmd>checkhealth<CR>")
+vim.keymap.set("n", "<leader>ch", "<cmd>checkhealth<CR>")
