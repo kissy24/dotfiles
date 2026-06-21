@@ -26,12 +26,12 @@ local BACK_COLOR = 'none'
 local HOVER_COLOR = 'none'
 
 -- ウィンドウの設定
-config.window_background_opacity = 0.9
-config.win32_system_backdrop = 'Acrylic'
-config.macos_window_background_blur = 20
+-- config.window_background_opacity = 0.9
+-- config.win32_system_backdrop = 'Acrylic'
+-- config.macos_window_background_blur = 20
 config.initial_cols = 190
 config.initial_rows = 50
-config.window_decorations = "RESIZE"
+config.window_decorations = "TITLE|RESIZE"
 config.show_new_tab_button_in_tab_bar = false
 
 -- カーソルスタイルをバーに設定
