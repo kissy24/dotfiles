@@ -1,16 +1,19 @@
 return {
     {
-        'projekt0n/github-nvim-theme',
-        name = 'github-theme',
+        "catppuccin/nvim",
+        name = "catppuccin",
         lazy = false,
         priority = 1000,
         config = function()
-            require('github-theme').setup({
-                options = {
+            require("catppuccin").setup({
+                flavour = "mocha",
+                transparent_background = true,
+                float = {
                     transparent = true,
-                }
+                },
             })
-            vim.cmd([[colorscheme github_dark_dimmed]])
+
+            vim.cmd.colorscheme("catppuccin-mocha")
         end,
     },
     { "lewis6991/gitsigns.nvim", opts = {} },

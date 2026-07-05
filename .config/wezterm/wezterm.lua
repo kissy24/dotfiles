@@ -7,7 +7,7 @@ if wezterm.target_triple:find("windows") then
 end
 
 -- カラースキームの設定
-config.color_scheme = "Github Dark (Gogh)"
+config.color_scheme = 'Catppuccin Mocha'
 
 -- フォント設定
 config.font = wezterm.font("HackGen Console NF")
@@ -16,47 +16,47 @@ if wezterm.target_triple:find("darwin") then
 else
     config.font_size = 11
 end
-config.use_ime = true
+config.use_ime                        = true
 
 -- タブバーの表示オプション(catpputin-mocha の設定を参考にした)
-local HEADER = " "
-local SYMBOL_COLOR = { '#58a6ff', '#484f58' }
-local FONT_COLOR = { '#c9d1d9', '#8b949e' }
-local BACK_COLOR = 'none'
-local HOVER_COLOR = 'none'
+local HEADER                          = " "
+local SYMBOL_COLOR                    = { "#cba6f7", "#585b70" }
+local FONT_COLOR                      = { "#cdd6f4", "#9399b2" }
+local BACK_COLOR                      = 'none'
+local HOVER_COLOR                     = 'none'
 
 -- ウィンドウの設定
-config.window_background_opacity = 0.9
-config.win32_system_backdrop = 'Acrylic'
-config.macos_window_background_blur = 20
-config.initial_cols = 190
-config.initial_rows = 50
-config.window_decorations = "RESIZE"
+config.window_background_opacity      = 0.8
+config.win32_system_backdrop          = 'Acrylic'
+config.macos_window_background_blur   = 20
+config.initial_cols                   = 160
+config.initial_rows                   = 45
+config.window_decorations             = "RESIZE"
 config.show_new_tab_button_in_tab_bar = false
 
 -- カーソルスタイルをバーに設定
-config.default_cursor_style = "BlinkingBar"
+config.default_cursor_style           = "BlinkingBar"
 
 -- 簡易的なアニメーション効果
-config.animation_fps = 60
-config.cursor_blink_rate = 500
+config.animation_fps                  = 60
+config.cursor_blink_rate              = 500
 
 -- ベルの設定
-config.audible_bell = "Disabled"
+config.audible_bell                   = "Disabled"
 
 -- ホットキー設定
-config.keys = {
+config.keys                           = {
     { key = "C", mods = "CTRL", action = wezterm.action.CopyTo("Clipboard") },
     { key = "V", mods = "CTRL", action = wezterm.action.PasteFrom("Clipboard") },
 }
 
-config.window_frame = {
+config.window_frame                   = {
     inactive_titlebar_bg = "none",
     active_titlebar_bg = "none",
 }
 
-config.window_background_gradient = {
-    colors = { "#22272e", "#1c2128" },
+config.window_background_gradient     = {
+    colors = { "#181825", "#11111b" },
 }
 
 wezterm.on('format-tab-title', function(tab, hover)
