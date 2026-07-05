@@ -11,24 +11,3 @@ github = "zsh-users/zsh-syntax-highlighting"
 [plugins.zsh-history-substring-search]
 github = "zsh-users/zsh-history-substring-search"
 
-# 便利ツール
-[plugins.fzf]
-github = "junegunn/fzf"
-
-# 補完機能
-[plugins.zsh-completions]
-github = "zsh-users/zsh-completions"
-
-# Git関連
-[plugins.git]
-github = "ohmyzsh/ohmyzsh"
-dir = "plugins/git"
-
-# 追加の便利プラグイン
-[plugins.colored-man-pages]
-github = "ohmyzsh/ohmyzsh"
-dir = "plugins/colored-man-pages"
-
-[plugins.extract]
-github = "ohmyzsh/ohmyzsh"
-dir = "plugins/extract"
