@@ -79,8 +79,14 @@ The GitHub Actions workflow validates the scripts on Ubuntu and macOS. Local
 checks are installed through uv during setup:
 
 ```sh
+./scripts/smoke-test.sh
 pre-commit run --all-files
 ```
+
+The smoke test exercises CLI startup, ripgrep and fzf searches, a tmux session,
+zoxide database operations, Bun/Go/Python execution, and a TypeScript Language
+Server attachment inside headless Neovim. GUI rendering and GitHub authentication
+remain manual checks.
 
 ## License
 

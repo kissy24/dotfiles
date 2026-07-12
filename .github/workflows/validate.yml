@@ -63,7 +63,19 @@ jobs:
             test -L "$path"
           done
 
-          nvim --headless "+lua assert(vim.fn.executable('bun') == 1)" +qa
+      - name: Run functional smoke tests
+        shell: bash
+        run: |
+          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          export PATH="$HOME/.local/bin:$PATH"
+          ./scripts/smoke-test.sh
+
+      - name: Run repository checks
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
           pre-commit run --all-files
 
       - name: Verify safe conflict behavior
