@@ -25,7 +25,10 @@ jobs:
           bash -n setup.sh uninstall.sh
           ./setup.sh --help
           ./uninstall.sh --help
-          ! grep -Eq '^brew "(rust|node|fd)"' Brewfile
+          if grep -Eq '^brew "(rust|node|fd)"' Brewfile; then
+            echo "Brewfile contains a removed dependency." >&2
+            exit 1
+          fi
           grep -q '^brew "bun"' Brewfile
           grep -q '^brew "neovim"' Brewfile
 
@@ -96,7 +99,7 @@ jobs:
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           fi
           ./uninstall.sh
-          ! test -L "$HOME/.zshrc"
-          ! test -L "$HOME/.config/nvim"
+          test ! -L "$HOME/.zshrc"
+          test ! -L "$HOME/.config/nvim"
           brew list --formula neovim
           brew list --formula bun

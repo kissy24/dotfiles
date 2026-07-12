@@ -11,15 +11,15 @@ repos:
       - id: check-json
         stages: [pre-commit]
       - id: check-added-large-files
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.9
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
     hooks:
-      - id: ruff
-        types_or: [python, pyi]
-        args: [--fix]
-      - id: ruff-format
-        types_or: [python, pyi]
-        stages: [pre-commit]
+      - id: shellcheck
+        exclude: ^\.zshrc$
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.4.0
     hooks:
