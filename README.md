@@ -3,114 +3,90 @@
 [![License: MIT](https://img.shields.io/github/license/kissy24/dotfiles)](LICENSE)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/kissy24/dotfiles)
 
-Personal development environment for macOS and Ubuntu. The setup script installs the
-command-line tools used by these dotfiles and links the configuration files into
+Personal development environment for macOS and Ubuntu/WSL. Homebrew installs the
+shared command-line tools and the setup script links the configuration files into
 `$HOME`.
 
-## Supported environments
+## Requirements
 
-- macOS (Homebrew is required)
-- Ubuntu and other Debian-based Linux distributions that provide `apt`
-- x86_64 (the Neovim downloads in `setup.sh` are architecture-specific)
+- macOS or an Ubuntu/Debian environment with `apt-get`
+- Zsh and WezTerm
+- `HackGen Console NF`
+- Homebrew on macOS
 
-Zsh and WezTerm must already be installed. On Windows, the WezTerm configuration can
-launch `Ubuntu-24.04` in WSL, but the setup script itself must be run inside macOS or
-Linux.
-
-## Included tools
-
-| Category | Tools |
-| --- | --- |
-| Terminal | WezTerm, tmux |
-| Shell | Zsh, Starship, Sheldon, zoxide, fzf |
-| Editor | Neovim (nightly on macOS, latest AppImage on Linux) |
-| Git | Git, GitHub CLI, Lazygit |
-| Languages and runtimes | Bun, Go, Rust, uv |
-| Search | ripgrep, fd |
-
-Neovim uses `lazy.nvim` and includes LSP support, completion, Telescope search, Oil
-file navigation, Git integrations, and the Catppuccin Mocha theme. Mason installs
-language servers for Lua, TypeScript/JavaScript, HTML, CSS, JSON, Markdown, Python,
-and Go.
-
-## Managed configuration
-
-```text
-.
-├── .config
-│   ├── gh
-│   ├── lazygit
-│   ├── nvim
-│   │   └── lua
-│   │       ├── base
-│   │       └── plugins
-│   ├── sheldon
-│   ├── wezterm
-│   └── starship.toml
-├── .github
-│   └── workflows
-├── .tmux.conf
-├── .zshrc
-├── setup.sh
-└── uninstall.sh
-```
-
-`setup.sh` creates the following symbolic links:
-
-| Repository source | Destination |
-| --- | --- |
-| `.zshrc` | `~/.zshrc` |
-| `.tmux.conf` | `~/.tmux.conf` |
-| `.config/starship.toml` | `~/.config/starship.toml` |
-| `.config/nvim` | `~/.config/nvim` |
-| `.config/wezterm` | `~/.config/wezterm` |
-| `.config/sheldon` | `~/.config/sheldon` |
-| `.config/lazygit` | `~/.config/lazygit` |
-| `.config/gh` | `~/.config/gh` |
-
-If a destination already exists, it is moved to the same path with a `.bak` suffix
-before the link is created. GitHub CLI credentials in `.config/gh/hosts.yml` are not
-tracked.
+On Ubuntu, the setup script installs Homebrew and its apt prerequisites. Zsh,
+WezTerm, and the font must be installed separately.
 
 ## Installation
 
-Install [WezTerm](https://wezterm.org/) and Zsh first. On macOS, also install
-[Homebrew](https://brew.sh/). Then run:
+Install the complete environment with:
 
 ```sh
 git clone https://github.com/kissy24/dotfiles.git
 cd dotfiles
-bash ./setup.sh
+./setup.sh
 ```
 
-The script installs system packages, so it may request `sudo`. It then creates the
-links, installs Bun and Sheldon, synchronizes Neovim plugins, and locks Sheldon
-plugins. Restart the terminal after it completes.
+Existing dotfiles are skipped by default. Use `./setup.sh --force` to replace
+them with managed symbolic links. This permanently removes the paths being
+replaced, so review them first.
 
-The terminal configuration expects the `HackGen Console NF` font. Install it
-separately if it is not already available.
+Package declarations live in `Brewfile`, `packages/apt.txt`, and
+`packages/bun-lsp/package.json`. Sheldon and Mason
+dependencies remain in their respective configuration files.
+
+## Included environment
+
+- Starship, Sheldon, zoxide, and fzf integration for Zsh
+- tmux session and pane management
+- Neovim stable with Lazy.nvim, completion, Telescope, Oil, Git integration,
+  and LSP support
+- Bun-only JavaScript/TypeScript tooling; Node.js and npm are not installed
+- Go with gopls
+- uv with pre-commit and Python tooling
+
+The fzf Zsh integration enables Ctrl-R history search, Ctrl-T file selection,
+Alt-C directory selection, and fuzzy completion.
+
+## Managed configuration
+
+`setup.sh` creates links for `.zshrc`, `.tmux.conf`, and the
+Starship, Neovim, WezTerm, Sheldon, Lazygit, and GitHub CLI configurations.
+
+Neovim plugins are synchronized with Lazy.nvim. Lua, Markdown, and Go language
+servers are managed by Mason. TypeScript/JavaScript, HTML, CSS, JSON, and Python
+language servers are installed from the tracked Bun manifest and run with Bun.
 
 ## Uninstallation
 
+The safe default removes only symbolic links managed by this repository:
+
 ```sh
-bash ./uninstall.sh
+./uninstall.sh
 ```
 
-The uninstaller asks for confirmation, removes the managed links, restores matching
-`.bak` files, and removes the packages and standalone tools listed in the script—even
-if they existed before setup was run. Review it before uninstalling on a machine where
-those tools are shared with another environment.
+Package removal must be explicitly requested and confirmed:
+
+```sh
+./uninstall.sh --packages
+```
+
+This removes declared packages even if they existed before this setup was run.
 
 ## Development
 
-The GitHub Actions workflow validates setup, symlink creation, and uninstallation on
-Ubuntu and macOS. Optional local checks use `pre-commit`:
+The GitHub Actions workflow validates the scripts on Ubuntu and macOS. Local
+checks are installed through uv during setup:
 
 ```sh
-pre-commit install
-pre-commit install --hook-type commit-msg
+./scripts/smoke-test.sh
 pre-commit run --all-files
 ```
+
+The smoke test exercises CLI startup, ripgrep and fzf searches, a tmux session,
+zoxide database operations, Bun/Go/Python execution, and a TypeScript Language
+Server attachment inside headless Neovim. GUI rendering and GitHub authentication
+remain manual checks.
 
 ## License
 

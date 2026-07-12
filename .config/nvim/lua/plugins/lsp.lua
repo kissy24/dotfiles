@@ -30,58 +30,57 @@ return {
             -- -------------------------------------------------------
             local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
+            vim.lsp.config("*", { capabilities = capabilities })
+            vim.lsp.config("lua_ls", {
+                settings = {
+                    Lua = {
+                        runtime = { version = "LuaJIT" },
+                        workspace = {
+                            checkThirdParty = false,
+                            library = { vim.env.VIMRUNTIME },
+                        },
+                        diagnostics = { globals = { "vim" } },
+                    },
+                },
+            })
+            vim.lsp.config("gopls", {
+                settings = {
+                    gopls = {
+                        completeUnimported = true,
+                        usePlaceholders    = true,
+                        analyses           = {
+                            unusedparams = true,
+                            shadow       = true,
+                        },
+                        staticcheck        = true,
+                    },
+                },
+            })
+
             require("mason-lspconfig").setup({
                 ensure_installed = {
                     "lua_ls",   -- Lua
-                    "ts_ls",    -- TypeScript/JavaScript
-                    "html",     -- HTML
-                    "cssls",    -- CSS
-                    "jsonls",   -- JSON
                     "marksman", -- Markdown
-                    "pyright",  -- Python
                     "gopls",    -- Go
                 },
-                handlers = {
-                    function(server_name)
-                        require("lspconfig")[server_name].setup({
-                            capabilities = capabilities,
-                        })
-                    end,
-
-                    ["lua_ls"] = function()
-                        require("lspconfig").lua_ls.setup({
-                            capabilities = capabilities,
-                            settings = {
-                                Lua = {
-                                    runtime = { version = "LuaJIT" },
-                                    workspace = {
-                                        checkThirdParty = false,
-                                        library = { vim.env.VIMRUNTIME },
-                                    },
-                                    diagnostics = { globals = { "vim" } },
-                                },
-                            },
-                        })
-                    end,
-
-                    ["gopls"] = function()
-                        require("lspconfig").gopls.setup({
-                            capabilities = capabilities,
-                            settings = {
-                                gopls = {
-                                    completeUnimported = true,
-                                    usePlaceholders    = true,
-                                    analyses           = {
-                                        unusedparams = true,
-                                        shadow       = true,
-                                    },
-                                    staticcheck        = true,
-                                },
-                            },
-                        })
-                    end,
-                },
+                automatic_enable = true,
             })
+
+            -- npm由来のLanguage ServerはNode/MasonではなくBunで管理する。
+            local bun_lsp_bin = vim.fn.stdpath("data") .. "/dotfiles-lsp/node_modules/.bin/"
+            local bun_servers = {
+                ts_ls = "typescript-language-server",
+                html = "vscode-html-language-server",
+                cssls = "vscode-css-language-server",
+                jsonls = "vscode-json-language-server",
+                pyright = "pyright-langserver",
+            }
+            for server_name, executable in pairs(bun_servers) do
+                vim.lsp.config(server_name, {
+                    cmd = { "bun", bun_lsp_bin .. executable, "--stdio" },
+                })
+                vim.lsp.enable(server_name)
+            end
 
             -- -------------------------------------------------------
             -- LspAttach: キーマップ & 保存時フォーマット

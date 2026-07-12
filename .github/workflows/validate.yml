@@ -2,11 +2,9 @@ name: Validate Setup Scripts
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   validate:
@@ -21,64 +19,83 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Make scripts executable
-        run: chmod +x ./setup.sh ./uninstall.sh
-
-      - name: Run setup script
+      - name: Validate declarations and shell syntax
+        shell: bash
         run: |
-          ./setup.sh | tee setup_log.txt
-          echo "Listing .config to see if everything is there:"
-          ls -laR .config
+          bash -n setup.sh uninstall.sh
+          ./setup.sh --help
+          ./uninstall.sh --help
+          ! grep -Eq '^brew "(rust|node|fd)"' Brewfile
+          grep -q '^brew "bun"' Brewfile
+          grep -q '^brew "neovim"' Brewfile
 
-      - name: Verify installation and symlinks
+      - name: Run complete setup
+        shell: bash
+        run: ./setup.sh --force | tee setup_log.txt
+
+      - name: Verify tools, integrations, and symlinks
+        shell: bash
         run: |
-          set -e
-          echo "Verifying tools are in PATH..."
-          command -v nvim
-          command -v starship
-          command -v lazygit
-          command -v sheldon
-          command -v gh
-          command -v tmux
-          command -v zoxide
-          command -v fzf
-          command -v go
-          command -v uv
+          set -euo pipefail
+          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          export PATH="$HOME/.local/bin:$PATH"
 
-          echo "Verifying symlinks..."
-          verify_link() {
-            if [ -L "$1" ]; then
-              echo "✓ Link exists: $1 -> $(readlink "$1")"
-            else
-              echo "✗ Link missing: $1"
-              if grep -q "Skipping.*$(basename "$1")" setup_log.txt; then
-                echo "  (Setup script skipped this link. Check the source directory exists in repo.)"
-              fi
-              return 1
-            fi
-          }
+          for tool in nvim starship lazygit sheldon gh tmux zoxide fzf go uv bun pre-commit; do
+            command -v "$tool"
+          done
 
-          verify_link "$HOME/.zshrc"
-          verify_link "$HOME/.tmux.conf"
-          verify_link "$HOME/.config/starship.toml"
-          verify_link "$HOME/.config/nvim"
-          verify_link "$HOME/.config/wezterm"
-          verify_link "$HOME/.config/sheldon"
-          verify_link "$HOME/.config/lazygit"
-          verify_link "$HOME/.config/gh"
+          test -x "$HOME/.local/share/dotfiles-lsp/node_modules/.bin/typescript-language-server"
+          test -x "$HOME/.local/share/dotfiles-lsp/node_modules/.bin/pyright-langserver"
+          test -x .git/hooks/pre-commit
+          test -x .git/hooks/commit-msg
 
-          echo "Setup verification successful!"
-      - name: Run uninstall script
-        run: echo "y" | ./uninstall.sh
+          for path in \
+            "$HOME/.zshrc" \
+            "$HOME/.tmux.conf" \
+            "$HOME/.config/starship.toml" \
+            "$HOME/.config/nvim" \
+            "$HOME/.config/wezterm" \
+            "$HOME/.config/sheldon" \
+            "$HOME/.config/lazygit" \
+            "$HOME/.config/gh"; do
+            test -L "$path"
+          done
 
-      - name: Verify uninstallation and cleanup
+      - name: Run functional smoke tests
+        shell: bash
         run: |
-          set -e
-          echo "Verifying symlinks are removed..."
+          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          export PATH="$HOME/.local/bin:$PATH"
+          ./scripts/smoke-test.sh
+
+      - name: Run repository checks
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          pre-commit run --all-files
+
+      - name: Verify safe conflict behavior
+        shell: bash
+        run: |
+          rm "$HOME/.zshrc"
+          echo sentinel > "$HOME/.zshrc"
+          ./setup.sh
+          grep -q sentinel "$HOME/.zshrc"
+          ./setup.sh --force
+          test -L "$HOME/.zshrc"
+
+      - name: Verify safe uninstallation
+        shell: bash
+        run: |
+          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          fi
+          ./uninstall.sh
           ! test -L "$HOME/.zshrc"
           ! test -L "$HOME/.config/nvim"
-
-          # Note: We don't strictly check for tool removal of all packages 
-          # because some might be pre-installed in GitHub Runner images (like git, curl, etc.)
-
-          echo "Uninstallation verification successful!"
+          brew list --formula neovim
+          brew list --formula bun
