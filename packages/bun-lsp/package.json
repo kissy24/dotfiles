@@ -1,0 +1,10 @@
+{
+  "name": "dotfiles-language-servers",
+  "private": true,
+  "dependencies": {
+    "pyright": "latest",
+    "typescript": "latest",
+    "typescript-language-server": "latest",
+    "vscode-langservers-extracted": "latest"
+  }
+}

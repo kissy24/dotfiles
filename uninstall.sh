@@ -1,127 +1,87 @@
 #!/bin/bash
-set -eu
-
-# Uninstallation script for the dotfiles repository.
+set -euo pipefail
 
 SCRIPT_DIR=$(dirname "$0")
 REPO_ROOT=$(cd "$SCRIPT_DIR" && pwd)
+REMOVE_PACKAGES=0
 
-# --- Helper Functions ---
+usage() {
+    cat <<'EOF'
+Usage: ./uninstall.sh [--packages]
+
+By default only managed symlinks are removed.
+
+  --packages  Also uninstall packages declared in the Brewfile
+  --help      Show this help
+EOF
+}
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --packages) REMOVE_PACKAGES=1; shift ;;
+        --help|-h) usage; exit 0 ;;
+        *) echo "Error: Unknown option: $1" >&2; usage >&2; exit 2 ;;
+    esac
+done
 
 remove_symlinks() {
-    local dotfile_dests=(
-        "$HOME/.zshrc"
-        "$HOME/.tmux.conf"
-        "$HOME/.config/starship.toml"
-        "$HOME/.config/nvim"
-        "$HOME/.config/wezterm"
-        "$HOME/.config/sheldon"
-        "$HOME/.config/lazygit"
-        "$HOME/.config/gh"
+    local dest expected
+    local dotfile_paths=(
+        .zshrc
+        .tmux.conf
+        .config/starship.toml
+        .config/nvim
+        .config/wezterm
+        .config/sheldon
+        .config/lazygit
+        .config/gh
     )
 
-    echo "Removing symlinks and restoring backups..."
-    for dest in "${dotfile_dests[@]}"; do
-        if [ -L "$dest" ]; then
+    echo "Removing managed symlinks..."
+    for expected in "${dotfile_paths[@]}"; do
+        dest="$HOME/$expected"
+        if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$REPO_ROOT/$expected" ]; then
             echo "- Removing link: $dest"
             rm "$dest"
-            
-            if [ -e "$dest.bak" ]; then
-                echo "- Restoring backup: $dest.bak -> $dest"
-                mv "$dest.bak" "$dest"
-            fi
-        elif [ -e "$dest" ]; then
-            echo "- Skipping $dest (not a symbolic link)"
+        elif [ -e "$dest" ] || [ -L "$dest" ]; then
+            echo "- Skipping unmanaged path: $dest"
         fi
     done
-    echo "Symlink removal complete."
 }
 
-uninstall_macos() {
-    echo "Uninstalling dependencies for macOS..."
-    if command -v brew &> /dev/null; then
-        echo "Removing packages via Homebrew..."
-        brew uninstall git starship rust lazygit node ripgrep fd gh tmux zoxide fzf go
-        
-        echo "Removing Neovim from /usr/local..."
-        sudo rm -rf /usr/local/bin/nvim /usr/local/share/nvim /usr/local/lib/nvim /usr/local/share/man/man1/nvim.1
-    fi
+brew_packages_from() {
+    sed -n 's/^brew "\([^"]*\)".*/\1/p' "$1"
 }
 
-uninstall_ubuntu() {
-    echo "Uninstalling dependencies for Ubuntu..."
-    
-    echo "Removing packages via apt..."
-    sudo apt purge -y git curl build-essential pkg-config libssl-dev nodejs npm ripgrep fd-find tmux zoxide fzf golang-go gh
-    sudo apt autoremove -y
-
-    echo "Removing Neovim..."
-    sudo rm -f /usr/local/bin/nvim
-
-    echo "Removing n (Node.js manager) if exists..."
-    sudo npm uninstall -g n || true
+remove_brew_packages() {
+    local package
+    while IFS= read -r package; do
+        if brew list --formula "$package" >/dev/null 2>&1; then
+            brew uninstall "$package"
+        fi
+    done < <(brew_packages_from "$REPO_ROOT/Brewfile")
 }
 
-# --- Main Execution ---
-
-# 1. Determine OS
-OS=""
-case "$(uname)" in
-    "Linux") OS="Linux" ;; 
-    "Darwin") OS="Darwin" ;; 
-    *) echo "Error: Unsupported OS." >&2; exit 1 ;; 
-esac
-
-echo "Running uninstallation for $OS..."
-
-# 2. Confirm with user
-echo "Warning: This will uninstall tools and remove symlinks."
-read -p "Are you sure you want to proceed? (y/N): " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Uninstallation cancelled."
-    exit 1
-fi
-
-# 3. Remove symlinks
-echo "--- Removing symlinks ---"
 remove_symlinks
 
-# 4. Uninstall dependencies
-echo "--- Uninstalling dependencies ---"
-if [ "$OS" = "Darwin" ]; then
-    uninstall_macos
-elif [ "$OS" = "Linux" ]; then
-    uninstall_ubuntu
+if [ "$REMOVE_PACKAGES" -eq 1 ]; then
+    echo "This removes declared packages even if they existed before setup."
+    read -r -p "Continue? (y/N): " reply
+    case "$reply" in [Yy]) ;; *) echo "Package removal cancelled."; exit 0 ;; esac
+
+    if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    fi
+    command -v brew >/dev/null 2>&1 || { echo "Error: Homebrew not found." >&2; exit 1; }
+
+    export PATH="$HOME/.local/bin:$PATH"
+    if command -v pre-commit >/dev/null 2>&1; then
+        pre-commit uninstall || true
+        pre-commit uninstall --hook-type commit-msg || true
+    fi
+    command -v uv >/dev/null 2>&1 && uv tool uninstall pre-commit || true
+    rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles-lsp"
+    remove_brew_packages
 fi
 
-# 5. Remove standalone tools
-echo "--- Removing standalone tools ---"
-
-if [ -d "$HOME/.cargo" ]; then
-    echo "Removing Rust (rustup)..."
-    rustup self uninstall -y || rm -rf "$HOME/.cargo" "$HOME/.rustup"
-fi
-
-if [ -d "$HOME/.local/bin/uv" ] || command -v uv &> /dev/null; then
-    echo "Removing uv..."
-    rm -rf "$HOME/.local/bin/uv" "$HOME/.cargo/bin/uv"
-fi
-
-if [ -d "$HOME/.bun" ]; then
-    echo "Removing bun..."
-    rm -rf "$HOME/.bun"
-fi
-
-if [ -f "/usr/local/bin/starship" ]; then
-    echo "Removing starship..."
-    sudo rm -f /usr/local/bin/starship
-fi
-
-if [ -f "/usr/local/bin/lazygit" ]; then
-    echo "Removing lazygit..."
-    sudo rm -f /usr/local/bin/lazygit
-fi
-
-echo "-------------------------------------"
-echo "Uninstallation complete! Please restart your terminal."
+echo "Uninstallation complete."

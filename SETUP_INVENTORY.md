@@ -1,146 +1,93 @@
 # `setup.sh` インストール対象一覧
 
-現行の `setup.sh` がインストールするツールと、セットアップ後の処理によって間接的に導入されるプラグイン・Language Serverを整理したものです。
+刷新後の`setup.sh`が導入するツールと、その用途をまとめたものです。すべての依存はコードまたは設定ファイルに列挙されています。
 
-この文書は現状把握を目的としており、刷新案や変更方針はまだ含めていません。
+## kissy24からの要求と対応
 
-## 直接インストールするもの
+| 要求 | 対応 |
+| --- | --- |
+| UbuntuとmacOSを基本的にHomebrewで統一 | 共通ツールを単一の`Brewfile`から導入 |
+| 全ライブラリをコードか設定へ列挙 | Brewfile、apt一覧、Bun manifest、Mason、Sheldonを情報源にする |
+| Ubuntu固有設定にはaptを利用 | Homebrew導入前提だけを`packages/apt.txt`からaptで導入 |
+| curlやCargoでの導入を最小化 | curlはUbuntuへのHomebrew導入時だけ使用し、Cargo/Rustは廃止 |
+| Node.js/npm/`n`を廃止してBunへ統一 | npm由来LSPもBunでインストール・実行 |
+| fdを廃止し、fzfを活用 | fdを削除し、fzf公式Zsh連携を有効化 |
+| Goを必須にする | `Brewfile`へGoを収録して常に導入 |
+| Neovimをlatest安定版にする | Homebrewの安定版Formulaから導入 |
+| 構成を過度に分割しない | 単一の`Brewfile`とセットアップ経路に統一 |
+| 既存設定を上書きまたは何もしない | 既定はスキップ、`--force`指定時だけ置換 |
+| uv経由でpre-commitを必須化 | `uv tool install pre-commit`とGit hooks設定を実行 |
+| Zsh、WezTerm、フォントは前提のまま | セットアップ対象外を維持 |
 
-| ツール | macOS | Ubuntu | 用途・現在の使われ方 |
-| --- | --- | --- | --- |
-| Git | Homebrew | apt | バージョン管理。Neovimプラグインの取得にも必要 |
-| Starship | Homebrew | 公式インストールスクリプト | Zshのプロンプト表示 |
-| Rust / Cargo | Homebrew | rustup | Rust開発環境。現状は主にSheldonのインストールに使用 |
-| Lazygit | Homebrew | GitHub Release | GitをTUIで操作。Zshの`lg`エイリアスとNeovimから利用 |
-| Node.js | Homebrew | aptで一時導入後、`n stable`で再導入 | JavaScript/TypeScriptランタイム。TypeScript系LSPなどMasonパッケージの実行にも必要 |
-| npm | Node.jsに付属 | aptで一時導入 | UbuntuでNode.js管理ツール`n`をインストールするために使用 |
-| `n` | インストールしない | npm global | Ubuntuで安定版Node.jsを導入するバージョン管理ツール |
-| ripgrep (`rg`) | Homebrew | apt | 高速な全文検索。NeovimのTelescopeがファイル検索とgrepに直接使用 |
-| fd | Homebrew | `fd-find` | 高速なファイル検索。現行のリポジトリ設定内では明示的な利用箇所なし |
-| GitHub CLI (`gh`) | Homebrew | GitHub公式aptリポジトリ | Issue、Pull Request、認証などのGitHub操作 |
-| tmux | Homebrew | apt | ターミナルの画面分割・セッション管理 |
-| zoxide | Homebrew | apt | 使用履歴を学習する高速なディレクトリ移動 |
-| fzf | Homebrew | apt | 曖昧検索UI。現行のリポジトリ設定内では明示的なキーバインドなどはなし |
-| Go | Homebrew | apt | Go開発環境。`gopls`によるGo編集にも対応 |
-| Neovim | nightlyのtarball | latestのAppImage | メインエディタ。設定、プラグイン、LSPをまとめて利用 |
-| uv | 公式インストールスクリプト | 公式インストールスクリプト | Python本体、仮想環境、依存関係、Python製ツールの管理 |
-| Bun | 公式インストールスクリプト | 公式インストールスクリプト | JavaScript/TypeScriptランタイム兼パッケージマネージャー |
-| Sheldon | Cargo | Cargo | Zshプラグインマネージャー |
+## Homebrewパッケージ
 
-macOSでは、GitからGoまでの主要パッケージをHomebrewで一括インストールします。Neovimとuvは個別にダウンロード・インストールされます。
+宣言元は単一の`Brewfile`です。
 
-Ubuntuでは、基本パッケージをaptで導入し、GitHub CLI、Node.js、Neovim、Rust、Starship、Lazygit、uvをそれぞれ異なる方法で追加します。
+| ツール | 用途 |
+| --- | --- |
+| Git | バージョン管理とNeovimプラグイン取得 |
+| Starship | Zshプロンプト |
+| Sheldon | Zshプラグイン管理。Homebrew版を使うためRust/Cargoは不要 |
+| Lazygit | GitのTUI操作とNeovim連携 |
+| ripgrep | 高速全文検索とTelescopeの検索バックエンド |
+| GitHub CLI | GitHubのIssue、Pull Request、認証操作 |
+| tmux | ターミナルの画面分割とセッション管理 |
+| zoxide | 使用履歴に基づくディレクトリ移動 |
+| fzf | Zshの履歴、ファイル、ディレクトリ、補完の曖昧検索 |
+| Neovim | 安定版のメインエディタ |
+| Bun | JavaScript/TypeScriptランタイム、パッケージ管理、npm由来LSPの実行 |
+| uv | Python環境とPython製CLIの管理 |
+| Go | Go開発環境 |
 
-## Ubuntuのみインストールするビルド・通信系パッケージ
+uvは追加でpre-commitをtool installし、pre-commitとcommit-msgのGit hooksを設定します。
+
+## Ubuntu固有のaptパッケージ
+
+宣言元は`packages/apt.txt`です。
 
 | パッケージ | 用途 |
 | --- | --- |
-| curl | インストーラーやGitHub Releaseのダウンロード |
-| build-essential | C/C++コンパイラ、makeなどの基本ビルド環境 |
-| pkg-config | ネイティブライブラリのビルド設定検出 |
-| libssl-dev | OpenSSLを使うソフトウェアのコンパイル |
+| build-essential | Homebrewが必要とする基本ビルド環境 |
+| procps | Homebrewが必要とするプロセス関連ツール |
+| curl | Homebrew公式インストーラーの取得 |
+| file | Homebrewが必要とするファイル種別判定 |
+| git | Homebrew本体とFormulaの取得 |
 
-これらは日常的に直接操作するツールというより、Rust/Cargoなどによるビルドを成立させるための基盤です。
+## Zshプラグイン
 
-## Sheldonが追加するZshプラグイン
-
-`setup.sh`は`cargo install sheldon`でSheldon本体を導入し、`sheldon lock`によって `.config/sheldon/plugins.toml` に定義されたプラグインを取得します。
+`.config/sheldon/plugins.toml`が以下を宣言します。
 
 | プラグイン | 用途 |
 | --- | --- |
-| zsh-autosuggestions | コマンド履歴をもとに入力候補を薄く表示 |
-| zsh-syntax-highlighting | 入力中のコマンドを構文や有効性に応じて色付け |
-| zsh-history-substring-search | 入力中の文字列を含むコマンド履歴を検索 |
+| zsh-autosuggestions | 履歴をもとに入力候補を表示 |
+| zsh-syntax-highlighting | コマンド入力を構文に応じて色付け |
+| zsh-history-substring-search | 入力文字列を含む履歴を検索 |
 
-## Neovimが追加するプラグイン
+## Neovimプラグイン
 
-`setup.sh`は次のコマンドを実行します。
+Lazy.nvimがカラースキーム、ステータスライン、Git表示、Lazygit連携、Telescope、Oil、LSP、補完、進捗表示の各プラグインを管理します。具体的な一覧は`.config/nvim/lua/plugins`が情報源です。
 
-```sh
-nvim --headless -c 'Lazy sync' -c 'qa'
-```
+## Language Server
 
-これにより、Lazy.nvim本体とNeovim設定に定義された以下のプラグインが導入されます。
-
-| 分類 | プラグイン | 用途 |
-| --- | --- | --- |
-| 管理 | lazy.nvim | Neovimプラグインのインストール、更新、遅延ロード |
-| 外観 | catppuccin | Mochaカラースキーム |
-| 外観 | lualine.nvim | ステータスライン |
-| 外観 | nvim-web-devicons | ファイル種別アイコン |
-| Git | gitsigns.nvim | 変更行、追加、削除などを画面端に表示 |
-| Git | lazygit.nvim | NeovimからLazygitを起動 |
-| Git | git-blame.nvim | 行ごとのコミット日時、作者などを表示 |
-| Git | oil-git.nvim | Oil上でGitの状態を表示 |
-| 検索 | telescope.nvim | ファイル、文字列、バッファ、ヘルプの曖昧検索 |
-| ファイル | oil.nvim | ディレクトリを編集可能なバッファとして操作 |
-| 共通部品 | plenary.nvim | TelescopeやLazygitプラグインなどが利用するLuaライブラリ |
-| LSP | nvim-lspconfig | Language ServerのNeovim設定 |
-| LSP | mason.nvim | LSPなどの外部開発ツールを管理 |
-| LSP | mason-lspconfig.nvim | Masonとnvim-lspconfigを連携 |
-| 補完 | nvim-cmp | 入力補完エンジン |
-| 補完 | cmp-nvim-lsp | LSPから補完候補を取得 |
-| 補完 | cmp-buffer | 開いているバッファから補完候補を取得 |
-| 補完 | cmp-path | ファイルパスを補完 |
-| 補完 | cmp-cmdline | Neovimのコマンドラインを補完 |
-| 表示 | fidget.nvim | LSPの処理進捗を表示 |
-
-## Masonが追加するLanguage Server
-
-Neovim設定の`mason-lspconfig`にある`ensure_installed`によって、以下のLanguage Serverが追加取得されます。
-
-| Masonでの名前 | 対象言語・形式 |
+| 管理方法 | 対象 |
 | --- | --- |
-| lua_ls | Lua |
-| ts_ls | TypeScript / JavaScript |
-| html | HTML |
-| cssls | CSS |
-| jsonls | JSON |
-| marksman | Markdown |
-| pyright | Python |
-| gopls | Go |
+| Mason | Lua (`lua_ls`)、Markdown (`marksman`)、Go (`gopls`) |
+| Bun manifest | TypeScript/JavaScript、HTML、CSS、JSON、Python (`pyright`) |
 
-これらは`setup.sh`に名前が直接書かれていませんが、Neovimプラグイン同期後の設定読み込みによってインストールされるため、実質的なセットアップ対象です。
+Bun管理対象は`packages/bun-lsp/package.json`と`bun.lock`で固定し、`~/.local/share/dotfiles-lsp`へ導入します。Neovimは各サーバーを`bun`で明示的に起動するため、Node.jsコマンドは不要です。
 
-## インストールせず、設定だけ管理しているもの
+## セットアップ対象外
 
-以下は設定ファイルへのシンボリックリンクを作成しますが、アプリケーション本体は`setup.sh`でインストールしません。
+- Zsh
+- WezTerm
+- HackGen Console NF
 
-| 対象 | 状態 |
-| --- | --- |
-| Zsh | 事前インストールが必要 |
-| WezTerm | 事前インストールが必要 |
-| HackGen Console NF | WezTerm設定が要求するフォント。別途インストールが必要 |
-| pre-commit | 設定ファイルは存在するが、本体もGit hooksも`setup.sh`では導入しない |
+これらは事前にインストールされていることを前提とします。
 
-## 作成するシンボリックリンク
+## 安全動作
 
-| リポジトリ内の設定 | リンク先 |
-| --- | --- |
-| `.zshrc` | `~/.zshrc` |
-| `.tmux.conf` | `~/.tmux.conf` |
-| `.config/starship.toml` | `~/.config/starship.toml` |
-| `.config/nvim` | `~/.config/nvim` |
-| `.config/wezterm` | `~/.config/wezterm` |
-| `.config/sheldon` | `~/.config/sheldon` |
-| `.config/lazygit` | `~/.config/lazygit` |
-| `.config/gh` | `~/.config/gh` |
-
-リンク先に既存のファイルまたはディレクトリがある場合は、同じ場所の`.bak`へ移動してからリンクを作成します。
-
-## 現状から見える確認ポイント
-
-以下は変更案ではなく、今後の見直し時に判断が必要になりそうな点です。
-
-- Rust一式の主用途がSheldonのビルドだけでよいか。
-- Node.jsとBunを併用する必要があるか、それぞれの担当範囲をどうするか。
-- `fd`と`fzf`を今後使うのか。現在の設定内には直接の利用箇所が見当たらない。
-- Go開発環境と`gopls`が常に必要か、用途別の任意インストールにするか。
-- macOS版Neovimがnightly固定でよいか。
-- macOS版NeovimのダウンロードがIntel用`x86_64`に固定されている。
-- Ubuntu版NeovimとLazygitも`x86_64`に固定されている。
-- uv、Rust、Starship、Bunで`curl | sh`形式のインストールを利用してよいか。
-- 全ツールを無条件に導入するのか、「必須」「開発言語別」「任意」などに分割するか。
-- 既存設定のバックアップが単一の`.bak`のみで、再実行時の衝突をどう扱うか。
-- `pre-commit`設定は存在するが、本体のインストール経路がない状態でよいか。
-- Zsh、WezTerm、HackGen Console NFを事前準備のままにするか、セットアップ対象に含めるか。
+- `setup.sh`は`Brewfile`にある全ツールを導入します。
+- 既存dotfileは既定で変更しません。
+- `--force`指定時だけ既存パスを削除してシンボリックリンクへ置換します。
+- `uninstall.sh`は既定で、このリポジトリを指すリンクだけを削除します。
+- パッケージ削除は`--packages`を明示し、確認に同意した場合だけ実行します。

@@ -41,17 +41,13 @@ bindkey -M viins 'jj' vi-cmd-mode
 
 # パッケージマネージャー
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    alias pkgupd='sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt autoclean'
+    alias pkgupd='brew update && brew upgrade && brew cleanup && sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt autoclean'
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     alias pkgupd='brew update && brew upgrade && brew cleanup'
 fi
 
-# envの実行
-. "$HOME/.local/bin/env"
-. "$HOME/.cargo/env"
-
-# 特定のPathを通す
-[ -d "$HOME/.npm-global/bin" ] && export PATH="$HOME/.npm-global/bin:$PATH"
+# ユーザー単位でインストールしたCLI
+[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
 [ -d "$HOME/bin" ] && export PATH="$HOME/bin:$PATH"
 
 
@@ -60,19 +56,21 @@ if command -v uv &> /dev/null; then
     eval "$(uv generate-shell-completion zsh)"
 fi
 
-# macOS
-if [[ "$(uname)" == "Darwin" ]]; then
+# Homebrew (Apple Silicon, Intel macOS, Linux)
+if command -v brew >/dev/null 2>&1; then
+    eval "$(brew shellenv)"
+elif [[ -x /opt/homebrew/bin/brew ]]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
-# bun
-if [[ -x "$HOME/.bun" ]]; then
-    export BUN_INSTALL="$HOME/.bun"
-    export PATH="$BUN_INSTALL/bin:$PATH"
-fi
+# fzf標準連携 (Ctrl-R: 履歴、Ctrl-T: ファイル、Alt-C: ディレクトリ)
+source <(fzf --zsh)
 
 # init plugins
 eval "$(starship init zsh)"
 eval "$(sheldon source)"
 eval "$(zoxide init zsh)"
-
