@@ -78,7 +78,7 @@ ensure_homebrew() {
 
 install_brew_packages() {
     echo "Installing Homebrew packages..."
-    brew bundle --file="$REPO_ROOT/Brewfile"
+    brew bundle install --jobs=1 --file="$REPO_ROOT/Brewfile"
 }
 
 create_symlinks() {
