@@ -46,8 +46,9 @@ jobs:
             command -v "$tool"
           done
 
-          test -x "$HOME/.local/share/dotfiles-lsp/node_modules/.bin/typescript-language-server"
-          test -x "$HOME/.local/share/dotfiles-lsp/node_modules/.bin/pyright-langserver"
+          data_home=${XDG_DATA_HOME:-$HOME/.local/share}
+          test -x "$data_home/dotfiles-lsp/node_modules/.bin/typescript-language-server"
+          test -x "$data_home/dotfiles-lsp/node_modules/.bin/pyright-langserver"
           test -x .git/hooks/pre-commit
           test -x .git/hooks/commit-msg
 

@@ -67,7 +67,8 @@ return {
             })
 
             -- npm由来のLanguage ServerはNode/MasonではなくBunで管理する。
-            local bun_lsp_bin = vim.fn.stdpath("data") .. "/dotfiles-lsp/node_modules/.bin/"
+            local data_home = vim.env.XDG_DATA_HOME or (vim.env.HOME .. "/.local/share")
+            local bun_lsp_bin = data_home .. "/dotfiles-lsp/node_modules/.bin/"
             local bun_servers = {
                 ts_ls = "typescript-language-server",
                 html = "vscode-html-language-server",

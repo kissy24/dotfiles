@@ -50,7 +50,7 @@ printf '{"private":true}\n' > "$TMP_ROOT/typescript/package.json"
 printf 'const answer: number = 42\n' > "$TMP_ROOT/typescript/smoke.ts"
 nvim --headless "$TMP_ROOT/typescript/smoke.ts" \
     "+lua assert(vim.fn.exists(':Lazy') == 2, 'Lazy command is unavailable')" \
-    "+lua local attached = vim.wait(15000, function() return #vim.lsp.get_clients({ bufnr = 0, name = 'ts_ls' }) > 0 end, 100); assert(attached, 'ts_ls did not attach')" \
+    "+lua local attached = vim.wait(15000, function() local clients = vim.lsp.get_clients({ bufnr = 0, name = 'ts_ls' }); return #clients > 0 and clients[1].initialized end, 100); assert(attached, 'ts_ls did not initialize')" \
     "+qa"
 
 echo "All smoke tests passed."
