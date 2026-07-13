@@ -3,23 +3,20 @@
 [![License: MIT](https://img.shields.io/github/license/kissy24/dotfiles)](LICENSE)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/kissy24/dotfiles)
 
-Personal development environment for macOS and Ubuntu/WSL. Homebrew installs the
-shared command-line tools and the setup script links the configuration files into
-`$HOME`.
+macOSおよびUbuntu/WSL向けの個人開発環境です。共通のコマンドラインツールはHomebrewでインストールし、セットアップスクリプトが設定ファイルを`$HOME`以下へシンボリックリンクします。
 
-## Requirements
+## 必要な環境
 
-- macOS or an Ubuntu/Debian environment with `apt-get`
-- Zsh and WezTerm
+- macOS、または`apt-get`を利用できるUbuntu/Debian環境
+- ZshとWezTerm
 - `HackGen Console NF`
-- Homebrew on macOS
+- macOSではHomebrew
 
-On Ubuntu, the setup script installs Homebrew and its apt prerequisites. Zsh,
-WezTerm, and the font must be installed separately.
+Ubuntuでは、セットアップスクリプトがaptの前提パッケージとHomebrewをインストールします。Zsh、WezTerm、フォントは別途インストールしてください。
 
-## Installation
+## インストール
 
-Install the complete environment with:
+開発環境一式をインストールします。
 
 ```sh
 git clone https://github.com/kissy24/dotfiles.git
@@ -27,67 +24,66 @@ cd dotfiles
 ./setup.sh
 ```
 
-Existing dotfiles are skipped by default. Use `./setup.sh --force` to replace
-them with managed symbolic links. This permanently removes the paths being
-replaced, so review them first.
+既存のdotfilesはデフォルトでは変更せずにスキップします。管理対象のシンボリックリンクへ置き換える場合は`./setup.sh --force`を使います。置換対象のパスは削除されるため、実行前に内容を確認してください。
 
-Package declarations live in `Brewfile`, `packages/apt.txt`, and
-`packages/bun-lsp/package.json`. Sheldon and Mason
-dependencies remain in their respective configuration files.
+パッケージの宣言は`Brewfile`、`packages/apt.txt`、`packages/bun-lsp/package.json`にあります。SheldonとMasonの依存関係は、それぞれの設定ファイルで管理します。
 
-## Included environment
+## 導入する環境
 
-- Starship, Sheldon, zoxide, and fzf integration for Zsh
-- tmux session and pane management
-- Neovim stable with Lazy.nvim, completion, Telescope, Oil, Git integration,
-  and LSP support
-- Bun-only JavaScript/TypeScript tooling; Node.js and npm are not installed
-- Go with gopls
-- uv with pre-commit and Python tooling
+- Zsh向けのStarship、Sheldon、zoxide、fzf連携
+- tmuxによるセッション・ペイン管理
+- Lazy.nvim、補完、Telescope、Oil、Git連携、LSPを備えた安定版Neovim
+- Bunに統一したJavaScript/TypeScript環境（Node.jsとnpmはインストールしません）
+- goplsを含むGo開発環境
+- uvによるpre-commitとPythonツール管理
 
-The fzf Zsh integration enables Ctrl-R history search, Ctrl-T file selection,
-Alt-C directory selection, and fuzzy completion.
+fzfのZsh連携では、Ctrl-Rによる履歴検索、Ctrl-Tによるファイル選択、Alt-Cによるディレクトリ選択、曖昧補完を利用できます。
 
-## Managed configuration
+## 管理する設定
 
-`setup.sh` creates links for `.zshrc`, `.tmux.conf`, and the
-Starship, Neovim, WezTerm, Sheldon, Lazygit, and GitHub CLI configurations.
+`setup.sh`は`.zshrc`、`.tmux.conf`、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。
 
-Neovim plugins are synchronized with Lazy.nvim. Lua, Markdown, and Go language
-servers are managed by Mason. TypeScript/JavaScript, HTML, CSS, JSON, and Python
-language servers are installed from the tracked Bun manifest and run with Bun.
+NeovimプラグインはLazy.nvimで同期します。Lua、Markdown、GoのLanguage ServerはMasonで管理し、TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
 
-## Uninstallation
+### マシン固有のZsh設定
 
-The safe default removes only symbolic links managed by this repository:
+管理対象の`.zshrc`は、`~/.zshrc.local`が存在する場合に最後に読み込みます。特定のマシンだけで使うエイリアス、環境変数、PATHなどを記述できます。
+
+```sh
+touch ~/.zshrc.local
+chmod 600 ~/.zshrc.local
+$EDITOR ~/.zshrc.local
+```
+
+`~/.zshrc.local`は、このリポジトリによる作成、リンク、削除、Git管理の対象外です。共通設定の後に読み込むため、共通のエイリアスや環境変数をマシンごとに上書きできます。
+
+## アンインストール
+
+デフォルトでは、このリポジトリが管理するシンボリックリンクだけを削除します。
 
 ```sh
 ./uninstall.sh
 ```
 
-Package removal must be explicitly requested and confirmed:
+パッケージも削除する場合は、明示的な指定と確認が必要です。
 
 ```sh
 ./uninstall.sh --packages
 ```
 
-This removes declared packages even if they existed before this setup was run.
+この操作では、セットアップ前から存在していた場合でも、宣言済みのパッケージを削除します。
 
-## Development
+## 開発
 
-The GitHub Actions workflow validates the scripts on Ubuntu and macOS. Local
-checks are installed through uv during setup:
+GitHub ActionsでUbuntuとmacOSのセットアップスクリプトを検証します。ローカル検査はセットアップ時にuv経由でインストールされます。
 
 ```sh
 ./scripts/smoke-test.sh
 pre-commit run --all-files
 ```
 
-The smoke test exercises CLI startup, ripgrep and fzf searches, a tmux session,
-zoxide database operations, Bun/Go/Python execution, and a TypeScript Language
-Server attachment inside headless Neovim. GUI rendering and GitHub authentication
-remain manual checks.
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、tmuxセッション、zoxideのデータベース操作、Bun・Go・Pythonのコード実行、ヘッドレスNeovim上でのTypeScript Language Server接続を確認します。GUI表示とGitHub認証は手動確認の対象です。
 
-## License
+## ライセンス
 
 [MIT](LICENSE)

@@ -74,3 +74,8 @@ source <(fzf --zsh)
 eval "$(starship init zsh)"
 eval "$(sheldon source)"
 eval "$(zoxide init zsh)"
+
+# マシン固有の設定（Git・setup.shの管理対象外）
+if [[ -r "$HOME/.zshrc.local" ]]; then
+    source "$HOME/.zshrc.local"
+fi
