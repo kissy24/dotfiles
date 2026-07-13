@@ -1,0 +1,31 @@
+name: Check Dependency EOL
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - Brewfile
+      - .config/nvim/**
+      - .config/sheldon/**
+      - .github/workflows/**
+      - .pre-commit-config.yaml
+      - scripts/check-dependency-eol.sh
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-eol:
+    name: Check dependency lifecycle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Reject archived, disabled, or deprecated dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/check-dependency-eol.sh
