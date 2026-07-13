@@ -54,6 +54,7 @@ pre-commit run --all-files
 - GitHub Actions変更: actionlint
 - JSON/YAML変更: pre-commitの構文検査
 - Neovim変更: ヘッドレス起動と関連LSP・プラグインの初期化確認
+- 依存関係変更: `GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh`
 - セットアップ動作変更: `scripts/smoke-test.sh`を更新し、実行可能な環境では実行する
 
 ローカルでフルセットアップするとユーザー環境を破壊する可能性があるため、`./setup.sh --force`やパッケージ削除は検証目的だけで実行しない。完全セットアップはGitHub Actionsの使い捨てrunnerで検証する。

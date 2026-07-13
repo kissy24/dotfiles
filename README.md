@@ -84,6 +84,14 @@ pre-commit run --all-files
 
 スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、tmuxセッション、zoxideのデータベース操作、Bun・Go・Pythonのコード実行、ヘッドレスNeovim上でのTypeScript Language Server接続、標準Markdownパーサーと`render-markdown.nvim`の初期化を確認します。GUI表示とGitHub認証は手動確認の対象です。
 
+依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
+
+```sh
+GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh
+```
+
+更新頻度の低さだけではEOLと判定せず、HomebrewとGitHubが提供する明示的なライフサイクル情報だけを失敗条件にします。
+
 ## ライセンス
 
 [MIT](LICENSE)
