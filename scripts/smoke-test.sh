@@ -53,4 +53,15 @@ nvim --headless "$TMP_ROOT/typescript/smoke.ts" \
     "+lua local attached = vim.wait(15000, function() local clients = vim.lsp.get_clients({ bufnr = 0, name = 'ts_ls' }); return #clients > 0 and clients[1].initialized end, 100); assert(attached, 'ts_ls did not initialize')" \
     "+qa"
 
+echo "Checking Neovim Markdown rendering with built-in parsers..."
+mkdir -p "$TMP_ROOT/markdown"
+printf '# Smoke test\n\n- Markdown rendering\n' > "$TMP_ROOT/markdown/smoke.md"
+nvim --headless "$TMP_ROOT/markdown/smoke.md" \
+    "+lua assert(vim.treesitter.language.add('markdown'), 'built-in markdown parser is unavailable')" \
+    "+lua assert(vim.treesitter.language.add('markdown_inline'), 'built-in markdown_inline parser is unavailable')" \
+    "+lua local parser = vim.treesitter.get_parser(0, 'markdown'); assert(#parser:parse() > 0, 'Markdown parsing failed')" \
+    "+lua assert(package.loaded['render-markdown'], 'render-markdown.nvim did not load')" \
+    "+lua assert(vim.fn.exists(':RenderMarkdown') == 2, 'RenderMarkdown command is unavailable')" \
+    "+qa"
+
 echo "All smoke tests passed."

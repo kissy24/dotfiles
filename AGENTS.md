@@ -33,6 +33,7 @@
   - Ubuntu固有パッケージ: `packages/apt.txt`
   - Bun管理LSP: `packages/bun-lsp/package.json`と`bun.lock`
   - Neovim/Mason/Sheldon: 各設定ファイル
+- EOL、archive済み、またはメンテナンス終了の依存関係は追加しない。導入前に公式の保守状況を確認し、Neovim標準機能など保守中の代替を優先する。例外はユーザーの明示的な承認を必要とする。
 - macOSとUbuntu/WSLの両方を考慮し、アーキテクチャやユーザー固有の絶対パスを埋め込まない。
 - 動作変更に対応するテストまたはスモークテストを追加・更新する。
 - ユーザー向けの利用方法や前提条件が変わる場合は、日本語の`README.md`も更新する。
