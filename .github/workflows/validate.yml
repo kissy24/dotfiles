@@ -85,6 +85,9 @@ jobs:
         run: |
           export PATH="$HOME/.local/bin:$PATH"
           pre-commit run --all-files
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            pre-commit run betterleaks-working-tree --hook-stage manual --all-files
+          fi
 
       - name: Verify safe conflict behavior
         shell: bash
