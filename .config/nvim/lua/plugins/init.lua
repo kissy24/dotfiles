@@ -18,6 +18,12 @@ return {
     },
     { "lewis6991/gitsigns.nvim", opts = {} },
     {
+        "MeanderingProgrammer/render-markdown.nvim",
+        ft = { "markdown" },
+        dependencies = { "nvim-tree/nvim-web-devicons" },
+        opts = {},
+    },
+    {
         "kdheepak/lazygit.nvim",
         lazy = true,
         cmd = { "LazyGit", "LazyGitConfig", "LazyGitCurrentFile", "LazyGitFilter", "LazyGitFilterCurrentFile" },

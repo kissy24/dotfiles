@@ -31,6 +31,10 @@ jobs:
           fi
           grep -q '^brew "bun"' Brewfile
           grep -q '^brew "neovim"' Brewfile
+          if grep -R -q 'nvim-treesitter/nvim-treesitter' .config/nvim Brewfile packages; then
+            echo "Archived nvim-treesitter dependency is not allowed; use Neovim built-in parsers." >&2
+            exit 1
+          fi
 
       - name: Run complete setup
         shell: bash
