@@ -1,4 +1,4 @@
-name: Check Dependency EOL
+name: Check Dependency Health
 
 on:
   schedule:
@@ -12,7 +12,9 @@ on:
       - .config/sheldon/**
       - .github/workflows/**
       - .pre-commit-config.yaml
+      - packages/bun-lsp/bun.lock
       - scripts/check-dependency-eol.sh
+      - scripts/check-dependency-cooldown.sh
 
 permissions:
   contents: read
@@ -29,3 +31,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/check-dependency-eol.sh
+
+  dependency-cooldown:
+    name: Check dependency cooldown
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Reject dependencies released within the last 7 days
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/check-dependency-cooldown.sh
