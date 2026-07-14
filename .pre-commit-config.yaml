@@ -26,3 +26,12 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: []
+  - repo: https://github.com/betterleaks/betterleaks
+    rev: v1.6.1
+    hooks:
+      - id: betterleaks
+      - id: betterleaks
+        alias: betterleaks-working-tree
+        name: Detect hardcoded secrets in working tree
+        entry: betterleaks dir --redact --verbose .
+        stages: [manual]

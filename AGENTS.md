@@ -53,6 +53,7 @@ pre-commit run --all-files
 - Zsh変更: `zsh -n`（`.zshrc`はShellCheck対象外）
 - GitHub Actions変更: actionlint
 - JSON/YAML変更: pre-commitの構文検査
+- 機微情報: Betterleaksのpre-commit hookとCIの作業ツリー走査を無効化しない。検出除外はユーザーの明示的な承認を必要とする
 - Neovim変更: ヘッドレス起動と関連LSP・プラグインの初期化確認
 - 依存関係変更: `GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh`
 - セットアップ動作変更: `scripts/smoke-test.sh`を更新し、実行可能な環境では実行する
