@@ -94,6 +94,14 @@ GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh
 
 更新頻度の低さだけではEOLと判定せず、HomebrewとGitHubが提供する明示的なライフサイクル情報だけを失敗条件にします。
 
+同じCIで、固定済み依存関係に7日間のクールダウンも適用します。pre-commitとGitHub Actionsは参照先コミットの日時、Bunのロックファイル内にあるnpmパッケージは公開日時を検査し、期間内の依存があれば失敗します。ローカルでは次のコマンドを実行します。
+
+```sh
+GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-cooldown.sh
+```
+
+検査期間は`COOLDOWN_DAYS`で変更できます。バージョンを固定していないHomebrewと、ロックファイルだけではリポジトリを一意に特定できないNeovimプラグインは対象外です。
+
 ## ライセンス
 
 [MIT](LICENSE)
