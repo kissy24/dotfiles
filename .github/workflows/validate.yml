@@ -43,6 +43,8 @@ jobs:
             exit 1
           fi
           grep -Eq '^config\.enable_tab_bar[[:space:]]*=[[:space:]]*false$' .config/wezterm/wezterm.lua
+          grep -Eq '^    config\.window_decorations = "TITLE \| RESIZE"$' .config/wezterm/wezterm.lua
+          grep -Eq '^    config\.window_decorations = "RESIZE"$' .config/wezterm/wezterm.lua
           grep -q 'exec herdr' .config/wezterm/wezterm.lua
           grep -q 'send_herdr_prefix_key' .config/wezterm/wezterm.lua
           grep -Eq 'key = "T".*mods = "CMD\|SHIFT".*send_herdr_prefix_key\("n", "SHIFT"\)' .config/wezterm/wezterm.lua

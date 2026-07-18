@@ -32,7 +32,11 @@ config.win32_system_backdrop        = 'Acrylic'
 config.macos_window_background_blur = 20
 config.initial_cols                 = 188
 config.initial_rows                 = 55
-config.window_decorations           = "RESIZE"
+if wezterm.target_triple:find("windows") then
+    config.window_decorations = "TITLE | RESIZE"
+else
+    config.window_decorations = "RESIZE"
+end
 config.enable_tab_bar               = false
 
 -- カーソルスタイルをバーに設定
