@@ -33,7 +33,7 @@ echo "Checking fzf filtering..."
 test "$(printf 'apple\nbanana\n' | fzf --filter=banana)" = "banana"
 
 echo "Checking Herdr configuration and session lifecycle..."
-mkdir -p "$TMP_ROOT/config/herdr"
+mkdir -p "$TMP_ROOT/config/herdr" "$TMP_ROOT/project"
 cp "$PWD/.config/herdr/config.toml" "$HERDR_TEST_CONFIG"
 HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
     XDG_CONFIG_HOME="$TMP_ROOT/config" \
@@ -52,12 +52,21 @@ HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
     herdr --session "$HERDR_SESSION_NAME" workspace list >/dev/null
 HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
     XDG_CONFIG_HOME="$TMP_ROOT/config" \
+    herdr --session "$HERDR_SESSION_NAME" workspace create \
+        --cwd "$TMP_ROOT/project" \
+        --label project \
+        --focus >/dev/null
+HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
+    XDG_CONFIG_HOME="$TMP_ROOT/config" \
+    herdr --session "$HERDR_SESSION_NAME" workspace list | grep -q project
+HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
+    XDG_CONFIG_HOME="$TMP_ROOT/config" \
     herdr session stop "$HERDR_SESSION_NAME" >/dev/null
 wait "$HERDR_SERVER_PID"
 HERDR_SERVER_PID=""
 
 echo "Checking zoxide database operations..."
-mkdir -p "$TMP_ROOT/zoxide-data" "$TMP_ROOT/project"
+mkdir -p "$TMP_ROOT/zoxide-data"
 _ZO_DATA_DIR="$TMP_ROOT/zoxide-data" zoxide add "$TMP_ROOT/project"
 test "$(_ZO_DATA_DIR="$TMP_ROOT/zoxide-data" zoxide query project)" = "$TMP_ROOT/project"
 

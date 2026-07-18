@@ -33,6 +33,27 @@ alias l="ls -lFh"
 alias lg="lazygit"
 alias hr="herdr"
 
+# カレントディレクトリまたは指定したディレクトリをHerdr Workspaceとして開く
+hrw() {
+    if (( $# > 2 )); then
+        print -u2 "usage: hrw [directory] [label]"
+        return 2
+    fi
+
+    local workspace_dir="${1:-$PWD}"
+    if [[ ! -d "$workspace_dir" ]]; then
+        print -u2 "hrw: directory not found: $workspace_dir"
+        return 1
+    fi
+
+    workspace_dir="${workspace_dir:A}"
+    local workspace_label="${2:-${workspace_dir:t}}"
+    herdr workspace create \
+        --cwd "$workspace_dir" \
+        --label "$workspace_label" \
+        --focus
+}
+
 
 # Vim Mode
 export KEYTIMEOUT=20
