@@ -47,9 +47,9 @@ NeovimプラグインはLazy.nvimで同期します。Markdownを開くと`rende
 
 ### Herdr
 
-WezTermを起動するとHerdrのバックグラウンドセッションを新規作成または再接続します。ほかの端末からは、作業ディレクトリで`herdr`または短縮エイリアスの`hr`を実行して接続できます。設定はtmuxから移行しやすいように`Ctrl-b`プレフィックス、端末のカラーパレット、マウス操作、新しいペインへのカレントディレクトリ継承を使用します。
+WezTermを起動すると、起動時のディレクトリ名を持つHerdrのバックグラウンドセッションを新規作成または再接続します。ほかの端末でも、作業ディレクトリで引数なしの`herdr`または短縮エイリアスの`hr`を実行すると同じ命名規則で接続できます。Herdrの制約に合わせ、ディレクトリ名のASCII英数字、`.`、`_`、`-`以外は`-`へ置換し、64文字に切り詰めます。サブコマンドやオプションを指定した`herdr`は引数を変更せず実行します。設定はtmuxから移行しやすいように`Ctrl-b`プレフィックス、端末のカラーパレット、マウス操作、新しいペインへのカレントディレクトリ継承を使用します。
 
-Herdrのタブバーは常に表示され、クリックで切り替えられます。新しいタブは名前の入力を求めず即座に作成します。macOSでは`Cmd-t`／`Cmd-w`、`Cmd-Shift-[`／`Cmd-Shift-]`、`Cmd-1`〜`Cmd-9`を使用できます。WindowsおよびLinuxでは`Ctrl-Shift-t`／`Ctrl-Shift-w`と`Ctrl-Tab`／`Ctrl-Shift-Tab`を使用できます。これらはWezTermがHerdrのキー操作へ変換し、従来の`Ctrl-b`操作も引き続き利用できます。
+HerdrのAgents欄はagent種別ではなく、各workspaceで動作中のforegroundプロセスのディレクトリ名を表示します。タブバーは常に表示され、クリックで切り替えられます。新しいタブは名前の入力を求めず即座に作成します。macOSでは`Cmd-t`／`Cmd-w`、`Cmd-Shift-[`／`Cmd-Shift-]`、`Cmd-1`〜`Cmd-9`を使用できます。WindowsおよびLinuxでは`Ctrl-Shift-t`／`Ctrl-Shift-w`と`Ctrl-Tab`／`Ctrl-Shift-Tab`を使用できます。これらはWezTermがHerdrのキー操作へ変換し、従来の`Ctrl-b`操作も引き続き利用できます。
 
 主な操作は次のとおりです。
 

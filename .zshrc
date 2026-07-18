@@ -33,6 +33,25 @@ alias l="ls -lFh"
 alias lg="lazygit"
 alias hr="herdr"
 
+# 引数なしのHerdrは、カレントディレクトリ名の永続セッションへ接続する
+_herdr_session_name() {
+    local session_name="${PWD:t}"
+    session_name="${session_name//[^A-Za-z0-9._-]/-}"
+    session_name="${session_name[1,64]}"
+    if [[ -z "$session_name" || "$session_name" == "." || "$session_name" == ".." ]]; then
+        session_name="herdr"
+    fi
+    print -r -- "$session_name"
+}
+
+herdr() {
+    if (( $# == 0 )); then
+        command herdr --session "$(_herdr_session_name)"
+    else
+        command herdr "$@"
+    fi
+}
+
 
 # Vim Mode
 export KEYTIMEOUT=20
@@ -69,7 +88,7 @@ fi
 
 # Herdr completion
 if command -v herdr &> /dev/null; then
-    eval "$(herdr completion zsh)"
+    eval "$(command herdr completion zsh)"
 fi
 
 # fzf標準連携 (Ctrl-R: 履歴、Ctrl-T: ファイル、Alt-C: ディレクトリ)

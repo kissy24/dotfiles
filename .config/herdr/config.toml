@@ -19,3 +19,7 @@ copy_on_select = true
 prompt_new_tab_name = false
 hide_tab_bar_when_single_tab = false
 sidebar_collapsed_mode = "hidden"
+
+[ui.sidebar.agents]
+# Use the live workspace CWD-derived label instead of the agent kind (for example, codex).
+rows = [["state_icon", "workspace"]]

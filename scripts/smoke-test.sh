@@ -56,6 +56,29 @@ HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
 wait "$HERDR_SERVER_PID"
 HERDR_SERVER_PID=""
 
+echo "Checking directory-named Herdr shell launcher..."
+mkdir -p "$TMP_ROOT/bin" "$TMP_ROOT/project name"
+printf '%s\n' \
+    '#!/bin/sh' \
+    "printf '%s\\n' \"\$@\" > \"\$HERDR_ARGS_FILE\"" \
+    > "$TMP_ROOT/bin/herdr"
+chmod +x "$TMP_ROOT/bin/herdr"
+HERDR_ARGS_FILE="$TMP_ROOT/herdr-args.txt" \
+    HERDR_STUB_DIR="$TMP_ROOT/bin" \
+    HERDR_TEST_CWD="$TMP_ROOT/project name" \
+    zsh -lic 'cd "$HERDR_TEST_CWD" && PATH="$HERDR_STUB_DIR:$PATH" herdr'
+test "$(sed -n '1p' "$TMP_ROOT/herdr-args.txt")" = "--session"
+test "$(sed -n '2p' "$TMP_ROOT/herdr-args.txt")" = "project-name"
+test "$(wc -l < "$TMP_ROOT/herdr-args.txt" | tr -d ' ')" = "2"
+
+HERDR_ARGS_FILE="$TMP_ROOT/herdr-args.txt" \
+    HERDR_STUB_DIR="$TMP_ROOT/bin" \
+    zsh -lic 'PATH="$HERDR_STUB_DIR:$PATH" herdr session list --json'
+test "$(sed -n '1p' "$TMP_ROOT/herdr-args.txt")" = "session"
+test "$(sed -n '2p' "$TMP_ROOT/herdr-args.txt")" = "list"
+test "$(sed -n '3p' "$TMP_ROOT/herdr-args.txt")" = "--json"
+test "$(wc -l < "$TMP_ROOT/herdr-args.txt" | tr -d ' ')" = "3"
+
 echo "Checking zoxide database operations..."
 mkdir -p "$TMP_ROOT/zoxide-data" "$TMP_ROOT/project"
 _ZO_DATA_DIR="$TMP_ROOT/zoxide-data" zoxide add "$TMP_ROOT/project"
