@@ -81,10 +81,20 @@ install_brew_packages() {
     brew bundle install --jobs=1 --file="$REPO_ROOT/Brewfile"
 }
 
+remove_legacy_tmux_symlink() {
+    local legacy_source="$REPO_ROOT/.tmux.conf"
+    local legacy_dest="$HOME/.tmux.conf"
+
+    if [ -L "$legacy_dest" ] && [ "$(readlink "$legacy_dest")" = "$legacy_source" ]; then
+        echo "Removing legacy tmux config link: $legacy_dest"
+        rm "$legacy_dest"
+    fi
+}
+
 create_symlinks() {
     local dotfile_sources=(
         "$REPO_ROOT/.zshrc"
-        "$REPO_ROOT/.tmux.conf"
+        "$REPO_ROOT/.config/herdr/config.toml"
         "$REPO_ROOT/.config/starship.toml"
         "$REPO_ROOT/.config/nvim"
         "$REPO_ROOT/.config/wezterm"
@@ -94,7 +104,7 @@ create_symlinks() {
     )
     local dotfile_dests=(
         "$HOME/.zshrc"
-        "$HOME/.tmux.conf"
+        "$HOME/.config/herdr/config.toml"
         "$HOME/.config/starship.toml"
         "$HOME/.config/nvim"
         "$HOME/.config/wezterm"
@@ -148,6 +158,7 @@ install_pre_commit() {
 
 ensure_homebrew
 install_brew_packages
+remove_legacy_tmux_symlink
 create_symlinks
 install_bun_language_servers
 install_pre_commit

@@ -1,11 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
-TMP_ROOT=$(mktemp -d)
-TMUX_SESSION="dotfiles-smoke-$$"
+TMP_ROOT=$(mktemp -d /tmp/dotfiles-smoke.XXXXXX)
+HERDR_SESSION_NAME="dotfiles-smoke-$$"
+HERDR_SERVER_PID=""
 
 cleanup() {
-    tmux kill-session -t "$TMUX_SESSION" >/dev/null 2>&1 || true
+    XDG_CONFIG_HOME="$TMP_ROOT/config" herdr session stop "$HERDR_SESSION_NAME" >/dev/null 2>&1 || true
+    if [ -n "$HERDR_SERVER_PID" ]; then
+        kill "$HERDR_SERVER_PID" >/dev/null 2>&1 || true
+        wait "$HERDR_SERVER_PID" >/dev/null 2>&1 || true
+    fi
     rm -rf "$TMP_ROOT"
 }
 trap cleanup EXIT
@@ -24,10 +29,29 @@ test "$(rg --no-filename '^beta$' "$TMP_ROOT/search.txt")" = "beta"
 echo "Checking fzf filtering..."
 test "$(printf 'apple\nbanana\n' | fzf --filter=banana)" = "banana"
 
-echo "Checking tmux session lifecycle..."
-tmux new-session -d -s "$TMUX_SESSION"
-test "$(tmux display-message -p -t "$TMUX_SESSION" '#S')" = "$TMUX_SESSION"
-tmux kill-session -t "$TMUX_SESSION"
+echo "Checking Herdr configuration and session lifecycle..."
+mkdir -p "$TMP_ROOT/config/herdr"
+HERDR_CONFIG_PATH="$PWD/.config/herdr/config.toml" \
+    XDG_CONFIG_HOME="$TMP_ROOT/config" \
+    HERDR_SESSION="$HERDR_SESSION_NAME" \
+    herdr server >/dev/null 2>&1 &
+HERDR_SERVER_PID=$!
+for _ in {1..50}; do
+    if HERDR_CONFIG_PATH="$PWD/.config/herdr/config.toml" \
+        XDG_CONFIG_HOME="$TMP_ROOT/config" \
+        HERDR_SESSION="$HERDR_SESSION_NAME" \
+        herdr workspace list >/dev/null 2>&1; then
+        break
+    fi
+    sleep 0.1
+done
+HERDR_CONFIG_PATH="$PWD/.config/herdr/config.toml" \
+    XDG_CONFIG_HOME="$TMP_ROOT/config" \
+    HERDR_SESSION="$HERDR_SESSION_NAME" \
+    herdr workspace list >/dev/null
+XDG_CONFIG_HOME="$TMP_ROOT/config" herdr session stop "$HERDR_SESSION_NAME" >/dev/null
+wait "$HERDR_SERVER_PID"
+HERDR_SERVER_PID=""
 
 echo "Checking zoxide database operations..."
 mkdir -p "$TMP_ROOT/zoxide-data" "$TMP_ROOT/project"

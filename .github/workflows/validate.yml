@@ -31,6 +31,11 @@ jobs:
           fi
           grep -q '^brew "bun"' Brewfile
           grep -q '^brew "neovim"' Brewfile
+          grep -q '^brew "herdr"' Brewfile
+          if grep -q '^brew "tmux"' Brewfile; then
+            echo "Brewfile still contains the replaced tmux dependency." >&2
+            exit 1
+          fi
           if grep -R -q 'nvim-treesitter/nvim-treesitter' .config/nvim Brewfile packages; then
             echo "Archived nvim-treesitter dependency is not allowed; use Neovim built-in parsers." >&2
             exit 1
@@ -38,7 +43,10 @@ jobs:
 
       - name: Run complete setup
         shell: bash
-        run: ./setup.sh --force | tee setup_log.txt
+        run: |
+          ln -s "$PWD/.tmux.conf" "$HOME/.tmux.conf"
+          ./setup.sh --force | tee setup_log.txt
+          test ! -L "$HOME/.tmux.conf"
 
       - name: Verify tools, integrations, and symlinks
         shell: bash
@@ -49,7 +57,7 @@ jobs:
           fi
           export PATH="$HOME/.local/bin:$PATH"
 
-          for tool in nvim starship lazygit sheldon gh tmux zoxide fzf go uv bun pre-commit; do
+          for tool in nvim starship lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
             command -v "$tool"
           done
 
@@ -61,7 +69,7 @@ jobs:
 
           for path in \
             "$HOME/.zshrc" \
-            "$HOME/.tmux.conf" \
+            "$HOME/.config/herdr/config.toml" \
             "$HOME/.config/starship.toml" \
             "$HOME/.config/nvim" \
             "$HOME/.config/wezterm" \
