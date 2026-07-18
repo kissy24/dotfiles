@@ -18,13 +18,6 @@ else
 end
 config.use_ime                        = true
 
--- タブバーの表示オプション(catpputin-mocha の設定を参考にした)
-local HEADER                          = " "
-local SYMBOL_COLOR                    = { "#cba6f7", "#585b70" }
-local FONT_COLOR                      = { "#cdd6f4", "#9399b2" }
-local BACK_COLOR                      = 'none'
-local HOVER_COLOR                     = 'none'
-
 -- ウィンドウの設定
 config.window_background_opacity      = 0.7
 config.win32_system_backdrop          = 'Acrylic'
@@ -32,7 +25,7 @@ config.macos_window_background_blur   = 20
 config.initial_cols                   = 180
 config.initial_rows                   = 50
 config.window_decorations             = "RESIZE"
-config.show_new_tab_button_in_tab_bar = false
+config.enable_tab_bar                 = false
 
 -- カーソルスタイルをバーに設定
 config.default_cursor_style           = "BlinkingBar"
@@ -58,20 +51,6 @@ config.window_frame                   = {
 config.window_background_gradient     = {
     colors = { "#181825", "#11111b" },
 }
-
-wezterm.on('format-tab-title', function(tab, hover)
-    local index = tab.is_active and 1 or 2
-    local bg = hover and HOVER_COLOR or BACK_COLOR
-    local zoomed = tab.active_pane.is_zoomed and '🔎 ' or ' '
-    return {
-        { Foreground = { Color = SYMBOL_COLOR[index] } },
-        { Background = { Color = bg } },
-        { Text = HEADER .. zoomed },
-        { Foreground = { Color = FONT_COLOR[index] } },
-        { Background = { Color = bg } },
-        { Text = tab.active_pane.title },
-    }
-end)
 
 local function BaseName(s)
     return string.gsub(s, '(.*[/\\])(.*)', '%2')

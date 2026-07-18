@@ -42,6 +42,11 @@ jobs:
             echo "Managed Herdr config must not be ignored." >&2
             exit 1
           fi
+          grep -Eq '^config\.enable_tab_bar[[:space:]]*=[[:space:]]*false$' .config/wezterm/wezterm.lua
+          if grep -Eq 'format-tab-title|show_new_tab_button_in_tab_bar' .config/wezterm/wezterm.lua; then
+            echo "WezTerm native tab UI must stay disabled in favor of Herdr tabs." >&2
+            exit 1
+          fi
           if grep -q '^brew "tmux"' Brewfile; then
             echo "Brewfile still contains the replaced tmux dependency." >&2
             exit 1
