@@ -32,6 +32,16 @@ jobs:
           grep -q '^brew "bun"' Brewfile
           grep -q '^brew "neovim"' Brewfile
           grep -q '^brew "herdr"' Brewfile
+          for path in \
+            .config/herdr/herdr-client.log \
+            .config/herdr/herdr-server.log \
+            .config/herdr/session.json; do
+            git check-ignore --no-index --quiet "$path"
+          done
+          if git check-ignore --no-index --quiet .config/herdr/config.toml; then
+            echo "Managed Herdr config must not be ignored." >&2
+            exit 1
+          fi
           if grep -q '^brew "tmux"' Brewfile; then
             echo "Brewfile still contains the replaced tmux dependency." >&2
             exit 1
