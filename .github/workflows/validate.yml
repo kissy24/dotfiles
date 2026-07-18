@@ -78,7 +78,7 @@ jobs:
           fi
           export PATH="$HOME/.local/bin:$PATH"
 
-          for tool in nvim starship lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
+          for tool in zsh nvim starship lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
             command -v "$tool"
           done
 
