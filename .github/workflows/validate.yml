@@ -52,7 +52,7 @@ jobs:
           grep -Eq '^prompt_new_tab_name[[:space:]]*=[[:space:]]*false$' .config/herdr/config.toml
           grep -Eq '^hide_tab_bar_when_single_tab[[:space:]]*=[[:space:]]*false$' .config/herdr/config.toml
           grep -Fq 'rows = [["state_icon", "workspace"]]' .config/herdr/config.toml
-          grep -Fq 'command herdr --session "$(_herdr_session_name)"' .zshrc
+          grep -Fq "command herdr --session \"\$(_herdr_session_name)\"" .zshrc
           if grep -q '^brew "tmux"' Brewfile; then
             echo "Brewfile still contains the replaced tmux dependency." >&2
             exit 1
