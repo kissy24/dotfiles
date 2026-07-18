@@ -16,5 +16,6 @@ reload_config = "prefix+shift+r"
 [ui]
 mouse_capture = true
 copy_on_select = true
-hide_tab_bar_when_single_tab = true
+prompt_new_tab_name = false
+hide_tab_bar_when_single_tab = false
 sidebar_collapsed_mode = "hidden"
