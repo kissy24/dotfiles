@@ -29,6 +29,7 @@ remove_symlinks() {
     local dotfile_paths=(
         .zshrc
         .tmux.conf
+        .config/herdr/config.toml
         .config/starship.toml
         .config/nvim
         .config/wezterm

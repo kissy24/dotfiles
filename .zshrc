@@ -31,7 +31,7 @@ alias ll="ls -alFhG"
 alias la="ls -AFG"
 alias l="ls -lFh"
 alias lg="lazygit"
-alias tx="tmux new-session \; split-window -h \; select-pane -L \; resize-pane -x 70%"
+alias hr="herdr"
 
 
 # Vim Mode
@@ -65,6 +65,11 @@ elif [[ -x /usr/local/bin/brew ]]; then
     eval "$(/usr/local/bin/brew shellenv)"
 elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
+# Herdr completion
+if command -v herdr &> /dev/null; then
+    eval "$(herdr completion zsh)"
 fi
 
 # fzf標準連携 (Ctrl-R: 履歴、Ctrl-T: ファイル、Alt-C: ディレクトリ)

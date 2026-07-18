@@ -1,0 +1,20 @@
+# Keep the managed config immutable during Herdr's first launch.
+onboarding = false
+
+[theme]
+# Reuse the host terminal palette, matching the previous transparent tmux UI.
+name = "terminal"
+
+[terminal]
+shell_mode = "auto"
+new_cwd = "follow"
+
+[keys]
+prefix = "ctrl+b"
+reload_config = "prefix+shift+r"
+
+[ui]
+mouse_capture = true
+copy_on_select = true
+hide_tab_bar_when_single_tab = true
+sidebar_collapsed_mode = "hidden"
