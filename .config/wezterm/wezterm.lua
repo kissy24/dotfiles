@@ -1,9 +1,17 @@
 local wezterm = require 'wezterm'
+local act = wezterm.action
 local config = wezterm.config_builder()
 
--- WSL Ubuntu をデフォルトシェルとして設定
+-- Herdrをデフォルトで起動する
 if wezterm.target_triple:find("windows") then
-    config.default_prog = { "wsl.exe", "~", "-d", "Ubuntu-24.04" }
+    config.default_prog = {
+        "wsl.exe",
+        "--distribution", "Ubuntu-24.04",
+        "--cd", "~",
+        "--exec", "zsh", "-lic", "exec herdr",
+    }
+else
+    config.default_prog = { "zsh", "-lic", "exec herdr" }
 end
 
 -- カラースキームの設定
@@ -38,10 +46,41 @@ config.cursor_blink_rate              = 500
 config.audible_bell                   = "Disabled"
 
 -- ホットキー設定
-config.keys                           = {
-    { key = "C", mods = "CTRL", action = wezterm.action.CopyTo("Clipboard") },
-    { key = "V", mods = "CTRL", action = wezterm.action.PasteFrom("Clipboard") },
+local function send_herdr_prefix_key(key, mods)
+    local keypress = { key = key }
+    if mods then
+        keypress.mods = mods
+    end
+    return act.Multiple {
+        act.SendKey { key = "b", mods = "CTRL" },
+        act.SendKey(keypress),
+    }
+end
+
+config.keys = {
+    { key = "C", mods = "CTRL", action = act.CopyTo("Clipboard") },
+    { key = "V", mods = "CTRL", action = act.PasteFrom("Clipboard") },
+    { key = "t", mods = "CMD", action = send_herdr_prefix_key("c") },
+    { key = "w", mods = "CMD", action = send_herdr_prefix_key("x", "SHIFT") },
+    { key = "[", mods = "CMD|SHIFT", action = send_herdr_prefix_key("p") },
+    { key = "]", mods = "CMD|SHIFT", action = send_herdr_prefix_key("n") },
+    { key = "mapped:{", mods = "CMD", action = send_herdr_prefix_key("p") },
+    { key = "mapped:}", mods = "CMD", action = send_herdr_prefix_key("n") },
+    { key = "mapped:{", mods = "CMD|SHIFT", action = send_herdr_prefix_key("p") },
+    { key = "mapped:}", mods = "CMD|SHIFT", action = send_herdr_prefix_key("n") },
+    { key = "T", mods = "CTRL|SHIFT", action = send_herdr_prefix_key("c") },
+    { key = "W", mods = "CTRL|SHIFT", action = send_herdr_prefix_key("x", "SHIFT") },
+    { key = "Tab", mods = "CTRL", action = send_herdr_prefix_key("n") },
+    { key = "Tab", mods = "CTRL|SHIFT", action = send_herdr_prefix_key("p") },
 }
+
+for index = 1, 9 do
+    table.insert(config.keys, {
+        key = tostring(index),
+        mods = "CMD",
+        action = send_herdr_prefix_key(tostring(index)),
+    })
+end
 
 config.window_frame                   = {
     inactive_titlebar_bg = "none",

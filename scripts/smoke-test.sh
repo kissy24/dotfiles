@@ -4,9 +4,12 @@ set -euo pipefail
 TMP_ROOT=$(mktemp -d /tmp/dotfiles-smoke.XXXXXX)
 HERDR_SESSION_NAME="dotfiles-smoke-$$"
 HERDR_SERVER_PID=""
+HERDR_TEST_CONFIG="$TMP_ROOT/config/herdr/config.toml"
 
 cleanup() {
-    XDG_CONFIG_HOME="$TMP_ROOT/config" herdr session stop "$HERDR_SESSION_NAME" >/dev/null 2>&1 || true
+    HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
+        XDG_CONFIG_HOME="$TMP_ROOT/config" \
+        herdr session stop "$HERDR_SESSION_NAME" >/dev/null 2>&1 || true
     if [ -n "$HERDR_SERVER_PID" ]; then
         kill "$HERDR_SERVER_PID" >/dev/null 2>&1 || true
         wait "$HERDR_SERVER_PID" >/dev/null 2>&1 || true
@@ -31,25 +34,25 @@ test "$(printf 'apple\nbanana\n' | fzf --filter=banana)" = "banana"
 
 echo "Checking Herdr configuration and session lifecycle..."
 mkdir -p "$TMP_ROOT/config/herdr"
-HERDR_CONFIG_PATH="$PWD/.config/herdr/config.toml" \
+cp "$PWD/.config/herdr/config.toml" "$HERDR_TEST_CONFIG"
+HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
     XDG_CONFIG_HOME="$TMP_ROOT/config" \
-    HERDR_SESSION="$HERDR_SESSION_NAME" \
-    herdr server >/dev/null 2>&1 &
+    herdr --session "$HERDR_SESSION_NAME" server >/dev/null 2>&1 &
 HERDR_SERVER_PID=$!
 for _ in {1..50}; do
-    if HERDR_CONFIG_PATH="$PWD/.config/herdr/config.toml" \
+    if HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
         XDG_CONFIG_HOME="$TMP_ROOT/config" \
-        HERDR_SESSION="$HERDR_SESSION_NAME" \
-        herdr workspace list >/dev/null 2>&1; then
+        herdr --session "$HERDR_SESSION_NAME" workspace list >/dev/null 2>&1; then
         break
     fi
     sleep 0.1
 done
-HERDR_CONFIG_PATH="$PWD/.config/herdr/config.toml" \
+HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
     XDG_CONFIG_HOME="$TMP_ROOT/config" \
-    HERDR_SESSION="$HERDR_SESSION_NAME" \
-    herdr workspace list >/dev/null
-XDG_CONFIG_HOME="$TMP_ROOT/config" herdr session stop "$HERDR_SESSION_NAME" >/dev/null
+    herdr --session "$HERDR_SESSION_NAME" workspace list >/dev/null
+HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
+    XDG_CONFIG_HOME="$TMP_ROOT/config" \
+    herdr session stop "$HERDR_SESSION_NAME" >/dev/null
 wait "$HERDR_SERVER_PID"
 HERDR_SERVER_PID=""
 
