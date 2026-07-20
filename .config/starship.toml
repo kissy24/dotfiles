@@ -9,24 +9,53 @@ $time\
 $line_break\
 $character\
 """
+palette = 'catppuccin_mocha'
+
+[palettes.catppuccin_mocha]
+rosewater = '#f5e0dc'
+flamingo = '#f2cdcd'
+pink = '#f5c2e7'
+mauve = '#cba6f7'
+red = '#f38ba8'
+maroon = '#eba0ac'
+peach = '#fab387'
+yellow = '#f9e2af'
+green = '#a6e3a1'
+teal = '#94e2d5'
+sky = '#89dceb'
+sapphire = '#74c7ec'
+blue = '#89b4fa'
+lavender = '#b4befe'
+text = '#cdd6f4'
+subtext1 = '#bac2de'
+subtext0 = '#a6adc8'
+overlay2 = '#9399b2'
+overlay1 = '#7f849c'
+overlay0 = '#6c7086'
+surface2 = '#585b70'
+surface1 = '#45475a'
+surface0 = '#313244'
+base = '#1e1e2e'
+mantle = '#181825'
+crust = '#11111b'
 
 [directory]
 truncation_length = 4
 truncation_symbol = ' '
 truncate_to_repo = true
 home_symbol = '~'
-style = 'fg:#7aa2f7'
+style = 'fg:blue'
 read_only = ' 󰌾 '
-read_only_style = 'fg:#7aa2f7'
+read_only_style = 'fg:blue'
 
 [git_branch]
 symbol = ''
 truncation_length = 32
 truncation_symbol = ''
-style = 'fg:#f7768e'
+style = 'fg:red'
 
 [git_status]
-style = 'fg:#ff9e64'
+style = 'fg:peach'
 conflicted = '='
 ahead = '⇡${count}'
 behind = '⇣${count}'
@@ -39,26 +68,26 @@ renamed = '»'
 deleted = '✘'
 
 [git_metrics]
-added_style = 'fg:#9ece6a'
-deleted_style = 'fg:#9ece6a'
+added_style = 'fg:green'
+deleted_style = 'fg:red'
 format = '([+$added/]($added_style))([-$deleted]($deleted_style) )'
 disabled = false
 
 [character]
-success_symbol = '[❯](bold #9ece6a)'
-error_symbol = '[❯](bold #f7768e)'
+success_symbol = '[❯](bold green)'
+error_symbol = '[❯](bold red)'
 
 [fill]
 symbol = ' '
 
 [cmd_duration]
-min_time = 1
-style = 'fg:#e0af68'
+min_time = 500
+style = 'fg:yellow'
 format = "[ $duration ]($style)" # nf-pl-right_soft_divider, nf-mdi-clock
 
 [time]
 disabled = false
-style = 'fg:#9aa5ce'
+style = 'fg:subtext0'
 format = '[ $time ]($style)' # nf-pl-right_soft_divider, nf-fa-clock_o
-time_format = '%T'
+time_format = '%H:%M'
 utc_time_offset = '+9'

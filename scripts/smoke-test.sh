@@ -22,7 +22,8 @@ echo "Checking CLI startup..."
 git --version >/dev/null
 lazygit --version >/dev/null
 gh --version >/dev/null
-starship prompt >/dev/null
+STARSHIP_CONFIG="$PWD/.config/starship.toml" \
+    starship prompt --cmd-duration 500 >/dev/null
 sheldon source >/dev/null
 
 echo "Checking ripgrep search..."
