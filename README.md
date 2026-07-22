@@ -92,6 +92,20 @@ $EDITOR ~/.zshrc.local
 
 `~/.zshrc.local`は、このリポジトリによる作成、リンク、削除、Git管理の対象外です。共通設定の後に読み込むため、共通のエイリアスや環境変数をマシンごとに上書きできます。
 
+### パッケージ更新
+
+`pkgupd`はHomebrewの更新候補をローカルで初めて観測してから7日間待ち、同じバージョンが継続しているパッケージだけを更新します。待機中に候補バージョンが変わった場合は、そのバージョンの待機期間を初めから数え直します。観測状態は`${XDG_STATE_HOME:-~/.local/state}/pkgupd/homebrew.tsv`に保存します。
+
+```sh
+pkgupd
+```
+
+UbuntuではHomebrewのみにクールダウンを適用し、APTのシステム・セキュリティ更新は遅延させず従来どおり適用します。Homebrewが対象パッケージのインストールに必要と判断した依存関係は、同時に更新される場合があります。Homebrewだけを処理する場合は`pkgupd --homebrew-only`、待機日数を変更する場合は`PKGUPD_COOLDOWN_DAYS`を使用します。
+
+```sh
+PKGUPD_COOLDOWN_DAYS=14 pkgupd
+```
+
 ## アンインストール
 
 デフォルトでは、このリポジトリが管理するシンボリックリンクだけを削除します。
@@ -119,7 +133,7 @@ pre-commit run --all-files
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、Bun・Go・Pythonのコード実行、ヘッドレスNeovim上でのTypeScript Language Server接続、標準Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、ヘッドレスNeovim上でのTypeScript Language Server接続、標準Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
 依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 

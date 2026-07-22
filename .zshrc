@@ -60,13 +60,6 @@ export KEYTIMEOUT=20
 bindkey -v
 bindkey -M viins 'jj' vi-cmd-mode
 
-# パッケージマネージャー
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    alias pkgupd='brew update && brew upgrade && brew cleanup && sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y && sudo apt autoclean'
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    alias pkgupd='brew update && brew upgrade && brew cleanup'
-fi
-
 # ユーザー単位でインストールしたCLI
 [ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
 [ -d "$HOME/bin" ] && export PATH="$HOME/bin:$PATH"
