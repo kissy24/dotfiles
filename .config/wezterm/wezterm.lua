@@ -2,16 +2,17 @@ local wezterm = require 'wezterm'
 local act = wezterm.action
 local config = wezterm.config_builder()
 
--- Herdrをデフォルトで起動する
+-- Herdrが利用可能なら起動し、未導入時は通常のZshを開く
+local launch_command = "if command -v herdr >/dev/null 2>&1; then exec herdr; else exec zsh -l; fi"
 if wezterm.target_triple:find("windows") then
     config.default_prog = {
         "wsl.exe",
         "--distribution", "Ubuntu-24.04",
         "--cd", "~",
-        "--exec", "zsh", "-lic", "exec herdr",
+        "--exec", "zsh", "-lic", launch_command,
     }
 else
-    config.default_prog = { "zsh", "-lic", "exec herdr" }
+    config.default_prog = { "zsh", "-lic", launch_command }
 end
 
 -- カラースキームの設定
