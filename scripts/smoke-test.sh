@@ -74,6 +74,9 @@ test "$(_ZO_DATA_DIR="$TMP_ROOT/zoxide-data" zoxide query project)" = "$TMP_ROOT
 echo "Checking Bun execution..."
 test "$(bun -e 'console.log(1 + 1)')" = "2"
 
+echo "Checking package update cooldown..."
+./scripts/test-pkgupd.sh
+
 echo "Checking Go compilation and execution..."
 printf 'package main\nimport "fmt"\nfunc main() { fmt.Print("ok") }\n' > "$TMP_ROOT/main.go"
 test "$(go run "$TMP_ROOT/main.go")" = "ok"

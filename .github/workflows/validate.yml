@@ -22,7 +22,7 @@ jobs:
       - name: Validate declarations and shell syntax
         shell: bash
         run: |
-          bash -n setup.sh uninstall.sh
+          bash -n setup.sh uninstall.sh .local/bin/pkgupd scripts/test-pkgupd.sh
           ./setup.sh --help
           ./uninstall.sh --help
           if grep -Eq '^brew "(rust|node|fd)"' Brewfile; then
@@ -96,6 +96,7 @@ jobs:
 
           for path in \
             "$HOME/.zshrc" \
+            "$HOME/.local/bin/pkgupd" \
             "$HOME/.config/herdr/config.toml" \
             "$HOME/.config/starship.toml" \
             "$HOME/.config/nvim" \
@@ -142,6 +143,7 @@ jobs:
           fi
           ./uninstall.sh
           test ! -L "$HOME/.zshrc"
+          test ! -L "$HOME/.local/bin/pkgupd"
           test ! -L "$HOME/.config/nvim"
           brew list --formula neovim
           brew list --formula bun

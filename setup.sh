@@ -94,6 +94,7 @@ remove_legacy_tmux_symlink() {
 create_symlinks() {
     local dotfile_sources=(
         "$REPO_ROOT/.zshrc"
+        "$REPO_ROOT/.local/bin/pkgupd"
         "$REPO_ROOT/.config/herdr/config.toml"
         "$REPO_ROOT/.config/starship.toml"
         "$REPO_ROOT/.config/nvim"
@@ -104,6 +105,7 @@ create_symlinks() {
     )
     local dotfile_dests=(
         "$HOME/.zshrc"
+        "$HOME/.local/bin/pkgupd"
         "$HOME/.config/herdr/config.toml"
         "$HOME/.config/starship.toml"
         "$HOME/.config/nvim"
