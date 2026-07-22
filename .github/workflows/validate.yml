@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.0
 
       - name: Validate declarations and shell syntax
         shell: bash
@@ -45,7 +45,7 @@ jobs:
           grep -Eq '^config\.enable_tab_bar[[:space:]]*=[[:space:]]*false$' .config/wezterm/wezterm.lua
           grep -Eq '^    config\.window_decorations = "TITLE \| RESIZE"$' .config/wezterm/wezterm.lua
           grep -Eq '^    config\.window_decorations = "RESIZE"$' .config/wezterm/wezterm.lua
-          grep -q 'exec herdr' .config/wezterm/wezterm.lua
+          grep -Fq 'local launch_command = "if command -v herdr >/dev/null 2>&1; then exec herdr; else exec zsh -l; fi"' .config/wezterm/wezterm.lua
           grep -q 'send_herdr_prefix_key' .config/wezterm/wezterm.lua
           grep -Eq 'key = "T".*mods = "CMD\|SHIFT".*send_herdr_prefix_key\("n", "SHIFT"\)' .config/wezterm/wezterm.lua
           grep -Eq 'key = "N".*mods = "CTRL\|SHIFT".*send_herdr_prefix_key\("n", "SHIFT"\)' .config/wezterm/wezterm.lua
