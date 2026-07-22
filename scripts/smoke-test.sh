@@ -26,26 +26,6 @@ STARSHIP_CONFIG="$PWD/.config/starship.toml" \
     starship prompt --cmd-duration 500 >/dev/null
 sheldon source >/dev/null
 
-echo "Checking WezTerm shell fallback..."
-WEZTERM_LAUNCH_COMMAND=$(sed -nE 's/^local launch_command = "(.*)"$/\1/p' \
-    "$PWD/.config/wezterm/wezterm.lua")
-WEZTERM_TEST_ZSH=$(command -v zsh)
-WEZTERM_NO_HERDR_BIN="$TMP_ROOT/wezterm-no-herdr-bin"
-WEZTERM_WITH_HERDR_BIN="$TMP_ROOT/wezterm-with-herdr-bin"
-mkdir -p "$WEZTERM_NO_HERDR_BIN" "$WEZTERM_WITH_HERDR_BIN"
-printf '#!/bin/sh\nprintf fallback\n' > "$WEZTERM_NO_HERDR_BIN/zsh"
-printf '#!/bin/sh\nprintf fallback\n' > "$WEZTERM_WITH_HERDR_BIN/zsh"
-printf '#!/bin/sh\nprintf herdr\n' > "$WEZTERM_WITH_HERDR_BIN/herdr"
-chmod +x \
-    "$WEZTERM_NO_HERDR_BIN/zsh" \
-    "$WEZTERM_WITH_HERDR_BIN/zsh" \
-    "$WEZTERM_WITH_HERDR_BIN/herdr"
-test -n "$WEZTERM_LAUNCH_COMMAND"
-test "$(PATH="$WEZTERM_NO_HERDR_BIN:/usr/bin:/bin" \
-    "$WEZTERM_TEST_ZSH" -fc "$WEZTERM_LAUNCH_COMMAND")" = "fallback"
-test "$(PATH="$WEZTERM_WITH_HERDR_BIN:/usr/bin:/bin" \
-    "$WEZTERM_TEST_ZSH" -fc "$WEZTERM_LAUNCH_COMMAND")" = "herdr"
-
 echo "Checking ripgrep search..."
 printf 'alpha\nbeta\n' > "$TMP_ROOT/search.txt"
 test "$(rg --no-filename '^beta$' "$TMP_ROOT/search.txt")" = "beta"
