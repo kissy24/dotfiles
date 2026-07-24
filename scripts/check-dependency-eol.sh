@@ -9,6 +9,11 @@ trap 'rm -rf "$TMP_ROOT"' EXIT
 
 failures=0
 
+[ -f "$REPO_ROOT/flake.lock" ] || {
+    echo "ERROR: Missing locked Nix dependency file: flake.lock" >&2
+    exit 1
+}
+
 fetch() {
     local url=$1
     shift

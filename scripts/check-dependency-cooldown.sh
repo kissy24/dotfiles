@@ -15,6 +15,10 @@ if ! [[ $NOW_EPOCH =~ ^[0-9]+$ ]]; then
     echo "ERROR: NOW_EPOCH must be a non-negative integer: $NOW_EPOCH" >&2
     exit 2
 fi
+[ -f "$REPO_ROOT/flake.lock" ] || {
+    echo "ERROR: Missing locked Nix dependency file: flake.lock" >&2
+    exit 1
+}
 
 TMP_ROOT=$(mktemp -d)
 trap 'rm -rf "$TMP_ROOT"' EXIT
