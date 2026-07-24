@@ -3,12 +3,16 @@ set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 GITHUB_API_URL=${GITHUB_API_URL:-https://api.github.com}
-HOMEBREW_FORMULA_API_URL=${HOMEBREW_FORMULA_API_URL:-https://formulae.brew.sh/api/formula}
 
 TMP_ROOT=$(mktemp -d)
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
 failures=0
+
+[ -f "$REPO_ROOT/flake.lock" ] || {
+    echo "ERROR: Missing locked Nix dependency file: flake.lock" >&2
+    exit 1
+}
 
 fetch() {
     local url=$1
@@ -32,6 +36,22 @@ collect_github_repositories() {
             "$REPO_ROOT/.config/nvim/lua/base/lazy.lua"
         find "$REPO_ROOT/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \) \
             -exec sed -nE 's/.*uses:[[:space:]]*([[:alnum:]_.-]+\/[[:alnum:]_.-]+)@.*/\1/p' {} +
+        python3 - "$REPO_ROOT/flake.lock" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as lock_file:
+    lock = json.load(lock_file)
+
+for node in lock.get("nodes", {}).values():
+    locked = node.get("locked", {})
+    if locked.get("type") != "github":
+        continue
+    owner = locked.get("owner")
+    repo = locked.get("repo")
+    if owner and repo:
+        print(f"{owner}/{repo}")
+PY
     } | sed 's/\.git$//' | sort -u
 }
 
@@ -69,32 +89,7 @@ check_github_repositories() {
     done < "$repositories_file"
 }
 
-check_homebrew_formulae() {
-    local formula response
-
-    echo "Checking Homebrew formula lifecycle metadata..."
-    while IFS= read -r formula; do
-        [[ -n $formula ]] || continue
-        if ! response=$(fetch "$HOMEBREW_FORMULA_API_URL/$formula.json"); then
-            echo "ERROR: Could not read Homebrew formula metadata: $formula" >&2
-            failures=$((failures + 1))
-            continue
-        fi
-
-        if printf '%s' "$response" | is_true disabled; then
-            echo "ERROR: Homebrew formula is disabled: $formula" >&2
-            failures=$((failures + 1))
-        elif printf '%s' "$response" | is_true deprecated; then
-            echo "ERROR: Homebrew formula is deprecated: $formula" >&2
-            failures=$((failures + 1))
-        else
-            echo "OK: $formula"
-        fi
-    done < <(sed -nE 's/^brew "([^"]+)".*/\1/p' "$REPO_ROOT/Brewfile")
-}
-
 check_github_repositories
-check_homebrew_formulae
 
 if (( failures > 0 )); then
     echo "Dependency EOL check failed with $failures error(s)." >&2

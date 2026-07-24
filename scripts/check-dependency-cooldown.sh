@@ -15,6 +15,10 @@ if ! [[ $NOW_EPOCH =~ ^[0-9]+$ ]]; then
     echo "ERROR: NOW_EPOCH must be a non-negative integer: $NOW_EPOCH" >&2
     exit 2
 fi
+[ -f "$REPO_ROOT/flake.lock" ] || {
+    echo "ERROR: Missing locked Nix dependency file: flake.lock" >&2
+    exit 1
+}
 
 TMP_ROOT=$(mktemp -d)
 trap 'rm -rf "$TMP_ROOT"' EXIT
@@ -52,6 +56,31 @@ check_age() {
     age_days=$(((NOW_EPOCH - published_epoch) / 86400))
     if (( NOW_EPOCH - published_epoch < cooldown_seconds )); then
         echo "ERROR: Dependency is only ${age_days} day(s) old; require ${COOLDOWN_DAYS}: $dependency ($published_at)" >&2
+        failures=$((failures + 1))
+    else
+        echo "OK: $dependency (${age_days} day(s) old)"
+    fi
+}
+
+check_epoch_age() {
+    local dependency=$1
+    local published_epoch=$2
+    local age_days
+
+    if ! [[ $published_epoch =~ ^[0-9]+$ ]]; then
+        echo "ERROR: Invalid lock timestamp for $dependency: $published_epoch" >&2
+        failures=$((failures + 1))
+        return
+    fi
+    if (( published_epoch > NOW_EPOCH )); then
+        echo "ERROR: Lock timestamp is in the future for $dependency: $published_epoch" >&2
+        failures=$((failures + 1))
+        return
+    fi
+
+    age_days=$(((NOW_EPOCH - published_epoch) / 86400))
+    if (( NOW_EPOCH - published_epoch < cooldown_seconds )); then
+        echo "ERROR: Dependency is only ${age_days} day(s) old; require ${COOLDOWN_DAYS}: $dependency" >&2
         failures=$((failures + 1))
     else
         echo "OK: $dependency (${age_days} day(s) old)"
@@ -137,8 +166,41 @@ check_npm_packages() {
     done < "$packages_file"
 }
 
+check_nix_flake_inputs() {
+    local dependency published_epoch
+
+    echo "Checking Nix flake input ages..."
+    while IFS='|' read -r dependency published_epoch; do
+        [[ -n $dependency && -n $published_epoch ]] || continue
+        check_epoch_age "$dependency" "$published_epoch"
+    done < <(
+        python3 - "$REPO_ROOT/flake.lock" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as lock_file:
+    lock = json.load(lock_file)
+
+for name, node in sorted(lock.get("nodes", {}).items()):
+    locked = node.get("locked", {})
+    modified = locked.get("lastModified")
+    if modified is None:
+        continue
+    owner = locked.get("owner")
+    repo = locked.get("repo")
+    revision = locked.get("rev", "")
+    if owner and repo:
+        label = f"{owner}/{repo}@{revision}"
+    else:
+        label = name
+    print(f"{label}|{modified}")
+PY
+    )
+}
+
 check_github_refs
 check_npm_packages
+check_nix_flake_inputs
 
 if (( failures > 0 )); then
     echo "Dependency cooldown check failed with $failures error(s)." >&2

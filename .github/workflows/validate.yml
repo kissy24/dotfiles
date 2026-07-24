@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -22,17 +23,17 @@ jobs:
       - name: Validate declarations and shell syntax
         shell: bash
         run: |
-          bash -n setup.sh uninstall.sh .local/bin/pkgupd \
+          bash -n setup.sh uninstall.sh .local/bin/pkgupd scripts/install-nix.sh \
             scripts/test-pkgupd.sh scripts/test-wezterm-herdr-fallback.sh
           ./setup.sh --help
           ./uninstall.sh --help
-          if grep -Eq '^brew "(rust|node|fd)"' Brewfile; then
-            echo "Brewfile contains a removed dependency." >&2
-            exit 1
-          fi
-          grep -q '^brew "bun"' Brewfile
-          grep -q '^brew "neovim"' Brewfile
-          grep -q '^brew "herdr"' Brewfile
+          test -f flake.nix
+          test -f flake.lock
+          test ! -e Brewfile
+          test ! -e packages/apt.txt
+          grep -q 'nixpkgs-unstable' flake.nix
+          grep -q 'herdr.packages' flake.nix
+          grep -q 'nix-profile' .zshrc
           for path in \
             .config/herdr/herdr-client.log \
             .config/herdr/herdr-server.log \
@@ -64,11 +65,7 @@ jobs:
           fi
           grep -Eq '^prompt_new_tab_name[[:space:]]*=[[:space:]]*false$' .config/herdr/config.toml
           grep -Eq '^hide_tab_bar_when_single_tab[[:space:]]*=[[:space:]]*false$' .config/herdr/config.toml
-          if grep -q '^brew "tmux"' Brewfile; then
-            echo "Brewfile still contains the replaced tmux dependency." >&2
-            exit 1
-          fi
-          if grep -R -q 'nvim-treesitter/nvim-treesitter' .config/nvim Brewfile packages; then
+          if grep -R -q 'nvim-treesitter/nvim-treesitter' .config/nvim packages; then
             echo "Archived nvim-treesitter dependency is not allowed; use Neovim built-in parsers." >&2
             exit 1
           fi
@@ -76,6 +73,13 @@ jobs:
       - name: Run complete setup
         shell: bash
         run: |
+          ./scripts/install-nix.sh
+          if [ -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+            . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          else
+            . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+          fi
+          nix --extra-experimental-features "nix-command flakes" flake lock
           ln -s "$PWD/.tmux.conf" "$HOME/.tmux.conf"
           ./setup.sh --force | tee setup_log.txt
           test ! -L "$HOME/.tmux.conf"
@@ -84,15 +88,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          if [ -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+            . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          elif [ -r "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
+            . "$HOME/.nix-profile/etc/profile.d/nix.sh"
           fi
-          export PATH="$HOME/.local/bin:$PATH"
+          profile=${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/nix-profile
+          export PATH="$profile/bin:$HOME/.local/bin:$PATH"
 
           for tool in zsh nvim starship lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
             command -v "$tool"
           done
 
+          nix --extra-experimental-features "nix-command flakes" profile list --profile "$profile"
           data_home=${XDG_DATA_HOME:-$HOME/.local/share}
           test -x "$data_home/dotfiles-lsp/node_modules/.bin/typescript-language-server"
           test -x "$data_home/dotfiles-lsp/node_modules/.bin/pyright-langserver"
@@ -115,16 +123,32 @@ jobs:
       - name: Run functional smoke tests
         shell: bash
         run: |
-          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          if [ -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+            . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          else
+            . "$HOME/.nix-profile/etc/profile.d/nix.sh"
           fi
-          export PATH="$HOME/.local/bin:$PATH"
+          profile=${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/nix-profile
+          export PATH="$profile/bin:$HOME/.local/bin:$PATH"
           ./scripts/smoke-test.sh
+
+      - name: Validate locked Nix flake
+        shell: bash
+        run: |
+          if [ -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]; then
+            . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          else
+            . "$HOME/.nix-profile/etc/profile.d/nix.sh"
+          fi
+          nix --extra-experimental-features "nix-command flakes" flake lock
+          git diff --exit-code -- flake.lock
+          nix --extra-experimental-features "nix-command flakes" flake check
 
       - name: Run repository checks
         shell: bash
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
+          profile=${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/nix-profile
+          export PATH="$profile/bin:$HOME/.local/bin:$PATH"
           pre-commit run --all-files
           if [ "$RUNNER_OS" = "Linux" ]; then
             pre-commit run betterleaks-working-tree --hook-stage manual --all-files
@@ -143,12 +167,14 @@ jobs:
       - name: Verify safe uninstallation
         shell: bash
         run: |
-          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          fi
+          profile=${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/nix-profile
+          export PATH="$profile/bin:$HOME/.local/bin:$PATH"
           ./uninstall.sh
           test ! -L "$HOME/.zshrc"
           test ! -L "$HOME/.local/bin/pkgupd"
           test ! -L "$HOME/.config/nvim"
-          brew list --formula neovim
-          brew list --formula bun
+          test -x "$profile/bin/nvim"
+          test -x "$profile/bin/bun"
+          printf 'y\n' | ./uninstall.sh --packages
+          test ! -e "$profile/bin/nvim"
+          test ! -e "$profile/bin/bun"

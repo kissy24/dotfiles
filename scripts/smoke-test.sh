@@ -77,7 +77,7 @@ test "$(_ZO_DATA_DIR="$TMP_ROOT/zoxide-data" zoxide query project)" = "$TMP_ROOT
 echo "Checking Bun execution..."
 test "$(bun -e 'console.log(1 + 1)')" = "2"
 
-echo "Checking package update cooldown..."
+echo "Checking locked Nix profile updates..."
 ./scripts/test-pkgupd.sh
 
 echo "Checking Go compilation and execution..."

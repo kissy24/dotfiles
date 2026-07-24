@@ -29,8 +29,7 @@
 
 - 変更は依頼された目的に必要な最小範囲に限定する。
 - 依存関係は既存の宣言元を使う。
-  - Homebrew: `Brewfile`
-  - Ubuntu固有パッケージ: `packages/apt.txt`
+  - macOS／Linux共通CLIとLinux固有CLI: `flake.nix`と`flake.lock`
   - Bun管理LSP: `packages/bun-lsp/package.json`と`bun.lock`
   - Neovim/Mason/Sheldon: 各設定ファイル
 - EOL、archive済み、またはメンテナンス終了の依存関係は追加しない。導入前に公式の保守状況を確認し、Neovim標準機能など保守中の代替を優先する。例外はユーザーの明示的な承認を必要とする。
@@ -55,7 +54,7 @@ pre-commit run --all-files
 - JSON/YAML変更: pre-commitの構文検査
 - 機微情報: Betterleaksのpre-commit hookとCIの作業ツリー走査を無効化しない。検出除外はユーザーの明示的な承認を必要とする
 - Neovim変更: ヘッドレス起動と関連LSP・プラグインの初期化確認
-- 依存関係変更: `GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh`と`GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-cooldown.sh`
+- 依存関係変更: `nix --extra-experimental-features "nix-command flakes" flake check`、`GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh`、`GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-cooldown.sh`
 - セットアップ動作変更: `scripts/smoke-test.sh`を更新し、実行可能な環境では実行する
 
 ローカルでフルセットアップするとユーザー環境を破壊する可能性があるため、`./setup.sh --force`やパッケージ削除は検証目的だけで実行しない。完全セットアップはGitHub Actionsの使い捨てrunnerで検証する。

@@ -1,4 +1,15 @@
 # ~/.zshrc
+
+# Nix daemonとdotfiles専用profile
+if [[ -r /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
+    source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+elif [[ -r "$HOME/.nix-profile/etc/profile.d/nix.sh" ]]; then
+    source "$HOME/.nix-profile/etc/profile.d/nix.sh"
+fi
+dotfiles_nix_profile="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/nix-profile"
+[[ -d "$dotfiles_nix_profile/bin" ]] && export PATH="$dotfiles_nix_profile/bin:$PATH"
+unset dotfiles_nix_profile
+
 autoload -Uz compinit && compinit
 
 # 履歴ファイルの設定
@@ -92,17 +103,6 @@ bindkey -M viins 'jj' vi-cmd-mode
 # uv completion
 if command -v uv &> /dev/null; then
     eval "$(uv generate-shell-completion zsh)"
-fi
-
-# Homebrew (Apple Silicon, Intel macOS, Linux)
-if command -v brew >/dev/null 2>&1; then
-    eval "$(brew shellenv)"
-elif [[ -x /opt/homebrew/bin/brew ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [[ -x /usr/local/bin/brew ]]; then
-    eval "$(/usr/local/bin/brew shellenv)"
-elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
 # Herdr completion
