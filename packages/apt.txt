@@ -3,3 +3,4 @@ procps
 curl
 file
 git
+zsh

@@ -33,6 +33,30 @@ alias l="ls -lFh"
 alias lg="lazygit"
 alias hr="herdr"
 
+# 更新後のHerdrと旧サーバーが不整合になった場合に、確認して再起動する
+hrr() {
+    if (( $# > 1 )); then
+        print -u2 "usage: hrr [session]"
+        return 2
+    fi
+
+    local session_name="${1:-default}"
+    if [[ ! -t 0 ]]; then
+        print -u2 "hrr: an interactive terminal is required"
+        return 1
+    fi
+
+    print -u2 "Herdr session '$session_name' の全プロセスを終了して再起動します。"
+    if ! read -q "reply?続行しますか? [y/N] "; then
+        print
+        return 1
+    fi
+    print
+
+    herdr session stop "$session_name" || return
+    exec herdr --session "$session_name"
+}
+
 # カレントディレクトリまたは指定したディレクトリをHerdr Workspaceとして開く
 hrw() {
     if (( $# > 2 )); then
