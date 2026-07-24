@@ -11,7 +11,7 @@ Usage: ./uninstall.sh [--packages]
 
 By default only managed symlinks are removed.
 
-  --packages  Also uninstall packages declared in the Brewfile
+  --packages  Also remove the dedicated dotfiles Nix package profile
   --help      Show this help
 EOF
 }
@@ -51,30 +51,26 @@ remove_symlinks() {
     done
 }
 
-brew_packages_from() {
-    sed -n 's/^brew "\([^"]*\)".*/\1/p' "$1"
-}
+load_nix_environment() {
+    local profile_script
 
-remove_brew_packages() {
-    local package
-    while IFS= read -r package; do
-        if brew list --formula "$package" >/dev/null 2>&1; then
-            brew uninstall "$package"
+    for profile_script in \
+        /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh \
+        "$HOME/.nix-profile/etc/profile.d/nix.sh"; do
+        if [ -r "$profile_script" ]; then
+            # shellcheck disable=SC1090
+            . "$profile_script"
+            break
         fi
-    done < <(brew_packages_from "$REPO_ROOT/Brewfile")
+    done
 }
 
 remove_symlinks
 
 if [ "$REMOVE_PACKAGES" -eq 1 ]; then
-    echo "This removes declared packages even if they existed before setup."
+    echo "This removes the dedicated dotfiles Nix profile and managed user tools."
     read -r -p "Continue? (y/N): " reply
     case "$reply" in [Yy]) ;; *) echo "Package removal cancelled."; exit 0 ;; esac
-
-    if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    fi
-    command -v brew >/dev/null 2>&1 || { echo "Error: Homebrew not found." >&2; exit 1; }
 
     export PATH="$HOME/.local/bin:$PATH"
     if command -v pre-commit >/dev/null 2>&1; then
@@ -83,7 +79,17 @@ if [ "$REMOVE_PACKAGES" -eq 1 ]; then
     fi
     command -v uv >/dev/null 2>&1 && uv tool uninstall pre-commit || true
     rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles-lsp"
-    remove_brew_packages
+
+    profile=${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/nix-profile
+    if [ -e "$profile" ] || [ -L "$profile" ]; then
+        load_nix_environment
+        command -v nix >/dev/null 2>&1 || {
+            echo "Error: Nix is required to remove the dotfiles package profile." >&2
+            exit 1
+        }
+        nix --extra-experimental-features "nix-command flakes" \
+            profile remove --profile "$profile" --all
+    fi
 fi
 
 echo "Uninstallation complete."

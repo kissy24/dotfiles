@@ -1,0 +1,108 @@
+name: Update Nix Lock
+
+on:
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
+env:
+  UPDATE_BRANCH: chore/weekly-nix-lock
+
+jobs:
+  update:
+    name: Update locked Nix inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Find an existing update PR
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_number=$(gh pr list \
+            --head "$UPDATE_BRANCH" \
+            --base main \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+          echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
+
+      - name: Recheck a cooling-down update
+        if: steps.existing.outputs.pr_number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin "$UPDATE_BRANCH"
+          git checkout --detach "origin/$UPDATE_BRANCH"
+          if ./scripts/check-dependency-cooldown.sh; then
+            run_id=$(gh run list \
+              --branch "$UPDATE_BRANCH" \
+              --workflow dependency-eol.yml \
+              --status completed \
+              --limit 1 \
+              --json conclusion,databaseId \
+              --jq '.[] | select(.conclusion == "failure") | .databaseId')
+            if [ -n "$run_id" ]; then
+              gh run rerun "$run_id" --failed
+            fi
+          else
+            echo "The existing update is still in its cooldown period."
+          fi
+
+      - name: Install Nix
+        if: steps.existing.outputs.pr_number == ''
+        run: ./scripts/install-nix.sh
+
+      - name: Update flake.lock
+        if: steps.existing.outputs.pr_number == ''
+        id: update
+        shell: bash
+        run: |
+          . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+          nix --extra-experimental-features "nix-command flakes" flake update
+          if git diff --quiet -- flake.lock; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push update branch and create PR
+        if: steps.existing.outputs.pr_number == '' && steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$UPDATE_BRANCH"
+          git add flake.lock
+          git commit -m "chore(deps): update Nix flake lock"
+          git fetch origin "$UPDATE_BRANCH" || true
+          git push --force-with-lease origin "HEAD:$UPDATE_BRANCH"
+          gh pr create \
+            --base main \
+            --head "$UPDATE_BRANCH" \
+            --title "chore(deps): update Nix flake lock" \
+            --body "$(cat <<'EOF'
+          ## Summary
+
+          - update the locked Nixpkgs, Herdr, and Rust overlay inputs
+          - hold this exact candidate until the 7-day dependency cooldown passes
+
+          ## Validation
+
+          - automated macOS and Ubuntu setup validation
+          - dependency lifecycle and cooldown checks
+
+          This PR is created automatically and is not automatically merged.
+          EOF
+          )"

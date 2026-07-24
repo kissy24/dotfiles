@@ -1,29 +1,17 @@
 #!/bin/bash
 set -euo pipefail
 
-COOLDOWN_DAYS=${PKGUPD_COOLDOWN_DAYS:-7}
-NOW_EPOCH=${PKGUPD_NOW_EPOCH:-$(date +%s)}
-HOMEBREW_ONLY=0
-
 usage() {
     cat <<'EOF'
-Usage: pkgupd [--homebrew-only]
+Usage: pkgupd
 
-Update Homebrew packages after observing the same version for the cooldown period.
-Ubuntu/Debian system packages are updated immediately unless --homebrew-only is used.
-
-Environment:
-  PKGUPD_COOLDOWN_DAYS  Cooldown period in days (default: 7)
-  PKGUPD_NOW_EPOCH      Override the current Unix time for testing
+Apply the repository's locked Nix flake to the dotfiles package profile.
+This command does not update flake.lock or the host operating system.
 EOF
 }
 
 while [ "$#" -gt 0 ]; do
     case "$1" in
-        --homebrew-only)
-            HOMEBREW_ONLY=1
-            shift
-            ;;
         --help|-h)
             usage
             exit 0
@@ -36,114 +24,53 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-if ! [[ $COOLDOWN_DAYS =~ ^[0-9]+$ ]]; then
-    echo "Error: PKGUPD_COOLDOWN_DAYS must be a non-negative integer: $COOLDOWN_DAYS" >&2
-    exit 2
-fi
-if ! [[ $NOW_EPOCH =~ ^[0-9]+$ ]]; then
-    echo "Error: PKGUPD_NOW_EPOCH must be a non-negative integer: $NOW_EPOCH" >&2
-    exit 2
-fi
-command -v brew >/dev/null 2>&1 || { echo "Error: Homebrew not found." >&2; exit 1; }
-command -v bun >/dev/null 2>&1 || { echo "Error: Bun is required to read Homebrew metadata." >&2; exit 1; }
+resolve_script_path() {
+    local path=$1
+    local target
 
-STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/pkgupd
-STATE_FILE=$STATE_DIR/homebrew.tsv
-TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/pkgupd.XXXXXX")
-trap 'rm -rf "$TMP_ROOT"' EXIT
-umask 077
-mkdir -p "$STATE_DIR"
-touch "$STATE_FILE"
-
-OUTDATED_JSON=$TMP_ROOT/outdated.json
-CANDIDATES=$TMP_ROOT/candidates.tsv
-NEXT_STATE=$TMP_ROOT/homebrew.tsv
-ELIGIBLE=$TMP_ROOT/eligible.tsv
-WAITING=$TMP_ROOT/waiting.tsv
-
-echo "Updating Homebrew metadata..."
-brew update
-export HOMEBREW_NO_AUTO_UPDATE=1
-brew outdated --json=v2 > "$OUTDATED_JSON"
-bun -e '
-const data = JSON.parse(await Bun.stdin.text());
-for (const [group, kind] of [["formulae", "formula"], ["casks", "cask"]]) {
-  for (const item of data[group] ?? []) {
-    const name = String(item.name ?? "");
-    const version = String(item.current_version ?? "");
-    if (!name || !version) continue;
-    if (/[\t\r\n]/.test(name + version)) throw new Error("Invalid Homebrew metadata");
-    process.stdout.write(kind + "\t" + name + "\t" + version + "\n");
-  }
+    if [ -L "$path" ]; then
+        target=$(readlink "$path")
+        case "$target" in
+            /*) path=$target ;;
+            *) path=$(dirname "$path")/$target ;;
+        esac
+    fi
+    printf '%s/%s\n' \
+        "$(cd "$(dirname "$path")" && pwd)" \
+        "$(basename "$path")"
 }
-' < "$OUTDATED_JSON" > "$CANDIDATES"
 
-: > "$NEXT_STATE"
-: > "$ELIGIBLE"
-: > "$WAITING"
-COOLDOWN_SECONDS=$((COOLDOWN_DAYS * 24 * 60 * 60))
-awk -F '\t' \
-    -v now="$NOW_EPOCH" \
-    -v cooldown="$COOLDOWN_SECONDS" \
-    -v next_state="$NEXT_STATE" \
-    -v eligible="$ELIGIBLE" \
-    -v waiting="$WAITING" '
-    BEGIN { OFS = "\t" }
-    FILENAME == ARGV[1] {
-        if (NF == 4) first_seen[$1 SUBSEP $2 SUBSEP $3] = $4
-        next
-    }
-    NF == 3 {
-        key = $1 SUBSEP $2 SUBSEP $3
-        seen = key in first_seen ? first_seen[key] : now
-        if (seen > now) seen = now
-        print $1, $2, $3, seen > next_state
-        age = now - seen
-        if (age >= cooldown) {
-            print $1, $2, $3 > eligible
-        } else {
-            remaining = int((cooldown - age + 86399) / 86400)
-            print $1, $2, $3, remaining > waiting
-        }
-    }
-' "$STATE_FILE" "$CANDIDATES"
-mv "$NEXT_STATE" "$STATE_FILE"
+load_nix_environment() {
+    local profile_script
 
-if [ -s "$WAITING" ]; then
-    echo "Waiting for Homebrew cooldown:"
-    while IFS=$'\t' read -r kind name version remaining; do
-        printf -- '- %s %s %s (%s day(s) remaining)\n' "$kind" "$name" "$version" "$remaining"
-    done < "$WAITING"
+    for profile_script in \
+        /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh \
+        "$HOME/.nix-profile/etc/profile.d/nix.sh"; do
+        if [ -r "$profile_script" ]; then
+            # shellcheck disable=SC1090
+            . "$profile_script"
+            break
+        fi
+    done
+}
+
+script_path=$(resolve_script_path "$0")
+repo_root=$(cd "$(dirname "$script_path")/../.." && pwd)
+profile=${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/nix-profile
+nix_args=(--extra-experimental-features "nix-command flakes")
+
+load_nix_environment
+command -v nix >/dev/null 2>&1 || {
+    echo "Error: Nix is not installed. Run $repo_root/setup.sh first." >&2
+    exit 1
+}
+if [ ! -e "$profile" ] && [ ! -L "$profile" ]; then
+    echo "Error: Dotfiles Nix profile not found. Run $repo_root/setup.sh first." >&2
+    exit 1
 fi
 
-formulae=()
-casks=()
-while IFS=$'\t' read -r kind name _version; do
-    case "$kind" in
-        formula) formulae+=("$name") ;;
-        cask) casks+=("$name") ;;
-    esac
-done < "$ELIGIBLE"
-
-if [ "${#formulae[@]}" -gt 0 ]; then
-    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew upgrade --formula "${formulae[@]}"
-fi
-if [ "${#casks[@]}" -gt 0 ]; then
-    HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew upgrade --cask "${casks[@]}"
-fi
-if [ "${#formulae[@]}" -eq 0 ] && [ "${#casks[@]}" -eq 0 ]; then
-    echo "No Homebrew packages are eligible for upgrade."
-fi
-brew cleanup
-
-if [ "$HOMEBREW_ONLY" -eq 0 ] && [ "$(uname -s)" = "Linux" ]; then
-    command -v apt-get >/dev/null 2>&1 || {
-        echo "Error: Linux package updates require apt-get." >&2
-        exit 1
-    }
-    echo "Updating Ubuntu/Debian packages without a cooldown..."
-    sudo apt-get update
-    sudo apt-get upgrade -y
-    sudo apt-get autoremove -y
-    sudo apt-get autoclean
-fi
+echo "Applying the locked Nix package set..."
+nix "${nix_args[@]}" profile upgrade \
+    --profile "$profile" \
+    --all \
+    --no-write-lock-file

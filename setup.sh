@@ -32,53 +32,39 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-load_brew_environment() {
-    if command -v brew >/dev/null 2>&1; then
-        eval "$(brew shellenv)"
-    elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+load_nix_environment() {
+    local profile_script
+
+    for profile_script in \
+        /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh \
+        "$HOME/.nix-profile/etc/profile.d/nix.sh"; do
+        if [ -r "$profile_script" ]; then
+            # shellcheck disable=SC1090
+            . "$profile_script"
+            break
+        fi
+    done
+}
+
+install_nix_packages() {
+    local profile_dir=${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles
+    local profile=$profile_dir/nix-profile
+    local -a nix_args=(--extra-experimental-features "nix-command flakes")
+
+    mkdir -p "$profile_dir"
+    echo "Installing packages from the locked Nix flake..."
+    if [ -e "$profile" ] || [ -L "$profile" ]; then
+        nix "${nix_args[@]}" profile upgrade \
+            --profile "$profile" \
+            --all \
+            --no-write-lock-file
+    else
+        nix "${nix_args[@]}" profile add \
+            --profile "$profile" \
+            "$REPO_ROOT#dotfiles" \
+            --no-write-lock-file
     fi
-}
-
-install_homebrew_on_ubuntu() {
-    echo "Installing Ubuntu prerequisites for Homebrew..."
-    mapfile -t apt_packages < <(sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' "$REPO_ROOT/packages/apt.txt")
-    sudo apt-get update
-    sudo apt-get install -y "${apt_packages[@]}"
-
-    if ! command -v brew >/dev/null 2>&1 && [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-        echo "Installing Homebrew..."
-        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    fi
-    load_brew_environment
-}
-
-ensure_homebrew() {
-    case "$(uname)" in
-        Darwin)
-            load_brew_environment
-            if ! command -v brew >/dev/null 2>&1; then
-                echo "Error: Homebrew is required on macOS. Install it from https://brew.sh/ first." >&2
-                exit 1
-            fi
-            ;;
-        Linux)
-            if ! command -v apt-get >/dev/null 2>&1; then
-                echo "Error: Linux support requires an Ubuntu/Debian environment with apt-get." >&2
-                exit 1
-            fi
-            install_homebrew_on_ubuntu
-            ;;
-        *)
-            echo "Error: Unsupported OS." >&2
-            exit 1
-            ;;
-    esac
-}
-
-install_brew_packages() {
-    echo "Installing Homebrew packages..."
-    brew bundle install --jobs=1 --file="$REPO_ROOT/Brewfile"
+    export PATH="$profile/bin:$PATH"
 }
 
 remove_legacy_tmux_symlink() {
@@ -158,8 +144,13 @@ install_pre_commit() {
     pre-commit install --hook-type commit-msg --install-hooks
 }
 
-ensure_homebrew
-install_brew_packages
+"$REPO_ROOT/scripts/install-nix.sh"
+load_nix_environment
+command -v nix >/dev/null 2>&1 || {
+    echo "Error: Nix was installed but is not available in this shell." >&2
+    exit 1
+}
+install_nix_packages
 remove_legacy_tmux_symlink
 create_symlinks
 install_bun_language_servers
