@@ -56,7 +56,7 @@ jobs:
             zsh -n .zshrc
           fi
           grep -q '^hrr() {' .zshrc
-          grep -Fq 'herdr session stop "$session_name"' .zshrc
+          grep -Fq "herdr session stop \"\$session_name\"" .zshrc
           grep -q '^hrw() {' .zshrc
           if grep -Eq 'format-tab-title|show_new_tab_button_in_tab_bar' .config/wezterm/wezterm.lua; then
             echo "WezTerm native tab UI must stay disabled in favor of Herdr tabs." >&2
