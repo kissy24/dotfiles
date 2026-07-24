@@ -106,3 +106,5 @@ jobs:
           This PR is created automatically and is not automatically merged.
           EOF
           )"
+          gh workflow run validate.yml --ref "$UPDATE_BRANCH"
+          gh workflow run dependency-eol.yml --ref "$UPDATE_BRANCH"
