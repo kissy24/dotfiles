@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/wezterm-herdr-test.XXXXXX")
+ZSH_BIN=$(command -v zsh)
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
 launch_command=$(
@@ -27,13 +28,13 @@ marker="$TMP_ROOT/fallback"
 PATH="$TMP_ROOT/bin:/usr/bin:/bin" \
     HERDR_TEST_STATUS=0 \
     HERDR_TEST_FALLBACK_MARKER="$marker" \
-    /usr/bin/zsh -fc "$launch_command"
+    "$ZSH_BIN" -fc "$launch_command"
 test ! -e "$marker"
 
 PATH="$TMP_ROOT/bin:/usr/bin:/bin" \
     HERDR_TEST_STATUS=1 \
     HERDR_TEST_FALLBACK_MARKER="$marker" \
-    /usr/bin/zsh -fc "$launch_command" 2>"$TMP_ROOT/stderr"
+    "$ZSH_BIN" -fc "$launch_command" 2>"$TMP_ROOT/stderr"
 test -e "$marker"
 grep -Fq "hrrでセッションを再起動できます" "$TMP_ROOT/stderr"
 
