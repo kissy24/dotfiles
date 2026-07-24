@@ -2,15 +2,15 @@
   description = "Cross-platform CLI packages for kissy24's dotfiles";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/6e8b58cddc8438dbb68f8e292aa556e828685072";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     rust-overlay = {
-      url = "github:oxalica/rust-overlay/1785b85aeccca381caf8777133410f577b8f2f59";
+      url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     herdr = {
-      url = "github:ogulcancelik/herdr/9c9490d764d306b6cc093b5b3de1ccd4e6467c94";
+      url = "github:ogulcancelik/herdr";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.rust-overlay.follows = "rust-overlay";
     };

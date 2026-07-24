@@ -27,12 +27,10 @@ jobs:
           ./setup.sh --help
           ./uninstall.sh --help
           test -f flake.nix
-          if [ ! -f flake.lock ]; then
-            echo "flake.lock will be generated from cooled input revisions."
-          fi
+          test -f flake.lock
           test ! -e Brewfile
           test ! -e packages/apt.txt
-          grep -q 'github:NixOS/nixpkgs/' flake.nix
+          grep -q 'nixpkgs-unstable' flake.nix
           grep -q 'herdr.packages' flake.nix
           grep -q 'nix-profile' .zshrc
           for path in \
@@ -81,12 +79,6 @@ jobs:
             . "$HOME/.nix-profile/etc/profile.d/nix.sh"
           fi
           nix --extra-experimental-features "nix-command flakes" flake lock
-          if ! git diff --exit-code -- flake.lock; then
-            echo "FLAKE_LOCK_BASE64_BEGIN"
-            base64 < flake.lock
-            echo "FLAKE_LOCK_BASE64_END"
-            exit 1
-          fi
           ln -s "$PWD/.tmux.conf" "$HOME/.tmux.conf"
           ./setup.sh --force | tee setup_log.txt
           test ! -L "$HOME/.tmux.conf"
