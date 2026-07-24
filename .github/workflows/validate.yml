@@ -32,7 +32,7 @@ jobs:
           fi
           test ! -e Brewfile
           test ! -e packages/apt.txt
-          grep -q 'nixpkgs-unstable' flake.nix
+          grep -q 'github:NixOS/nixpkgs/' flake.nix
           grep -q 'herdr.packages' flake.nix
           grep -q 'nix-profile' .zshrc
           for path in \
