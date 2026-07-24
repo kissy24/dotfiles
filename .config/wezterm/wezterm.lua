@@ -2,8 +2,8 @@ local wezterm = require 'wezterm'
 local act = wezterm.action
 local config = wezterm.config_builder()
 
--- Herdrが利用可能なら起動し、未導入時は通常のZshを開く
-local launch_command = "if command -v herdr >/dev/null 2>&1; then exec herdr; else exec zsh -l; fi"
+-- Herdrが利用可能なら起動し、異常終了時も復旧用のZshを残す
+local launch_command = "if command -v herdr >/dev/null 2>&1; then herdr && exit; print -u2 '\\nHerdrの起動に失敗しました。作業を保存後、hrrでセッションを再起動できます。'; fi; exec zsh -l"
 if wezterm.target_triple:find("windows") then
     config.default_prog = {
         "wsl.exe",

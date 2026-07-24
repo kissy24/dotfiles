@@ -66,6 +66,9 @@ HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
 wait "$HERDR_SERVER_PID"
 HERDR_SERVER_PID=""
 
+echo "Checking WezTerm fallback after Herdr startup failure..."
+./scripts/test-wezterm-herdr-fallback.sh
+
 echo "Checking zoxide database operations..."
 mkdir -p "$TMP_ROOT/zoxide-data"
 _ZO_DATA_DIR="$TMP_ROOT/zoxide-data" zoxide add "$TMP_ROOT/project"
