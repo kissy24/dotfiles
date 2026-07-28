@@ -3,16 +3,16 @@
 [![License: MIT](https://img.shields.io/github/license/kissy24/dotfiles)](LICENSE)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/kissy24/dotfiles)
 
-macOSおよびUbuntu/WSL向けの個人開発環境です。共通のコマンドラインツールはHomebrewでインストールし、セットアップスクリプトが設定ファイルを`$HOME`以下へシンボリックリンクします。
+macOSおよびUbuntu/WSL向けの個人開発環境です。共通のコマンドラインツールはmiseとlockfileで管理し、セットアップスクリプトが設定ファイルを`$HOME`以下へシンボリックリンクします。
 
 ## 必要な環境
 
 - macOS、または`apt-get`を利用できるUbuntu/Debian環境
-- ZshとWezTerm
+- `curl`とGit
+- WezTerm
 - `HackGen Console NF`
-- macOSではHomebrew
 
-Ubuntuでは、セットアップスクリプトがaptの前提パッケージとHomebrewをインストールします。Zsh、WezTerm、フォントは別途インストールしてください。
+セットアップスクリプトはchecksumを検証してmiseを`~/.local/bin/mise`へ導入します。Ubuntuでは、miseでは管理できない`curl`、Git、Zsh、`procps`などのOS前提パッケージだけをaptでインストールします。WezTermとフォントは別途インストールしてください。
 
 ## インストール
 
@@ -26,7 +26,7 @@ cd dotfiles
 
 既存のdotfilesはデフォルトでは変更せずにスキップします。管理対象のシンボリックリンクへ置き換える場合は`./setup.sh --force`を使います。置換対象のパスは削除されるため、実行前に内容を確認してください。
 
-パッケージの宣言は`Brewfile`、`packages/apt.txt`、`packages/bun-lsp/package.json`にあります。SheldonとMasonの依存関係は、それぞれの設定ファイルで管理します。
+共通CLIの宣言は`.config/mise/config.toml`、固定バージョン・配布URL・checksumは`.config/mise/mise.lock`にあります。UbuntuのOS前提は`packages/apt.txt`、Bun管理LSPは`packages/bun-lsp/package.json`と`bun.lock`で管理します。SheldonとMasonの依存関係は、それぞれの設定ファイルで管理します。
 
 ## 導入する環境
 
@@ -41,7 +41,7 @@ fzfのZsh連携では、Ctrl-Rによる履歴検索、Ctrl-Tによるファイ�
 
 ## 管理する設定
 
-`setup.sh`はUbuntuでZshを導入し、`.zshrc`、Herdr、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。
+`setup.sh`はUbuntuでZshを導入し、`.zshrc`、mise、Herdr、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。miseのグローバル設定は`~/.config/mise`として全ディレクトリで有効になり、`.zshrc`の`mise activate zsh`が管理ツールをPATHへ追加します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。
 
 NeovimプラグインはLazy.nvimで同期します。Markdownを開くと`render-markdown.nvim`が読み込まれ、Neovim標準の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMasonで管理し、TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
 
@@ -78,7 +78,7 @@ hrw ~/Projects/docfiles docs
 | サイドバー表示切替 | `Ctrl-b b` |
 | 設定再読み込み | `Ctrl-b Shift-r` |
 
-tmuxの実行中プロセスやセッションはHerdrへ自動変換されません。既存セッションの作業を完了してデタッチした後にHerdrを起動してください。tmuxが不要になったことを確認してから、必要に応じて`brew uninstall tmux`で旧パッケージを削除できます。
+tmuxの実行中プロセスやセッションはHerdrへ自動変換されません。既存セッションの作業を完了してデタッチした後にHerdrを起動してください。tmuxが不要になったことを確認してから、導入に使ったOSパッケージマネージャーで旧パッケージを削除できます。
 
 Codexのセッション識別とHerdr再起動後のネイティブ復元を有効にする場合は、`herdr integration install codex`を一度実行します。この操作は`~/.codex`のhook設定を更新するため、共通セットアップからは自動実行しません。
 
@@ -96,16 +96,16 @@ $EDITOR ~/.zshrc.local
 
 ### パッケージ更新
 
-`pkgupd`はHomebrewの更新候補をローカルで初めて観測してから7日間待ち、同じバージョンが継続しているパッケージだけを更新します。待機中に候補バージョンが変わった場合は、そのバージョンの待機期間を初めから数え直します。観測状態は`${XDG_STATE_HOME:-~/.local/state}/pkgupd/homebrew.tsv`に保存します。
+`pkgupd`はリポジトリに固定されたmise本体と、mise lockfileに固定されたツールをインストールします。新しいバージョンは直接取得せず、毎週のGitHub Actionsが公開から7日以上経過した候補だけで更新PRを作成します。PRを確認してマージした後に`pkgupd`を実行することで、レビュー済みのバージョンへ更新できます。
 
 ```sh
 pkgupd
 ```
 
-UbuntuではHomebrewのみにクールダウンを適用し、APTのシステム・セキュリティ更新は遅延させず従来どおり適用します。Homebrewが対象パッケージのインストールに必要と判断した依存関係は、同時に更新される場合があります。Homebrewだけを処理する場合は`pkgupd --homebrew-only`、待機日数を変更する場合は`PKGUPD_COOLDOWN_DAYS`を使用します。
+UbuntuではAPTのシステム・セキュリティ更新を遅延させず従来どおり適用します。mise管理ツールだけをlockfileへ同期する場合は、次のように実行します。
 
 ```sh
-PKGUPD_COOLDOWN_DAYS=14 pkgupd
+pkgupd --tools-only
 ```
 
 ## アンインストール
@@ -122,7 +122,7 @@ PKGUPD_COOLDOWN_DAYS=14 pkgupd
 ./uninstall.sh --packages
 ```
 
-この操作では、セットアップ前から存在していた場合でも、宣言済みのパッケージを削除します。
+この操作では、セットアップ前からmiseで同じバージョンを導入していた場合でも、宣言済みのツールを削除します。mise本体とAPTのOS前提パッケージは削除しません。以前のHomebrew版セットアップで導入したformulaも自動削除しないため、mise版の動作確認後に必要に応じて手動で整理してください。
 
 ## 開発
 
@@ -135,23 +135,23 @@ pre-commit run --all-files
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、ヘッドレスNeovim上でのTypeScript Language Server接続、標準Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`によるlocked mise更新、Bun・Go・Pythonのコード実行、ヘッドレスNeovim上でのTypeScript Language Server接続、標準Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
-依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
+依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。mise lockfile、Neovim、Sheldon、pre-commit、GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 
 ```sh
 GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh
 ```
 
-更新頻度の低さだけではEOLと判定せず、HomebrewとGitHubが提供する明示的なライフサイクル情報だけを失敗条件にします。
+更新頻度の低さだけではEOLと判定せず、GitHubが提供する明示的なライフサイクル情報だけを失敗条件にします。
 
-同じCIで、固定済み依存関係に7日間のクールダウンも適用します。pre-commitとGitHub Actionsは参照先コミットの日時、Bunのロックファイル内にあるnpmパッケージは公開日時を検査し、期間内の依存があれば失敗します。ローカルでは次のコマンドを実行します。
+同じCIで、固定済み依存関係に7日間のクールダウンも適用します。mise管理ツールとmise本体はGitHubまたはGoの公開日時、pre-commitとGitHub Actionsは参照先コミットの日時、Bunのロックファイル内にあるnpmパッケージは公開日時を検査し、期間内の依存があれば失敗します。ローカルでは次のコマンドを実行します。
 
 ```sh
 GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-cooldown.sh
 ```
 
-検査期間は`COOLDOWN_DAYS`で変更できます。バージョンを固定していないHomebrewと、ロックファイルだけではリポジトリを一意に特定できないNeovimプラグインは対象外です。
+検査期間は`COOLDOWN_DAYS`で変更できます。miseの`minimum_release_age = "7d"`も更新時の候補選択に同じ待機期間を適用します。`.github/workflows/update-mise-lock.yml`は毎週、条件を満たす更新がある場合だけPRを作成し、自動マージは行いません。
 
 ## ライセンス
 

@@ -1,0 +1,28 @@
+min_version = "2026.7.7"
+
+[settings]
+lockfile = true
+lockfile_platforms = [
+  "linux-arm64",
+  "linux-x64",
+  "macos-arm64",
+  "macos-x64",
+]
+minimum_release_age = "7d"
+
+[tool_alias]
+neovim = "aqua:neovim/neovim"
+
+[tools]
+bun = "latest"
+fzf = "latest"
+gh = "latest"
+go = "latest"
+herdr = "latest"
+lazygit = "latest"
+neovim = "latest"
+ripgrep = "latest"
+sheldon = "latest"
+starship = "latest"
+uv = "latest"
+zoxide = "latest"

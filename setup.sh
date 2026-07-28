@@ -32,42 +32,27 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-load_brew_environment() {
-    if command -v brew >/dev/null 2>&1; then
-        eval "$(brew shellenv)"
-    elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    fi
-}
-
-install_homebrew_on_ubuntu() {
-    echo "Installing Ubuntu prerequisites for Homebrew..."
+install_ubuntu_prerequisites() {
+    echo "Installing Ubuntu prerequisites..."
     mapfile -t apt_packages < <(sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' "$REPO_ROOT/packages/apt.txt")
     sudo apt-get update
     sudo apt-get install -y "${apt_packages[@]}"
-
-    if ! command -v brew >/dev/null 2>&1 && [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-        echo "Installing Homebrew..."
-        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    fi
-    load_brew_environment
 }
 
-ensure_homebrew() {
+ensure_platform_prerequisites() {
     case "$(uname)" in
         Darwin)
-            load_brew_environment
-            if ! command -v brew >/dev/null 2>&1; then
-                echo "Error: Homebrew is required on macOS. Install it from https://brew.sh/ first." >&2
+            command -v curl >/dev/null 2>&1 || {
+                echo "Error: curl is required on macOS." >&2
                 exit 1
-            fi
+            }
             ;;
         Linux)
             if ! command -v apt-get >/dev/null 2>&1; then
                 echo "Error: Linux support requires an Ubuntu/Debian environment with apt-get." >&2
                 exit 1
             fi
-            install_homebrew_on_ubuntu
+            install_ubuntu_prerequisites
             ;;
         *)
             echo "Error: Unsupported OS." >&2
@@ -76,9 +61,20 @@ ensure_homebrew() {
     esac
 }
 
-install_brew_packages() {
-    echo "Installing Homebrew packages..."
-    brew bundle install --jobs=1 --file="$REPO_ROOT/Brewfile"
+ensure_mise() {
+    export PATH="$HOME/.local/bin:$PATH"
+    "$REPO_ROOT/scripts/install-mise.sh"
+    command -v mise >/dev/null 2>&1 || {
+        echo "Error: mise installation did not provide a mise command." >&2
+        exit 1
+    }
+}
+
+install_mise_tools() {
+    echo "Installing locked mise tools..."
+    mise trust "$REPO_ROOT/.config/mise/config.toml"
+    (cd "$REPO_ROOT" && mise install --locked)
+    export PATH="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH"
 }
 
 remove_legacy_tmux_symlink() {
@@ -95,6 +91,7 @@ create_symlinks() {
     local dotfile_sources=(
         "$REPO_ROOT/.zshrc"
         "$REPO_ROOT/.local/bin/pkgupd"
+        "$REPO_ROOT/.config/mise"
         "$REPO_ROOT/.config/herdr/config.toml"
         "$REPO_ROOT/.config/starship.toml"
         "$REPO_ROOT/.config/nvim"
@@ -106,6 +103,7 @@ create_symlinks() {
     local dotfile_dests=(
         "$HOME/.zshrc"
         "$HOME/.local/bin/pkgupd"
+        "$HOME/.config/mise"
         "$HOME/.config/herdr/config.toml"
         "$HOME/.config/starship.toml"
         "$HOME/.config/nvim"
@@ -158,10 +156,11 @@ install_pre_commit() {
     pre-commit install --hook-type commit-msg --install-hooks
 }
 
-ensure_homebrew
-install_brew_packages
+ensure_platform_prerequisites
+ensure_mise
 remove_legacy_tmux_symlink
 create_symlinks
+install_mise_tools
 install_bun_language_servers
 install_pre_commit
 

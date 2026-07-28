@@ -7,12 +7,13 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - Brewfile
+      - .config/mise/**
       - .config/nvim/**
       - .config/sheldon/**
       - .github/workflows/**
       - .pre-commit-config.yaml
       - packages/bun-lsp/bun.lock
+      - scripts/install-mise.sh
       - scripts/check-dependency-eol.sh
       - scripts/check-dependency-cooldown.sh
 

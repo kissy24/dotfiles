@@ -22,6 +22,11 @@ trap 'rm -rf "$TMP_ROOT"' EXIT
 failures=0
 cooldown_seconds=$((COOLDOWN_DAYS * 24 * 60 * 60))
 
+if [[ ! -s $REPO_ROOT/.config/mise/mise.lock ]]; then
+    echo "ERROR: mise lockfile is missing or empty." >&2
+    exit 1
+fi
+
 fetch() {
     local url=$1
     shift
@@ -76,6 +81,57 @@ collect_github_refs() {
 
     find "$REPO_ROOT/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \) \
         -exec sed -nE 's/.*uses:[[:space:]]*([[:alnum:]_.-]+\/[[:alnum:]_.-]+)@([^[:space:]#]+).*/\1|\2/p' {} +
+
+    awk '
+        /^\[\[tools\.go\]\]$/ { in_go = 1; next }
+        /^\[\[tools\./ { in_go = 0 }
+        in_go && /^version = "/ {
+            value = $0
+            sub(/^version = "/, "", value)
+            sub(/"$/, "", value)
+            print "golang/go|go" value
+            exit
+        }
+    ' "$REPO_ROOT/.config/mise/mise.lock"
+}
+
+collect_mise_github_releases() {
+    sed -nE 's#.*url = "https://github\.com/([^/]+/[^/]+)/releases/download/([^/]+)/.*#\1|\2#p' \
+        "$REPO_ROOT/.config/mise/mise.lock"
+
+    sed -nE 's/^MISE_VERSION=(v[^[:space:]]+).*/jdx\/mise|\1/p' \
+        "$REPO_ROOT/scripts/install-mise.sh"
+}
+
+check_mise_github_releases() {
+    local releases_file=$TMP_ROOT/mise-github-releases.txt
+    local repository tag response published_at
+    local -a headers=(
+        --header "Accept: application/vnd.github+json"
+        --header "X-GitHub-Api-Version: 2022-11-28"
+    )
+
+    collect_mise_github_releases | sort -u > "$releases_file"
+    if [[ -n ${GITHUB_TOKEN:-} ]]; then
+        headers+=(--header "Authorization: Bearer $GITHUB_TOKEN")
+    fi
+
+    echo "Checking mise-managed GitHub release ages..."
+    while IFS='|' read -r repository tag; do
+        [[ -n $repository && -n $tag ]] || continue
+        if ! response=$(fetch "$GITHUB_API_URL/repos/$repository/releases/tags/$tag" "${headers[@]}"); then
+            echo "ERROR: Could not read GitHub release metadata: $repository@$tag" >&2
+            failures=$((failures + 1))
+            continue
+        fi
+
+        if ! published_at=$(printf '%s' "$response" | python3 -c 'import json, sys; print(json.load(sys.stdin)["published_at"])'); then
+            echo "ERROR: Could not read release time for GitHub release: $repository@$tag" >&2
+            failures=$((failures + 1))
+            continue
+        fi
+        check_age "$repository@$tag" "$published_at"
+    done < "$releases_file"
 }
 
 check_github_refs() {
@@ -138,6 +194,7 @@ check_npm_packages() {
 }
 
 check_github_refs
+check_mise_github_releases
 check_npm_packages
 
 if (( failures > 0 )); then

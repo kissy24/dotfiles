@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -23,16 +24,22 @@ jobs:
         shell: bash
         run: |
           bash -n setup.sh uninstall.sh .local/bin/pkgupd \
-            scripts/test-pkgupd.sh scripts/test-wezterm-herdr-fallback.sh
+            scripts/install-mise.sh scripts/test-pkgupd.sh \
+            scripts/test-wezterm-herdr-fallback.sh
           ./setup.sh --help
           ./uninstall.sh --help
-          if grep -Eq '^brew "(rust|node|fd)"' Brewfile; then
-            echo "Brewfile contains a removed dependency." >&2
+          test ! -e Brewfile
+          test -f .config/mise/config.toml
+          test -f .config/mise/mise.lock
+          if grep -Eq '^(rust|node|fd)[[:space:]]*=' .config/mise/config.toml; then
+            echo "mise config contains a removed dependency." >&2
             exit 1
           fi
-          grep -q '^brew "bun"' Brewfile
-          grep -q '^brew "neovim"' Brewfile
-          grep -q '^brew "herdr"' Brewfile
+          grep -Eq '^bun[[:space:]]*=[[:space:]]*"latest"$' .config/mise/config.toml
+          grep -Eq '^neovim[[:space:]]*=[[:space:]]*"latest"$' .config/mise/config.toml
+          grep -Eq '^herdr[[:space:]]*=[[:space:]]*"latest"$' .config/mise/config.toml
+          grep -Eq '^minimum_release_age[[:space:]]*=[[:space:]]*"7d"$' .config/mise/config.toml
+          grep -Eq '^MISE_VERSION=v[0-9]{4}\.[0-9]+\.[0-9]+$' scripts/install-mise.sh
           for path in \
             .config/herdr/herdr-client.log \
             .config/herdr/herdr-server.log \
@@ -64,11 +71,11 @@ jobs:
           fi
           grep -Eq '^prompt_new_tab_name[[:space:]]*=[[:space:]]*false$' .config/herdr/config.toml
           grep -Eq '^hide_tab_bar_when_single_tab[[:space:]]*=[[:space:]]*false$' .config/herdr/config.toml
-          if grep -q '^brew "tmux"' Brewfile; then
-            echo "Brewfile still contains the replaced tmux dependency." >&2
+          if grep -Eq '^tmux[[:space:]]*=' .config/mise/config.toml; then
+            echo "mise config still contains the replaced tmux dependency." >&2
             exit 1
           fi
-          if grep -R -q 'nvim-treesitter/nvim-treesitter' .config/nvim Brewfile packages; then
+          if grep -R -q 'nvim-treesitter/nvim-treesitter' .config/nvim .config/mise packages; then
             echo "Archived nvim-treesitter dependency is not allowed; use Neovim built-in parsers." >&2
             exit 1
           fi
@@ -84,14 +91,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          fi
-          export PATH="$HOME/.local/bin:$PATH"
+          export PATH="$HOME/.local/bin:${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH"
 
-          for tool in zsh nvim starship lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
+          for tool in mise zsh nvim starship lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
             command -v "$tool"
           done
+          mise ls --current
 
           data_home=${XDG_DATA_HOME:-$HOME/.local/share}
           test -x "$data_home/dotfiles-lsp/node_modules/.bin/typescript-language-server"
@@ -102,6 +107,7 @@ jobs:
           for path in \
             "$HOME/.zshrc" \
             "$HOME/.local/bin/pkgupd" \
+            "$HOME/.config/mise" \
             "$HOME/.config/herdr/config.toml" \
             "$HOME/.config/starship.toml" \
             "$HOME/.config/nvim" \
@@ -115,16 +121,23 @@ jobs:
       - name: Run functional smoke tests
         shell: bash
         run: |
-          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          fi
-          export PATH="$HOME/.local/bin:$PATH"
+          export PATH="$HOME/.local/bin:${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH"
           ./scripts/smoke-test.sh
+
+      - name: Verify locked mise configuration
+        shell: bash
+        run: |
+          export PATH="$HOME/.local/bin:${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH"
+          mise install --locked
+          mise lock --global \
+            --platform linux-arm64,linux-x64,macos-arm64,macos-x64 \
+            --minimum-release-age 7d
+          git diff --exit-code -- .config/mise/config.toml .config/mise/mise.lock
 
       - name: Run repository checks
         shell: bash
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
+          export PATH="$HOME/.local/bin:${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH"
           pre-commit run --all-files
           if [ "$RUNNER_OS" = "Linux" ]; then
             pre-commit run betterleaks-working-tree --hook-stage manual --all-files
@@ -143,12 +156,18 @@ jobs:
       - name: Verify safe uninstallation
         shell: bash
         run: |
-          if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          fi
+          export PATH="$HOME/.local/bin:${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH"
           ./uninstall.sh
           test ! -L "$HOME/.zshrc"
           test ! -L "$HOME/.local/bin/pkgupd"
           test ! -L "$HOME/.config/nvim"
-          brew list --formula neovim
-          brew list --formula bun
+          test ! -L "$HOME/.config/mise"
+          mise exec -- nvim --version
+          mise exec -- bun --version
+
+          ./setup.sh --force
+          printf 'y\n' | ./uninstall.sh --packages
+          test ! -L "$HOME/.config/mise"
+          test ! -e "${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles-lsp"
+          command -v mise
+          test -z "$(mise ls --installed --no-header 2>/dev/null)"

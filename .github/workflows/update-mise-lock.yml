@@ -1,0 +1,108 @@
+name: Update mise Lockfile
+
+on:
+  schedule:
+    - cron: "41 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-mise-lock
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH: chore/weekly-mise-lock
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MISE_CONFIG_DIR: ${{ github.workspace }}/.config/mise
+      MISE_GLOBAL_CONFIG_FILE: ${{ github.workspace }}/.config/mise/config.toml
+      MISE_GLOBAL_CONFIG_ROOT: ${{ github.workspace }}
+      MISE_NO_UPDATE_CHECK: "1"
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Install mise
+        env:
+          MISE_INSTALL_PATH: ${{ runner.temp }}/bin/mise
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          ./scripts/install-mise.sh
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Select cooled mise release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/jdx/mise/releases?per_page=50" > "$RUNNER_TEMP/mise-releases.json"
+          mise_version=$(python3 -c '
+          import datetime
+          import json
+          import sys
+
+          cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)
+          with open(sys.argv[1], encoding="utf-8") as releases_file:
+              releases = json.load(releases_file)
+          for release in releases:
+              published = datetime.datetime.fromisoformat(
+                  release["published_at"].replace("Z", "+00:00")
+              )
+              if not release["draft"] and not release["prerelease"] and published <= cutoff:
+                  print(release["tag_name"])
+                  break
+          else:
+              raise SystemExit("No cooled mise release was found")
+          ' "$RUNNER_TEMP/mise-releases.json")
+          sed -i "s/^MISE_VERSION=.*/MISE_VERSION=$mise_version/" scripts/install-mise.sh
+
+      - name: Update cooled mise lock
+        run: |
+          mise trust .config/mise/config.toml
+          mise install --locked
+          mise upgrade --minimum-release-age 7d
+          mise lock --global \
+            --platform linux-arm64,linux-x64,macos-arm64,macos-x64 \
+            --minimum-release-age 7d
+
+      - name: Push update and create pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git diff --quiet -- .config/mise/mise.lock scripts/install-mise.sh; then
+            echo "No cooled mise updates are available."
+            exit 0
+          fi
+
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git checkout -B "$BRANCH"
+          git add .config/mise/mise.lock scripts/install-mise.sh
+          git commit -m "chore(deps): update mise dependencies"
+          git push --force-with-lease origin "$BRANCH"
+
+          pr_number=$(gh pr list \
+            --head "$BRANCH" \
+            --base main \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+          if [ -z "$pr_number" ]; then
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "chore(deps): update mise dependencies" \
+              --body "7日間のcooldownを満たしたmise本体と管理ツールへ更新します。自動マージは行いません。"
+          fi
+
+          gh workflow run validate.yml --ref "$BRANCH"
+          gh workflow run dependency-eol.yml --ref "$BRANCH"

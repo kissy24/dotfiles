@@ -3,12 +3,16 @@ set -euo pipefail
 
 REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 GITHUB_API_URL=${GITHUB_API_URL:-https://api.github.com}
-HOMEBREW_FORMULA_API_URL=${HOMEBREW_FORMULA_API_URL:-https://formulae.brew.sh/api/formula}
 
 TMP_ROOT=$(mktemp -d)
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
 failures=0
+
+if [[ ! -s $REPO_ROOT/.config/mise/mise.lock ]]; then
+    echo "ERROR: mise lockfile is missing or empty." >&2
+    exit 1
+fi
 
 fetch() {
     local url=$1
@@ -23,6 +27,11 @@ is_true() {
 
 collect_github_repositories() {
     {
+        if [[ -f $REPO_ROOT/.config/mise/mise.lock ]]; then
+            sed -nE 's#.*url = "https://github\.com/([^/]+/[^/]+)/releases/download/.*#\1#p' \
+                "$REPO_ROOT/.config/mise/mise.lock"
+        fi
+        printf '%s\n' golang/go jdx/mise
         sed -nE "s/^[[:space:]]*[{'\"]?[[:space:]]*['\"]([[:alnum:]_.-]+\/[[:alnum:]_.-]+)['\"].*/\1/p" \
             "$REPO_ROOT"/.config/nvim/lua/plugins/*.lua
         sed -nE 's/.*github[[:space:]]*=[[:space:]]*"([[:alnum:]_.-]+\/[[:alnum:]_.-]+)".*/\1/p' \
@@ -69,32 +78,7 @@ check_github_repositories() {
     done < "$repositories_file"
 }
 
-check_homebrew_formulae() {
-    local formula response
-
-    echo "Checking Homebrew formula lifecycle metadata..."
-    while IFS= read -r formula; do
-        [[ -n $formula ]] || continue
-        if ! response=$(fetch "$HOMEBREW_FORMULA_API_URL/$formula.json"); then
-            echo "ERROR: Could not read Homebrew formula metadata: $formula" >&2
-            failures=$((failures + 1))
-            continue
-        fi
-
-        if printf '%s' "$response" | is_true disabled; then
-            echo "ERROR: Homebrew formula is disabled: $formula" >&2
-            failures=$((failures + 1))
-        elif printf '%s' "$response" | is_true deprecated; then
-            echo "ERROR: Homebrew formula is deprecated: $formula" >&2
-            failures=$((failures + 1))
-        else
-            echo "OK: $formula"
-        fi
-    done < <(sed -nE 's/^brew "([^"]+)".*/\1/p' "$REPO_ROOT/Brewfile")
-}
-
 check_github_repositories
-check_homebrew_formulae
 
 if (( failures > 0 )); then
     echo "Dependency EOL check failed with $failures error(s)." >&2

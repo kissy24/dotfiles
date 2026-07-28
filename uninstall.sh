@@ -11,7 +11,7 @@ Usage: ./uninstall.sh [--packages]
 
 By default only managed symlinks are removed.
 
-  --packages  Also uninstall packages declared in the Brewfile
+  --packages  Also uninstall tools declared in the mise config
   --help      Show this help
 EOF
 }
@@ -30,6 +30,7 @@ remove_symlinks() {
         .zshrc
         .tmux.conf
         .local/bin/pkgupd
+        .config/mise
         .config/herdr/config.toml
         .config/starship.toml
         .config/nvim
@@ -51,39 +52,45 @@ remove_symlinks() {
     done
 }
 
-brew_packages_from() {
-    sed -n 's/^brew "\([^"]*\)".*/\1/p' "$1"
-}
+remove_mise_tools() {
+    local tool
+    local -a tools=()
 
-remove_brew_packages() {
-    local package
-    while IFS= read -r package; do
-        if brew list --formula "$package" >/dev/null 2>&1; then
-            brew uninstall "$package"
-        fi
-    done < <(brew_packages_from "$REPO_ROOT/Brewfile")
-}
+    while IFS= read -r tool; do
+        tools+=("$tool")
+    done < <(
+        awk '
+            /^\[tools\]$/ { in_tools = 1; next }
+            /^\[/ { in_tools = 0 }
+            in_tools && /^[[:alnum:]_-]+[[:space:]]*=/ {
+                name = $0
+                sub(/[[:space:]]*=.*/, "", name)
+                print name
+            }
+        ' "$REPO_ROOT/.config/mise/config.toml"
+    )
 
-remove_symlinks
+    if [ "${#tools[@]}" -gt 0 ]; then
+        (cd "$REPO_ROOT" && mise uninstall --yes "${tools[@]}")
+    fi
+}
 
 if [ "$REMOVE_PACKAGES" -eq 1 ]; then
     echo "This removes declared packages even if they existed before setup."
     read -r -p "Continue? (y/N): " reply
     case "$reply" in [Yy]) ;; *) echo "Package removal cancelled."; exit 0 ;; esac
 
-    if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-    fi
-    command -v brew >/dev/null 2>&1 || { echo "Error: Homebrew not found." >&2; exit 1; }
-
-    export PATH="$HOME/.local/bin:$PATH"
+    export PATH="$HOME/.local/bin:${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/shims:$PATH"
+    command -v mise >/dev/null 2>&1 || { echo "Error: mise not found." >&2; exit 1; }
     if command -v pre-commit >/dev/null 2>&1; then
         pre-commit uninstall || true
         pre-commit uninstall --hook-type commit-msg || true
     fi
     command -v uv >/dev/null 2>&1 && uv tool uninstall pre-commit || true
     rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles-lsp"
-    remove_brew_packages
+    remove_mise_tools
 fi
+
+remove_symlinks
 
 echo "Uninstallation complete."

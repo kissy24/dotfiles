@@ -1,6 +1,5 @@
-build-essential
-procps
 curl
 file
 git
+procps
 zsh
