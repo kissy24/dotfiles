@@ -150,6 +150,26 @@ install_bun_language_servers() {
     (cd "$lsp_dir" && bun install --frozen-lockfile)
 }
 
+generate_zsh_caches() {
+    local cache_home=${XDG_CACHE_HOME:-$HOME/.cache}
+    local completion_dir="$cache_home/dotfiles/zsh"
+    local zcompdump=${ZDOTDIR:-$HOME}/.zcompdump
+    local temp_file
+
+    echo "Generating Zsh completion caches..."
+    mkdir -p "$completion_dir"
+
+    temp_file=$(mktemp "$completion_dir/uv.zsh.XXXXXX")
+    uv generate-shell-completion zsh > "$temp_file"
+    mv "$temp_file" "$completion_dir/uv.zsh"
+
+    temp_file=$(mktemp "$completion_dir/herdr.zsh.XXXXXX")
+    herdr completion zsh > "$temp_file"
+    mv "$temp_file" "$completion_dir/herdr.zsh"
+
+    zsh -dfc 'autoload -Uz compinit && compinit -d "$1"' _ "$zcompdump"
+}
+
 install_pre_commit() {
     export PATH="$HOME/.local/bin:$PATH"
     echo "Installing pre-commit via uv..."
@@ -163,6 +183,7 @@ install_brew_packages
 remove_legacy_tmux_symlink
 create_symlinks
 install_bun_language_servers
+generate_zsh_caches
 install_pre_commit
 
 echo "Syncing Neovim plugins and Mason-managed language servers..."

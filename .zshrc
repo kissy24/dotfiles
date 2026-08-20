@@ -1,5 +1,5 @@
 # ~/.zshrc
-autoload -Uz compinit && compinit
+autoload -Uz compinit && compinit -C
 
 # 履歴ファイルの設定
 HISTFILE=~/.zsh_history
@@ -89,8 +89,11 @@ bindkey -M viins 'jj' vi-cmd-mode
 [ -d "$HOME/bin" ] && export PATH="$HOME/bin:$PATH"
 
 
-# uv completion
-if command -v uv &> /dev/null; then
+# CLI補完はsetup.shで生成したキャッシュを優先する。
+zsh_completion_dir="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/zsh"
+if [[ -r "$zsh_completion_dir/uv.zsh" ]]; then
+    source "$zsh_completion_dir/uv.zsh"
+elif command -v uv &> /dev/null; then
     eval "$(uv generate-shell-completion zsh)"
 fi
 
@@ -106,9 +109,12 @@ elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
 fi
 
 # Herdr completion
-if command -v herdr &> /dev/null; then
+if [[ -r "$zsh_completion_dir/herdr.zsh" ]]; then
+    source "$zsh_completion_dir/herdr.zsh"
+elif command -v herdr &> /dev/null; then
     eval "$(herdr completion zsh)"
 fi
+unset zsh_completion_dir
 
 # fzf標準連携 (Ctrl-R: 履歴、Ctrl-T: ファイル、Alt-C: ディレクトリ)
 source <(fzf --zsh)
