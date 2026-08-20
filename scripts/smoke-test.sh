@@ -26,6 +26,13 @@ STARSHIP_CONFIG="$PWD/.config/starship.toml" \
     starship prompt --cmd-duration 500 >/dev/null
 sheldon source >/dev/null
 
+echo "Checking cached Zsh completions..."
+ZSH_COMPLETION_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/zsh"
+test -s "$ZSH_COMPLETION_DIR/uv.zsh"
+test -s "$ZSH_COMPLETION_DIR/herdr.zsh"
+zsh -dfc 'autoload -Uz compinit && compinit -C; source "$1"; source "$2"' \
+    _ "$ZSH_COMPLETION_DIR/uv.zsh" "$ZSH_COMPLETION_DIR/herdr.zsh"
+
 echo "Checking ripgrep search..."
 printf 'alpha\nbeta\n' > "$TMP_ROOT/search.txt"
 test "$(rg --no-filename '^beta$' "$TMP_ROOT/search.txt")" = "beta"

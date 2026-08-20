@@ -39,6 +39,8 @@ cd dotfiles
 
 fzfのZsh連携では、Ctrl-Rによる履歴検索、Ctrl-Tによるファイル選択、Alt-Cによるディレクトリ選択、曖昧補完を利用できます。
 
+Zshの起動時間を抑えるため、セットアップ時にuvとHerdrの補完を`${XDG_CACHE_HOME:-~/.cache}/dotfiles/zsh/`へ生成し、`compinit`のdumpも更新します。CLIを個別に更新して補完内容が変わった場合は、`./setup.sh`を再実行するとキャッシュを更新できます。
+
 ## 管理する設定
 
 `setup.sh`はUbuntuでZshを導入し、`.zshrc`、Herdr、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。

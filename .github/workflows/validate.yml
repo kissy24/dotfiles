@@ -94,8 +94,12 @@ jobs:
           done
 
           data_home=${XDG_DATA_HOME:-$HOME/.local/share}
+          cache_home=${XDG_CACHE_HOME:-$HOME/.cache}
           test -x "$data_home/dotfiles-lsp/node_modules/.bin/typescript-language-server"
           test -x "$data_home/dotfiles-lsp/node_modules/.bin/pyright-langserver"
+          test -s "$cache_home/dotfiles/zsh/uv.zsh"
+          test -s "$cache_home/dotfiles/zsh/herdr.zsh"
+          test -s "$HOME/.zcompdump"
           test -x .git/hooks/pre-commit
           test -x .git/hooks/commit-msg
 
