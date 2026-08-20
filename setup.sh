@@ -167,7 +167,7 @@ generate_zsh_caches() {
     herdr completion zsh > "$temp_file"
     mv "$temp_file" "$completion_dir/herdr.zsh"
 
-    zsh -dfc 'autoload -Uz compinit && compinit -d "$1"' _ "$zcompdump"
+    zsh -dfc 'autoload -Uz compinit && compinit -i -d "$1"' _ "$zcompdump"
 }
 
 install_pre_commit() {
