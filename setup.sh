@@ -189,6 +189,11 @@ install_pre_commit
 echo "Syncing Neovim plugins and Mason-managed language servers..."
 nvim --headless -c 'Lazy sync' -c 'qa'
 
+echo "Installing configured Tree-sitter parsers..."
+nvim --headless \
+    -c "lua local task = require('nvim-treesitter').install(require('base.treesitter').parsers, { max_jobs = 4 }); assert(task:wait(300000), 'Tree-sitter parser installation failed')" \
+    -c 'qa'
+
 echo "Locking Sheldon plugins..."
 sheldon lock
 

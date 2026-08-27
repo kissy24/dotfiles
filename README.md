@@ -32,7 +32,7 @@ cd dotfiles
 
 - Zsh向けのStarship、Sheldon、zoxide、fzf連携
 - Herdrによる永続セッション、ワークスペース、タブ、ペイン、AIエージェント状態の管理
-- Lazy.nvim、補完、Telescope、Oil、Git連携、LSP、Markdownレンダリングを備えた安定版Neovim
+- Lazy.nvim、Tree-sitter、補完、Telescope、Oil、Git連携、LSP、Markdownレンダリングを備えた安定版Neovim
 - Bunに統一したJavaScript/TypeScript環境（Node.jsとnpmはインストールしません）
 - goplsを含むGo開発環境
 - uvによるpre-commitとPythonツール管理
@@ -45,7 +45,7 @@ Zshの起動時間を抑えるため、セットアップ時にuvとHerdrの補�
 
 `setup.sh`はUbuntuでZshを導入し、`.zshrc`、Herdr、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。
 
-NeovimプラグインはLazy.nvimで同期します。Markdownを開くと`render-markdown.nvim`が読み込まれ、Neovim標準の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMasonで管理し、TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
+NeovimプラグインはLazy.nvimで同期します。`nvim-treesitter`とHomebrewの`tree-sitter-cli`を使い、Markdown、Python、Go、TypeScript、TSX、Luaのパーサーをセットアップ時にインストールします。Go Modules用の`gomod`、`gosum`、`gowork`も対象です。Markdownを開くと`render-markdown.nvim`が読み込まれ、管理対象の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMasonで管理し、TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
 
 ### Herdr
 
@@ -137,7 +137,7 @@ pre-commit run --all-files
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、ヘッドレスNeovim上でのTypeScript Language Server接続、標準Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
 依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 
