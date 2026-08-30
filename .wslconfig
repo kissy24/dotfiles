@@ -1,0 +1,3 @@
+[wsl2]
+# Windows版WezTermを使うため、WSLgのGUI VMをコールドブート時に起動しない。
+guiApplications=false

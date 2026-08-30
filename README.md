@@ -41,6 +41,18 @@ fzfのZsh連携では、Ctrl-Rによる履歴検索、Ctrl-Tによるファイ�
 
 Zshの起動時間を抑えるため、セットアップ時にuvとHerdrの補完を`${XDG_CACHE_HOME:-~/.cache}/dotfiles/zsh/`へ生成し、`compinit`のdumpも更新します。CLIを個別に更新して補完内容が変わった場合は、`./setup.sh`を再実行するとキャッシュを更新できます。
 
+Ubuntu/WSLではUbuntu標準の`compinit`を無効化し、管理対象の`.zshrc`によるキャッシュ付き初期化だけを実行します。`.zshenv`は既存環境との互換性のため、`~/.cargo/env`が存在する場合も読み込みます。また、Windows版WezTermを端末として使う構成ではWSLgが不要なため、`setup.sh`はWindowsユーザーディレクトリへ`.wslconfig`をコピーしてLinux GUI VMの自動起動を無効化します。既存の`.wslconfig`はデフォルトでは変更せず、`--force`指定時だけ置き換えます。
+
+WSL設定を反映するには、セットアップ後にPowerShellでWSLを停止してからWezTermを開き直します。
+
+```powershell
+wsl.exe --shutdown
+```
+
+この設定ではWSL内のLinux GUIアプリを利用できません。必要な場合はWindowsの`%UserProfile%\.wslconfig`から`guiApplications=false`を削除し、再度`wsl.exe --shutdown`を実行してください。
+
+`uninstall.sh`は、Windows側の`.wslconfig`がリポジトリの管理版と完全に一致する場合だけ削除します。利用者が追記・変更した設定は残します。
+
 ## 管理する設定
 
 `setup.sh`はUbuntuでZshを導入し、`.zshrc`、Herdr、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。

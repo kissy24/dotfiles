@@ -15,7 +15,7 @@ repos:
     rev: v0.11.0.1
     hooks:
       - id: shellcheck
-        exclude: ^\.zshrc$
+        exclude: ^\.zsh(rc|env)$
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
     hooks:

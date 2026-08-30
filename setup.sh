@@ -94,6 +94,7 @@ remove_legacy_tmux_symlink() {
 create_symlinks() {
     local dotfile_sources=(
         "$REPO_ROOT/.zshrc"
+        "$REPO_ROOT/.zshenv"
         "$REPO_ROOT/.local/bin/pkgupd"
         "$REPO_ROOT/.config/herdr/config.toml"
         "$REPO_ROOT/.config/starship.toml"
@@ -105,6 +106,7 @@ create_symlinks() {
     )
     local dotfile_dests=(
         "$HOME/.zshrc"
+        "$HOME/.zshenv"
         "$HOME/.local/bin/pkgupd"
         "$HOME/.config/herdr/config.toml"
         "$HOME/.config/starship.toml"
@@ -182,6 +184,8 @@ ensure_homebrew
 install_brew_packages
 remove_legacy_tmux_symlink
 create_symlinks
+echo "Configuring WSL startup..."
+"$REPO_ROOT/scripts/install-wsl-config.sh" "$FORCE"
 install_bun_language_servers
 generate_zsh_caches
 install_pre_commit
