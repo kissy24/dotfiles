@@ -97,7 +97,7 @@ test "$(uv run --no-project --python "$(command -v python3)" python -c 'print(1 
 
 echo "Checking configured Tree-sitter parsers..."
 nvim --headless \
-    "+lua local treesitter = require('nvim-treesitter'); local installed = treesitter.get_installed('parsers'); for _, lang in ipairs(require('base.treesitter').parsers) do assert(vim.list_contains(installed, lang), lang .. ' parser is not managed by nvim-treesitter'); assert(vim.treesitter.language.add(lang), lang .. ' parser is unavailable'); assert(#vim.treesitter.get_string_parser('', lang):parse() > 0, lang .. ' parsing failed') end" \
+    "+lua local treesitter = require('nvim-treesitter'); local installed = treesitter.get_installed('parsers'); local parsers = require('plugins.treesitter')[1].opts.parsers; for _, lang in ipairs(parsers) do assert(vim.list_contains(installed, lang), lang .. ' parser is not managed by nvim-treesitter'); assert(vim.treesitter.language.add(lang), lang .. ' parser is unavailable'); assert(#vim.treesitter.get_string_parser('', lang):parse() > 0, lang .. ' parsing failed') end" \
     "+qa"
 
 echo "Checking Neovim plugin loading, TypeScript parsing, and Bun-managed LSP..."
