@@ -28,6 +28,7 @@ remove_symlinks() {
     local dest expected
     local dotfile_paths=(
         .zshrc
+        .zshenv
         .tmux.conf
         .local/bin/pkgupd
         .config/herdr/config.toml
@@ -65,6 +66,7 @@ remove_brew_packages() {
 }
 
 remove_symlinks
+"$REPO_ROOT/scripts/install-wsl-config.sh" remove
 
 if [ "$REMOVE_PACKAGES" -eq 1 ]; then
     echo "This removes declared packages even if they existed before setup."

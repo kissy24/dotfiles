@@ -33,6 +33,22 @@ test -s "$ZSH_COMPLETION_DIR/uv.zsh"
 test -s "$ZSH_COMPLETION_DIR/herdr.zsh"
 zsh -dfc 'autoload -Uz compinit && compinit -C; source "$1"; source "$2"' \
     _ "$ZSH_COMPLETION_DIR/uv.zsh" "$ZSH_COMPLETION_DIR/herdr.zsh"
+test "$(zsh -dfc 'source "$1"; print -r -- "$skip_global_compinit"' _ "$PWD/.zshenv")" = 1
+
+echo "Checking safe WSL configuration installation..."
+WSL_CONFIG_DEST="$TMP_ROOT/windows/.wslconfig" DOTFILES_TEST_WSL=1 \
+    ./scripts/install-wsl-config.sh
+cmp .wslconfig "$TMP_ROOT/windows/.wslconfig"
+printf 'sentinel\n' > "$TMP_ROOT/windows/.wslconfig"
+WSL_CONFIG_DEST="$TMP_ROOT/windows/.wslconfig" DOTFILES_TEST_WSL=1 \
+    ./scripts/install-wsl-config.sh
+test "$(cat "$TMP_ROOT/windows/.wslconfig")" = sentinel
+WSL_CONFIG_DEST="$TMP_ROOT/windows/.wslconfig" DOTFILES_TEST_WSL=1 \
+    ./scripts/install-wsl-config.sh 1
+cmp .wslconfig "$TMP_ROOT/windows/.wslconfig"
+WSL_CONFIG_DEST="$TMP_ROOT/windows/.wslconfig" DOTFILES_TEST_WSL=1 \
+    ./scripts/install-wsl-config.sh remove
+test ! -e "$TMP_ROOT/windows/.wslconfig"
 
 echo "Checking ripgrep search..."
 printf 'alpha\nbeta\n' > "$TMP_ROOT/search.txt"

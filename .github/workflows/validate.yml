@@ -104,6 +104,7 @@ jobs:
 
           for path in \
             "$HOME/.zshrc" \
+            "$HOME/.zshenv" \
             "$HOME/.local/bin/pkgupd" \
             "$HOME/.config/herdr/config.toml" \
             "$HOME/.config/starship.toml" \
@@ -151,6 +152,7 @@ jobs:
           fi
           ./uninstall.sh
           test ! -L "$HOME/.zshrc"
+          test ! -L "$HOME/.zshenv"
           test ! -L "$HOME/.local/bin/pkgupd"
           test ! -L "$HOME/.config/nvim"
           brew list --formula neovim
