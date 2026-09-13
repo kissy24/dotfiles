@@ -14,6 +14,8 @@ prefix = "ctrl+b"
 reload_config = "prefix+shift+r"
 
 [ui]
+# Keep Japanese IME candidates anchored to the pane cursor on Windows/WSL.
+host_cursor = "native"
 mouse_capture = true
 copy_on_select = true
 prompt_new_tab_name = false
