@@ -7,8 +7,22 @@ ZSH_BIN=$(command -v zsh)
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
 launch_command=$(
-    sed -n 's/^local launch_command = "\(.*\)"$/\1/p' \
-        "$REPO_ROOT/.config/wezterm/wezterm.lua" |
+    awk '
+        /^local launch_command = "/ {
+            sub(/^local launch_command = "/, "")
+            sub(/"$/, "")
+            print
+            exit
+        }
+        /^local launch_command =[[:space:]]*$/ {
+            if (getline > 0 && $0 ~ /^[[:space:]]*".*"$/) {
+                sub(/^[[:space:]]*"/, "")
+                sub(/"$/, "")
+                print
+            }
+            exit
+        }
+    ' "$REPO_ROOT/.config/wezterm/wezterm.lua" |
         sed 's/\\\\/\\/g'
 )
 test -n "$launch_command"
