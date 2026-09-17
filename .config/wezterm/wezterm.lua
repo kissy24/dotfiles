@@ -3,7 +3,8 @@ local act = wezterm.action
 local config = wezterm.config_builder()
 
 -- Herdrが利用可能なら起動し、異常終了時も復旧用のZshを残す
-local launch_command = "if command -v herdr >/dev/null 2>&1; then herdr && exit; print -u2 '\\nHerdrの起動に失敗しました。作業を保存後、hrrでセッションを再起動できます。'; fi; exec zsh -l"
+local launch_command =
+"if command -v herdr >/dev/null 2>&1; then herdr && exit; print -u2 '\\nHerdrの起動に失敗しました。作業を保存後、hrrでセッションを再起動できます。'; fi; exec zsh -l"
 if wezterm.target_triple:find("windows") then
     config.default_prog = {
         "wsl.exe",
@@ -28,9 +29,9 @@ end
 config.use_ime                      = true
 
 -- ウィンドウの設定
-config.window_background_opacity    = 0.7
+config.window_background_opacity    = 0.8
 config.win32_system_backdrop        = 'Acrylic'
-config.macos_window_background_blur = 20
+config.macos_window_background_blur = 10
 config.initial_cols                 = 188
 config.initial_rows                 = 55
 if wezterm.target_triple:find("windows") then
@@ -38,17 +39,17 @@ if wezterm.target_triple:find("windows") then
 else
     config.window_decorations = "RESIZE"
 end
-config.enable_tab_bar               = false
+config.enable_tab_bar       = false
 
 -- カーソルスタイルをバーに設定
-config.default_cursor_style         = "BlinkingBar"
+config.default_cursor_style = "BlinkingBar"
 
 -- 簡易的なアニメーション効果
-config.animation_fps                = 60
-config.cursor_blink_rate            = 500
+config.animation_fps        = 60
+config.cursor_blink_rate    = 500
 
 -- ベルの設定
-config.audible_bell                 = "Disabled"
+config.audible_bell         = "Disabled"
 
 -- ホットキー設定
 local function send_herdr_prefix_key(key, mods)
