@@ -5,6 +5,8 @@ nvim/plugin/
 .config/fish/functions
 .config/fish/completions
 .config/fish/conf.d
+# Keep Raycast settings local to each machine.
+/.config/raycast/
 # Herdr stores logs, sockets, and session state next to the managed config.
 /.config/herdr/*
 !/.config/herdr/config.toml
