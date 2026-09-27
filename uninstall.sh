@@ -5,6 +5,9 @@ SCRIPT_DIR=$(dirname "$0")
 REPO_ROOT=$(cd "$SCRIPT_DIR" && pwd)
 REMOVE_PACKAGES=0
 
+# shellcheck source=scripts/lib/dotfiles.sh
+source "$REPO_ROOT/scripts/lib/dotfiles.sh"
+
 usage() {
     cat <<'EOF'
 Usage: ./uninstall.sh [--packages]
@@ -24,34 +27,6 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-remove_symlinks() {
-    local dest expected
-    local dotfile_paths=(
-        .zshrc
-        .zshenv
-        .tmux.conf
-        .local/bin/pkgupd
-        .config/herdr/config.toml
-        .config/starship.toml
-        .config/nvim
-        .config/wezterm
-        .config/sheldon
-        .config/lazygit
-        .config/gh
-    )
-
-    echo "Removing managed symlinks..."
-    for expected in "${dotfile_paths[@]}"; do
-        dest="$HOME/$expected"
-        if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$REPO_ROOT/$expected" ]; then
-            echo "- Removing link: $dest"
-            rm "$dest"
-        elif [ -e "$dest" ] || [ -L "$dest" ]; then
-            echo "- Skipping unmanaged path: $dest"
-        fi
-    done
-}
-
 brew_packages_from() {
     sed -n 's/^brew "\([^"]*\)".*/\1/p' "$1"
 }
@@ -65,7 +40,7 @@ remove_brew_packages() {
     done < <(brew_packages_from "$REPO_ROOT/Brewfile")
 }
 
-remove_symlinks
+remove_symlinks "$REPO_ROOT" "$HOME"
 "$REPO_ROOT/scripts/install-wsl-config.sh" remove
 
 if [ "$REMOVE_PACKAGES" -eq 1 ]; then

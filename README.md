@@ -24,7 +24,9 @@ cd dotfiles
 ./setup.sh
 ```
 
-既存のdotfilesはデフォルトでは変更せずにスキップします。管理対象のシンボリックリンクへ置き換える場合は`./setup.sh --force`を使います。置換対象のパスは削除されるため、実行前に内容を確認してください。
+既存のdotfilesはデフォルトでは変更せずにスキップします。管理対象のシンボリックリンクへ置き換える場合は`./setup.sh --force`を使います。置換対象は削除せず、同じ親ディレクトリの`<元の名前>.backup-<日時>.<ランダム文字列>/original`へ退避します。既に正しいリンクになっている場合はバックアップを作りません。バックアップはアンインストール後も残ります。
+
+元の設定へ戻す場合は、`./uninstall.sh`で管理対象のリンクを解除してから、表示された退避先の`original`を元のパスへ移動してください。復元先にファイルやディレクトリが残っている場合は、内容を確認して別の場所へ退避してから戻します。複数のバックアップがある場合は復元したいものを選びます。Windows側の`.wslconfig`も同じ方式で退避します。
 
 パッケージの宣言は`Brewfile`、`packages/apt.txt`、`packages/bun-lsp/package.json`にあります。SheldonとMasonの依存関係は、それぞれの設定ファイルで管理します。
 
@@ -41,7 +43,7 @@ fzfのZsh連携では、Ctrl-Rによる履歴検索、Ctrl-Tによるファイ�
 
 Zshの起動時間を抑えるため、セットアップ時にuvとHerdrの補完を`${XDG_CACHE_HOME:-~/.cache}/dotfiles/zsh/`へ生成し、`compinit`のdumpも更新します。CLIを個別に更新して補完内容が変わった場合は、`./setup.sh`を再実行するとキャッシュを更新できます。
 
-Ubuntu/WSLではUbuntu標準の`compinit`を無効化し、管理対象の`.zshrc`によるキャッシュ付き初期化だけを実行します。`.zshenv`は既存環境との互換性のため、`~/.cargo/env`が存在する場合も読み込みます。また、Windows版WezTermを端末として使う構成ではWSLgが不要なため、`setup.sh`はWindowsユーザーディレクトリへ`.wslconfig`をコピーしてLinux GUI VMの自動起動を無効化します。既存の`.wslconfig`はデフォルトでは変更せず、`--force`指定時だけ置き換えます。
+Ubuntu/WSLではUbuntu標準の`compinit`を無効化し、管理対象の`.zshrc`によるキャッシュ付き初期化だけを実行します。`.zshenv`は既存環境との互換性のため、`~/.cargo/env`が存在する場合も読み込みます。また、Windows版WezTermを端末として使う構成ではWSLgが不要なため、`setup.sh`はWindowsユーザーディレクトリへ`.wslconfig`をコピーしてLinux GUI VMの自動起動を無効化します。既存の`.wslconfig`はデフォルトでは変更せず、`--force`指定時だけバックアップして置き換えます。
 
 WSL設定を反映するには、セットアップ後にPowerShellでWSLを停止してからWezTermを開き直します。
 
@@ -55,7 +57,9 @@ wsl.exe --shutdown
 
 ## 管理する設定
 
-`setup.sh`はUbuntuでZshを導入し、`.zshrc`、Herdr、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。
+`setup.sh`はUbuntuでZshを導入し、`.zshrc`、Herdr、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。GitHub CLIも`~/.config/gh/config.yml`だけを管理し、認証情報の`hosts.yml`などは保持します。
+
+以前のセットアップが作った`~/.config/gh`のディレクトリリンクは、次回セットアップ時に通常のディレクトリへ移行します。中のローカルファイルは権限を保ってコピーし、旧リンクもバックアップします。リポジトリ内に残っているGit管理対象外の`hosts.yml`などは削除しません。別の場所を指す利用者独自のディレクトリリンクは、`--force`でも変更せずスキップします。
 
 NeovimプラグインはLazy.nvimで同期します。`nvim-treesitter`とHomebrewの`tree-sitter-cli`を使い、Markdown、Python、Go、TypeScript、TSX、Luaのパーサーをセットアップ時にインストールします。Go Modules用の`gomod`、`gosum`、`gowork`も対象です。Markdownを開くと`render-markdown.nvim`が読み込まれ、管理対象の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMasonで管理し、TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
 
@@ -149,7 +153,7 @@ pre-commit run --all-files
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
 依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 

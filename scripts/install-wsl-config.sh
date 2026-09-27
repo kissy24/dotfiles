@@ -5,6 +5,9 @@ REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SOURCE_CONFIG="$REPO_ROOT/.wslconfig"
 ACTION=${1:-0}
 
+# shellcheck source=scripts/lib/dotfiles.sh
+source "$REPO_ROOT/scripts/lib/dotfiles.sh"
+
 if [ "${DOTFILES_TEST_WSL:-0}" != 1 ]; then
     if ! grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then
         exit 0
@@ -38,9 +41,12 @@ if cmp -s "$SOURCE_CONFIG" "$dest"; then
     echo "- Windows config already installed: $dest"
     exit 0
 fi
-if [ -e "$dest" ] && [ "$ACTION" -ne 1 ]; then
-    echo "- Skipping existing Windows config: $dest (use --force to replace)"
-    exit 0
+if [ -e "$dest" ] || [ -L "$dest" ]; then
+    if [ "$ACTION" -ne 1 ]; then
+        echo "- Skipping existing Windows config: $dest (use --force to replace)"
+        exit 0
+    fi
+    backup_path "$dest"
 fi
 
 cp "$SOURCE_CONFIG" "$dest"

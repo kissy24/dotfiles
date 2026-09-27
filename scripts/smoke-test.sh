@@ -18,6 +18,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
+echo "Checking setup backups and GitHub CLI migration..."
+./scripts/test-dotfile-links.sh
+
+echo "Checking Neovim failure propagation..."
+./scripts/test-nvim-check.sh
+
 echo "Checking CLI startup..."
 git --version >/dev/null
 lazygit --version >/dev/null
@@ -46,6 +52,7 @@ test "$(cat "$TMP_ROOT/windows/.wslconfig")" = sentinel
 WSL_CONFIG_DEST="$TMP_ROOT/windows/.wslconfig" DOTFILES_TEST_WSL=1 \
     ./scripts/install-wsl-config.sh 1
 cmp .wslconfig "$TMP_ROOT/windows/.wslconfig"
+grep -qx sentinel "$TMP_ROOT"/windows/.wslconfig.backup-*/original
 WSL_CONFIG_DEST="$TMP_ROOT/windows/.wslconfig" DOTFILES_TEST_WSL=1 \
     ./scripts/install-wsl-config.sh remove
 test ! -e "$TMP_ROOT/windows/.wslconfig"
@@ -112,29 +119,41 @@ echo "Checking Python execution through uv..."
 test "$(uv run --no-project --python "$(command -v python3)" python -c 'print(1 + 1)')" = "2"
 
 echo "Checking configured Tree-sitter parsers..."
-nvim --headless \
-    "+lua local treesitter = require('nvim-treesitter'); local installed = treesitter.get_installed('parsers'); local parsers = require('plugins.treesitter')[1].opts.parsers; for _, lang in ipairs(parsers) do assert(vim.list_contains(installed, lang), lang .. ' parser is not managed by nvim-treesitter'); assert(vim.treesitter.language.add(lang), lang .. ' parser is unavailable'); assert(#vim.treesitter.get_string_parser('', lang):parse() > 0, lang .. ' parsing failed') end" \
-    "+qa"
+./scripts/run-nvim-check.sh '
+local treesitter = require("nvim-treesitter")
+local installed = treesitter.get_installed("parsers")
+for _, lang in ipairs(require("plugins.treesitter")[1].opts.parsers) do
+    assert(vim.list_contains(installed, lang), lang .. " parser is not managed by nvim-treesitter")
+    assert(vim.treesitter.language.add(lang), lang .. " parser is unavailable")
+    assert(#vim.treesitter.get_string_parser("", lang):parse() > 0, lang .. " parsing failed")
+end
+'
 
 echo "Checking Neovim plugin loading, TypeScript parsing, and Bun-managed LSP..."
 mkdir -p "$TMP_ROOT/typescript"
 printf '{"private":true}\n' > "$TMP_ROOT/typescript/package.json"
 printf 'const answer: number = 42\n' > "$TMP_ROOT/typescript/smoke.ts"
-nvim --headless "$TMP_ROOT/typescript/smoke.ts" \
-    "+lua assert(vim.fn.exists(':Lazy') == 2, 'Lazy command is unavailable')" \
-    "+lua local parser = vim.treesitter.get_parser(0, 'typescript'); assert(#parser:parse() > 0, 'TypeScript parsing failed')" \
-    "+lua local attached = vim.wait(15000, function() local clients = vim.lsp.get_clients({ bufnr = 0, name = 'ts_ls' }); return #clients > 0 and clients[1].initialized end, 100); assert(attached, 'ts_ls did not initialize')" \
-    "+qa"
+./scripts/run-nvim-check.sh '
+assert(vim.fn.exists(":Lazy") == 2, "Lazy command is unavailable")
+local parser = vim.treesitter.get_parser(0, "typescript")
+assert(#parser:parse() > 0, "TypeScript parsing failed")
+local attached = vim.wait(15000, function()
+    local clients = vim.lsp.get_clients({ bufnr = 0, name = "ts_ls" })
+    return #clients > 0 and clients[1].initialized
+end, 100)
+assert(attached, "ts_ls did not initialize")
+' "$TMP_ROOT/typescript/smoke.ts"
 
 echo "Checking Neovim Markdown rendering with managed parsers..."
 mkdir -p "$TMP_ROOT/markdown"
 printf '# Smoke test\n\n- Markdown rendering\n' > "$TMP_ROOT/markdown/smoke.md"
-nvim --headless "$TMP_ROOT/markdown/smoke.md" \
-    "+lua assert(vim.treesitter.language.add('markdown'), 'managed markdown parser is unavailable')" \
-    "+lua assert(vim.treesitter.language.add('markdown_inline'), 'managed markdown_inline parser is unavailable')" \
-    "+lua local parser = vim.treesitter.get_parser(0, 'markdown'); assert(#parser:parse() > 0, 'Markdown parsing failed')" \
-    "+lua assert(package.loaded['render-markdown'], 'render-markdown.nvim did not load')" \
-    "+lua assert(vim.fn.exists(':RenderMarkdown') == 2, 'RenderMarkdown command is unavailable')" \
-    "+qa"
+./scripts/run-nvim-check.sh '
+assert(vim.treesitter.language.add("markdown"), "managed markdown parser is unavailable")
+assert(vim.treesitter.language.add("markdown_inline"), "managed markdown_inline parser is unavailable")
+local parser = vim.treesitter.get_parser(0, "markdown")
+assert(#parser:parse() > 0, "Markdown parsing failed")
+assert(package.loaded["render-markdown"], "render-markdown.nvim did not load")
+assert(vim.fn.exists(":RenderMarkdown") == 2, "RenderMarkdown command is unavailable")
+' "$TMP_ROOT/markdown/smoke.md"
 
 echo "All smoke tests passed."
