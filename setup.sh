@@ -5,11 +5,14 @@ SCRIPT_DIR=$(dirname "$0")
 REPO_ROOT=$(cd "$SCRIPT_DIR" && pwd)
 FORCE=0
 
+# shellcheck source=scripts/lib/dotfiles.sh
+source "$REPO_ROOT/scripts/lib/dotfiles.sh"
+
 usage() {
     cat <<'EOF'
 Usage: ./setup.sh [--force]
 
-  --force    Replace existing dotfiles instead of skipping them
+  --force    Back up and replace existing dotfiles instead of skipping them
   --help     Show this help
 EOF
 }
@@ -91,56 +94,6 @@ remove_legacy_tmux_symlink() {
     fi
 }
 
-create_symlinks() {
-    local dotfile_sources=(
-        "$REPO_ROOT/.zshrc"
-        "$REPO_ROOT/.zshenv"
-        "$REPO_ROOT/.local/bin/pkgupd"
-        "$REPO_ROOT/.config/herdr/config.toml"
-        "$REPO_ROOT/.config/starship.toml"
-        "$REPO_ROOT/.config/nvim"
-        "$REPO_ROOT/.config/wezterm"
-        "$REPO_ROOT/.config/sheldon"
-        "$REPO_ROOT/.config/lazygit"
-        "$REPO_ROOT/.config/gh"
-    )
-    local dotfile_dests=(
-        "$HOME/.zshrc"
-        "$HOME/.zshenv"
-        "$HOME/.local/bin/pkgupd"
-        "$HOME/.config/herdr/config.toml"
-        "$HOME/.config/starship.toml"
-        "$HOME/.config/nvim"
-        "$HOME/.config/wezterm"
-        "$HOME/.config/sheldon"
-        "$HOME/.config/lazygit"
-        "$HOME/.config/gh"
-    )
-    local i src dest
-
-    echo "Creating symlinks..."
-    for i in "${!dotfile_sources[@]}"; do
-        src=${dotfile_sources[$i]}
-        dest=${dotfile_dests[$i]}
-        mkdir -p "$(dirname "$dest")"
-
-        if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
-            echo "- Link already exists: $dest"
-            continue
-        fi
-        if [ -e "$dest" ] || [ -L "$dest" ]; then
-            if [ "$FORCE" -ne 1 ]; then
-                echo "- Skipping existing path: $dest (use --force to replace)"
-                continue
-            fi
-            echo "- Replacing existing path: $dest"
-            rm -rf "$dest"
-        fi
-        echo "- Creating link: $dest -> $src"
-        ln -s "$src" "$dest"
-    done
-}
-
 install_bun_language_servers() {
     local data_home=${XDG_DATA_HOME:-$HOME/.local/share}
     local lsp_dir="$data_home/dotfiles-lsp"
@@ -183,7 +136,7 @@ install_pre_commit() {
 ensure_homebrew
 install_brew_packages
 remove_legacy_tmux_symlink
-create_symlinks
+create_symlinks "$REPO_ROOT" "$HOME" "$FORCE"
 echo "Configuring WSL startup..."
 "$REPO_ROOT/scripts/install-wsl-config.sh" "$FORCE"
 install_bun_language_servers
@@ -191,12 +144,11 @@ generate_zsh_caches
 install_pre_commit
 
 echo "Syncing Neovim plugins and Mason-managed language servers..."
-nvim --headless -c 'Lazy sync' -c 'qa'
+"$REPO_ROOT/scripts/run-nvim-check.sh" 'vim.cmd("Lazy! sync")'
 
 echo "Installing configured Tree-sitter parsers..."
-nvim --headless \
-    -c "lua local parsers = require('plugins.treesitter')[1].opts.parsers; local task = require('nvim-treesitter').install(parsers, { max_jobs = 4 }); assert(task:wait(300000), 'Tree-sitter parser installation failed')" \
-    -c 'qa'
+"$REPO_ROOT/scripts/run-nvim-check.sh" \
+    "local parsers = require('plugins.treesitter')[1].opts.parsers; local task = require('nvim-treesitter').install(parsers, { max_jobs = 4 }); assert(task:wait(300000), 'Tree-sitter parser installation failed')"
 
 echo "Locking Sheldon plugins..."
 sheldon lock

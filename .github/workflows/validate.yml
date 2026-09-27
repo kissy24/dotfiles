@@ -22,9 +22,10 @@ jobs:
       - name: Validate declarations and shell syntax
         shell: bash
         run: |
-          bash -n setup.sh uninstall.sh .local/bin/pkgupd \
-            scripts/smoke-test.sh scripts/test-pkgupd.sh \
-            scripts/test-wezterm-herdr-fallback.sh
+          for script in setup.sh uninstall.sh .local/bin/pkgupd scripts/*.sh scripts/lib/*.sh; do
+            bash -n "$script"
+          done
+          ./scripts/test-dotfile-links.sh
           ./setup.sh --help
           ./uninstall.sh --help
           if grep -Eq '^brew "(rust|node|fd)"' Brewfile; then
@@ -112,7 +113,7 @@ jobs:
             "$HOME/.config/wezterm" \
             "$HOME/.config/sheldon" \
             "$HOME/.config/lazygit" \
-            "$HOME/.config/gh"; do
+            "$HOME/.config/gh/config.yml"; do
             test -L "$path"
           done
 
@@ -143,6 +144,7 @@ jobs:
           grep -q sentinel "$HOME/.zshrc"
           ./setup.sh --force
           test -L "$HOME/.zshrc"
+          grep -qx sentinel "$HOME"/.zshrc.backup-*/original
 
       - name: Verify safe uninstallation
         shell: bash
@@ -155,5 +157,6 @@ jobs:
           test ! -L "$HOME/.zshenv"
           test ! -L "$HOME/.local/bin/pkgupd"
           test ! -L "$HOME/.config/nvim"
+          test ! -L "$HOME/.config/gh/config.yml"
           brew list --formula neovim
           brew list --formula bun
