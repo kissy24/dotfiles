@@ -29,7 +29,7 @@ end
 config.use_ime                      = true
 
 -- ウィンドウの設定
-config.window_background_opacity    = 0.8
+config.window_background_opacity    = 0.9
 config.win32_system_backdrop        = 'Acrylic'
 config.macos_window_background_blur = 10
 config.initial_cols                 = 188
