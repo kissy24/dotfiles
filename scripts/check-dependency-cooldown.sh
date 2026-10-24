@@ -69,6 +69,7 @@ collect_github_refs() {
         /^[[:space:]]*rev:/ && repo != "" {
             ref = $0
             sub(/^.*rev:[[:space:]]*/, "", ref)
+            sub(/[[:space:]#].*$/, "", ref)
             print repo "|" ref
             repo = ""
         }

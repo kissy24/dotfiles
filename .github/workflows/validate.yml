@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: Validate on ${{ matrix.os }}
@@ -17,7 +20,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
       - name: Validate declarations and shell syntax
         shell: bash
@@ -77,6 +82,7 @@ jobs:
         shell: bash
         run: |
           ./setup.sh --force | tee setup_log.txt
+          git diff --exit-code -- .config/nvim/lazy-lock.json
 
       - name: Verify tools, integrations, and symlinks
         shell: bash

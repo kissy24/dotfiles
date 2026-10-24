@@ -43,6 +43,8 @@ fzfのZsh連携では、Ctrl-Rによる履歴検索、Ctrl-Tによるファイ�
 
 Zshの起動時間を抑えるため、セットアップ時にuvとHerdrの補完を`${XDG_CACHE_HOME:-~/.cache}/dotfiles/zsh/`へ生成し、`compinit`のdumpも更新します。CLIを個別に更新して補完内容が変わった場合は、`./setup.sh`を再実行するとキャッシュを更新できます。
 
+補完の初期化では、キャッシュがある場合も毎回ディレクトリの所有者と権限を検査します。安全でない補完は`compinit -i`で除外します。補完が使えなくなった場合は、`autoload -Uz compaudit; compaudit`で対象を確認し、所有者や他ユーザーの書き込み権限を見直してください。
+
 Ubuntu/WSLではUbuntu標準の`compinit`を無効化し、管理対象の`.zshrc`によるキャッシュ付き初期化だけを実行します。また、Windows版WezTermを端末として使う構成ではWSLgが不要なため、`setup.sh`はWindowsユーザーディレクトリへ`.wslconfig`をコピーしてLinux GUI VMの自動起動を無効化します。既存の`.wslconfig`はデフォルトでは変更せず、`--force`指定時だけバックアップして置き換えます。
 
 WSL設定を反映するには、セットアップ後にPowerShellでWSLを停止してからWezTermを開き直します。
@@ -61,7 +63,7 @@ wsl.exe --shutdown
 
 以前のセットアップが作った`~/.config/gh`のディレクトリリンクは、次回セットアップ時に通常のディレクトリへ移行します。中のローカルファイルは権限を保ってコピーし、旧リンクもバックアップします。リポジトリ内に残っているGit管理対象外の`hosts.yml`などは削除しません。別の場所を指す利用者独自のディレクトリリンクは、`--force`でも変更せずスキップします。
 
-NeovimプラグインはLazy.nvimで同期します。`nvim-treesitter`とHomebrewの`tree-sitter-cli`を使い、Markdown、Python、Go、TypeScript、TSX、Luaのパーサーをセットアップ時にインストールします。Go Modules用の`gomod`、`gosum`、`gowork`も対象です。Markdownを開くと`render-markdown.nvim`が読み込まれ、管理対象の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMasonで管理し、TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
+NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合はNeovimで`:Lazy update`を実行し、ロックファイルの差分と動作を検証してコミットしてください。`nvim-treesitter`とHomebrewの`tree-sitter-cli`を使い、Markdown、Python、Go、TypeScript、TSX、Luaのパーサーをセットアップ時にインストールします。Go Modules用の`gomod`、`gosum`、`gowork`も対象です。Markdownを開くと`render-markdown.nvim`が読み込まれ、管理対象の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMasonで管理し、TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
 
 ### Herdr
 
@@ -124,7 +126,7 @@ Rust/Cargoを別途利用する場合は、必要に応じて`[[ -r "$HOME/.carg
 pkgupd
 ```
 
-UbuntuではHomebrewのみにクールダウンを適用し、APTのシステム・セキュリティ更新は遅延させず従来どおり適用します。Homebrewが対象パッケージのインストールに必要と判断した依存関係は、同時に更新される場合があります。Homebrewだけを処理する場合は`pkgupd --homebrew-only`、待機日数を変更する場合は`PKGUPD_COOLDOWN_DAYS`を使用します。
+UbuntuではHomebrewのみにクールダウンを適用し、APTのシステム・セキュリティ更新は遅延させず従来どおり適用します。Homebrewの処理に失敗してもAPTの更新を試みます。各パッケージマネージャーは途中で失敗したら後続処理を停止し、最後に両方の終了コードを表示して、いずれかが失敗した場合は`pkgupd`も失敗を返します。Homebrewが対象パッケージのインストールに必要と判断した依存関係は、同時に更新される場合があります。Homebrewだけを処理する場合は`pkgupd --homebrew-only`、待機日数を変更する場合は`PKGUPD_COOLDOWN_DAYS`を使用します。
 
 ```sh
 PKGUPD_COOLDOWN_DAYS=14 pkgupd
@@ -155,9 +157,11 @@ GitHub ActionsでUbuntuとmacOSのセットアップスクリプトを検証し�
 pre-commit run --all-files
 ```
 
+GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定しています。CIの`GITHUB_TOKEN`は`contents: read`に制限し、checkout後のGit認証情報も保存しません。
+
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、SHAのバージョンコメント付きクールダウン検査、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
 依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 

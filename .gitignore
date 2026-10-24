@@ -14,4 +14,3 @@ nvim/plugin/
 .config/gh/hosts.yml
 fish_variables
 .DS_Store
-lazy-lock.json
