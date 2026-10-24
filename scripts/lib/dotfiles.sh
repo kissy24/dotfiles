@@ -88,5 +88,5 @@ remove_symlinks() {
         elif [ -e "$dest" ] || [ -L "$dest" ]; then
             echo "- Skipping unmanaged path: $dest"
         fi
-    done < <(managed_dotfile_paths; printf '%s\n' .tmux.conf .config/gh)
+    done < <(managed_dotfile_paths; printf '%s\n' .config/gh)
 }

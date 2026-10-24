@@ -76,9 +76,7 @@ jobs:
       - name: Run complete setup
         shell: bash
         run: |
-          ln -s "$PWD/.tmux.conf" "$HOME/.tmux.conf"
           ./setup.sh --force | tee setup_log.txt
-          test ! -L "$HOME/.tmux.conf"
 
       - name: Verify tools, integrations, and symlinks
         shell: bash

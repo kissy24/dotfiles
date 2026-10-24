@@ -2,7 +2,7 @@
 onboarding = false
 
 [theme]
-# Reuse the host terminal palette, matching the previous transparent tmux UI.
+# Reuse the host terminal palette.
 name = "terminal"
 
 [terminal]

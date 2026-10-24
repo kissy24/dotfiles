@@ -39,7 +39,15 @@ test -s "$ZSH_COMPLETION_DIR/uv.zsh"
 test -s "$ZSH_COMPLETION_DIR/herdr.zsh"
 zsh -dfc 'autoload -Uz compinit && compinit -C; source "$1"; source "$2"' \
     _ "$ZSH_COMPLETION_DIR/uv.zsh" "$ZSH_COMPLETION_DIR/herdr.zsh"
-test "$(zsh -dfc 'source "$1"; print -r -- "$skip_global_compinit"' _ "$PWD/.zshenv")" = 1
+
+echo "Checking Zsh environment initialization with an existing Cargo environment..."
+mkdir -p "$TMP_ROOT/zsh-home/.cargo"
+printf 'export DOTFILES_TEST_CARGO_LOADED=1\n' > "$TMP_ROOT/zsh-home/.cargo/env"
+HOME="$TMP_ROOT/zsh-home" ZDOTDIR="$TMP_ROOT/zsh-home" zsh -dfc '
+    unset DOTFILES_TEST_CARGO_LOADED skip_global_compinit
+    source "$1" || exit 1
+    [[ "$skip_global_compinit" = 1 && -z "${DOTFILES_TEST_CARGO_LOADED:-}" ]]
+' _ "$PWD/.zshenv"
 
 echo "Checking safe WSL configuration installation..."
 WSL_CONFIG_DEST="$TMP_ROOT/windows/.wslconfig" DOTFILES_TEST_WSL=1 \

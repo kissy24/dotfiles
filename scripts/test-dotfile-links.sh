@@ -25,6 +25,8 @@ printf 'local gh config\n' > "$target_home/.config/gh/config.yml"
 printf 'local auth sentinel\n' > "$target_home/.config/gh/hosts.yml"
 chmod 600 "$target_home/.config/gh/hosts.yml"
 ln -s missing-relative-target "$target_home/.zshenv"
+# Retired configurations are unmanaged, even when linked to this repository.
+ln -s "$fixture_repo/.tmux.conf" "$target_home/.tmux.conf"
 
 create_symlinks "$fixture_repo" "$target_home" 0 >/dev/null
 test ! -L "$target_home/.zshrc"
@@ -33,6 +35,7 @@ grep -qx 'original editor' "$target_home/.config/nvim/init.lua"
 grep -qx 'local gh config' "$target_home/.config/gh/config.yml"
 test "$(readlink "$target_home/.zshenv")" = missing-relative-target
 test -z "$(find "$target_home" -name '*.backup-*' -print)"
+test "$(readlink "$target_home/.tmux.conf")" = "$fixture_repo/.tmux.conf"
 
 create_symlinks "$fixture_repo" "$target_home" 1 >/dev/null
 grep -qx 'original shell' "$target_home"/.zshrc.backup-*/original
@@ -62,6 +65,9 @@ test ! -L "$target_home/.zshrc"
 test ! -e "$target_home/.config/gh/config.yml"
 grep -qx 'local auth sentinel' "$target_home/.config/gh/hosts.yml"
 grep -qx 'original shell' "$target_home"/.zshrc.backup-*/original
+
+# Setup and uninstall must leave retired configurations untouched.
+test "$(readlink "$target_home/.tmux.conf")" = "$fixture_repo/.tmux.conf"
 
 # Migrate the old managed directory link without touching its source.
 legacy_home="$TMP_ROOT/legacy"
