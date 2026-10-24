@@ -156,7 +156,7 @@ assert(package.loaded["render-markdown"], "render-markdown.nvim did not load")
 assert(vim.fn.exists(":RenderMarkdown") == 2, "RenderMarkdown command is unavailable")
 ' "$TMP_ROOT/markdown/smoke.md"
 
-echo "Checking the Oil right sidebar and file navigation..."
+echo "Checking the Oil left sidebar and file navigation..."
 mkdir -p "$TMP_ROOT/oil/child"
 printf 'Oil sidebar test\n' > "$TMP_ROOT/oil/child/file with spaces.txt"
 DOTFILES_OIL_TEST_DIR="$TMP_ROOT/oil" ./scripts/run-nvim-check.sh \

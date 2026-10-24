@@ -30,7 +30,7 @@ return {
             ["g?"] = "actions.show_help",
             -- Enterの挙動をカスタマイズ
             ["<CR>"] = {
-                desc = "Open file in the window to the left",
+                desc = "Open file in the window to the right",
                 callback = function()
                     local oil = require("oil")
                     local entry = oil.get_cursor_entry()
@@ -42,13 +42,13 @@ return {
                         -- ディレクトリならそのままoil内で展開
                         oil.select()
                     else
-                        -- ファイルなら左側のウィンドウに移動して開く
+                        -- ファイルなら右側のウィンドウに移動して開く
                         local path = oil.get_current_dir() .. entry.name
-                        vim.cmd("wincmd h") -- 左のウィンドウへ移動
+                        vim.cmd("wincmd l") -- 右のウィンドウへ移動
 
-                        -- 左側に編集ウィンドウがなければ、splitrightによらず左に作る
+                        -- 右側に編集ウィンドウがなければ、splitrightによらず右に作る
                         if vim.bo.filetype == "oil" then
-                            vim.cmd("leftabove vsplit")
+                            vim.cmd("rightbelow vsplit")
                         end
 
                         vim.cmd("edit " .. vim.fn.fnameescape(path))
@@ -93,7 +93,7 @@ return {
                     vim.api.nvim_win_close(found_win, true)
                 else
                     -- 見つからなければ新しくサイドバーとして開く
-                    vim.cmd("botright vsplit | vertical resize 30")
+                    vim.cmd("topleft vsplit | vertical resize 30")
                     oil.open()
                 end
             end,
