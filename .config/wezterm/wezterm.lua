@@ -32,8 +32,8 @@ config.use_ime                      = true
 config.window_background_opacity    = 0.9
 config.win32_system_backdrop        = 'Acrylic'
 config.macos_window_background_blur = 10
-config.initial_cols                 = 188
-config.initial_rows                 = 55
+config.initial_cols                 = 175
+config.initial_rows                 = 54
 if wezterm.target_triple:find("windows") then
     config.window_decorations = "TITLE | RESIZE"
 else
