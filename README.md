@@ -43,7 +43,7 @@ fzfのZsh連携では、Ctrl-Rによる履歴検索、Ctrl-Tによるファイ�
 
 Zshの起動時間を抑えるため、セットアップ時にuvとHerdrの補完を`${XDG_CACHE_HOME:-~/.cache}/dotfiles/zsh/`へ生成し、`compinit`のdumpも更新します。CLIを個別に更新して補完内容が変わった場合は、`./setup.sh`を再実行するとキャッシュを更新できます。
 
-Ubuntu/WSLではUbuntu標準の`compinit`を無効化し、管理対象の`.zshrc`によるキャッシュ付き初期化だけを実行します。`.zshenv`は既存環境との互換性のため、`~/.cargo/env`が存在する場合も読み込みます。また、Windows版WezTermを端末として使う構成ではWSLgが不要なため、`setup.sh`はWindowsユーザーディレクトリへ`.wslconfig`をコピーしてLinux GUI VMの自動起動を無効化します。既存の`.wslconfig`はデフォルトでは変更せず、`--force`指定時だけバックアップして置き換えます。
+Ubuntu/WSLではUbuntu標準の`compinit`を無効化し、管理対象の`.zshrc`によるキャッシュ付き初期化だけを実行します。また、Windows版WezTermを端末として使う構成ではWSLgが不要なため、`setup.sh`はWindowsユーザーディレクトリへ`.wslconfig`をコピーしてLinux GUI VMの自動起動を無効化します。既存の`.wslconfig`はデフォルトでは変更せず、`--force`指定時だけバックアップして置き換えます。
 
 WSL設定を反映するには、セットアップ後にPowerShellでWSLを停止してからWezTermを開き直します。
 
@@ -65,7 +65,7 @@ NeovimプラグインはLazy.nvimで同期します。`nvim-treesitter`とHomebr
 
 ### Herdr
 
-WezTermを起動すると、Herdrが利用可能な場合はバックグラウンドセッションを新規作成または再接続します。Herdrが未導入の場合や、更新後のクライアントと常駐中の旧サーバーのバージョン不整合などでHerdrが異常終了した場合は、WezTermを閉じずに通常のZshを開きます。ほかの端末からは、作業ディレクトリで`herdr`または短縮エイリアスの`hr`を実行して接続できます。設定はtmuxから移行しやすいように`Ctrl-b`プレフィックス、端末のカラーパレット、マウス操作、新しいペインへのカレントディレクトリ継承を使用します。
+WezTermを起動すると、Herdrが利用可能な場合はバックグラウンドセッションを新規作成または再接続します。Herdrが未導入の場合や、更新後のクライアントと常駐中の旧サーバーのバージョン不整合などでHerdrが異常終了した場合は、WezTermを閉じずに通常のZshを開きます。ほかの端末からは、作業ディレクトリで`herdr`または短縮エイリアスの`hr`を実行して接続できます。設定は`Ctrl-b`プレフィックス、端末のカラーパレット、マウス操作、新しいペインへのカレントディレクトリ継承を使用します。
 
 Herdr更新後に旧サーバーとの不整合が表示された場合は、セッション内の作業を保存してから`hrr`を実行します。確認に同意すると既定のHerdrセッションとその配下の全プロセスを停止し、新しいバージョンで再接続します。名前付きセッションは`hrr セッション名`で指定できます。
 
@@ -96,8 +96,6 @@ hrw ~/Projects/docfiles docs
 | サイドバー表示切替 | `Ctrl-b b` |
 | 設定再読み込み | `Ctrl-b Shift-r` |
 
-tmuxの実行中プロセスやセッションはHerdrへ自動変換されません。既存セッションの作業を完了してデタッチした後にHerdrを起動してください。tmuxが不要になったことを確認してから、必要に応じて`brew uninstall tmux`で旧パッケージを削除できます。
-
 Codexのセッション識別とHerdr再起動後のネイティブ復元を有効にする場合は、`herdr integration install codex`を一度実行します。この操作は`~/.codex`のhook設定を更新するため、共通セットアップからは自動実行しません。
 
 ### Neovimのファイルサイドバー
@@ -115,6 +113,8 @@ $EDITOR ~/.zshrc.local
 ```
 
 `~/.zshrc.local`は、このリポジトリによる作成、リンク、削除、Git管理の対象外です。共通設定の後に読み込むため、共通のエイリアスや環境変数をマシンごとに上書きできます。
+
+Rust/Cargoを別途利用する場合は、必要に応じて`[[ -r "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"`を`~/.zshrc.local`へ追加してください。
 
 ### パッケージ更新
 

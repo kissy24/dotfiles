@@ -84,16 +84,6 @@ install_brew_packages() {
     brew bundle install --jobs=1 --file="$REPO_ROOT/Brewfile"
 }
 
-remove_legacy_tmux_symlink() {
-    local legacy_source="$REPO_ROOT/.tmux.conf"
-    local legacy_dest="$HOME/.tmux.conf"
-
-    if [ -L "$legacy_dest" ] && [ "$(readlink "$legacy_dest")" = "$legacy_source" ]; then
-        echo "Removing legacy tmux config link: $legacy_dest"
-        rm "$legacy_dest"
-    fi
-}
-
 install_bun_language_servers() {
     local data_home=${XDG_DATA_HOME:-$HOME/.local/share}
     local lsp_dir="$data_home/dotfiles-lsp"
@@ -135,7 +125,6 @@ install_pre_commit() {
 
 ensure_homebrew
 install_brew_packages
-remove_legacy_tmux_symlink
 create_symlinks "$REPO_ROOT" "$HOME" "$FORCE"
 echo "Configuring WSL startup..."
 "$REPO_ROOT/scripts/install-wsl-config.sh" "$FORCE"
