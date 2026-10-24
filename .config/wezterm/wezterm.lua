@@ -22,9 +22,9 @@ config.color_scheme = 'Catppuccin Mocha'
 -- フォント設定
 config.font = wezterm.font("HackGen Console NF")
 if wezterm.target_triple:find("darwin") then
-    config.font_size = 13.5
+    config.font_size = 14.5
 else
-    config.font_size = 11
+    config.font_size = 12
 end
 config.use_ime                      = true
 
