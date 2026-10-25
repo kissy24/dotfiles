@@ -150,10 +150,12 @@ PKGUPD_COOLDOWN_DAYS=14 pkgupd
 
 ## 開発
 
+テストとスモークテストは`tests/`に、セットアップ・保守用スクリプトと共通処理は`scripts/`に配置しています。`scripts/run-nvim-check.sh`はセットアップとテストで共用します。
+
 GitHub ActionsでUbuntuとmacOSのセットアップスクリプトを検証します。ローカル検査はセットアップ時にuv経由でインストールされます。
 
 ```sh
-./scripts/smoke-test.sh
+./tests/smoke-test.sh
 pre-commit run --all-files
 ```
 
