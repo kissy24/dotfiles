@@ -43,6 +43,31 @@ load_brew_environment() {
     fi
 }
 
+install_homebrew_from_pin() {
+    local installer commit checksum
+    commit=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["homebrew_install_commit"])' "$REPO_ROOT/packages/bootstrap.json")
+    checksum=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["homebrew_install_sha256"])' "$REPO_ROOT/packages/bootstrap.json")
+    installer=$(mktemp)
+    curl --fail --silent --show-error --proto '=https' --tlsv1.2 \
+        "https://raw.githubusercontent.com/Homebrew/install/$commit/install.sh" > "$installer" || {
+        rm -f "$installer"
+        return 1
+    }
+    if ! python3 - "$installer" "$checksum" <<'VERIFY'
+import hashlib, pathlib, sys
+if hashlib.sha256(pathlib.Path(sys.argv[1]).read_bytes()).hexdigest() != sys.argv[2]:
+    raise SystemExit("Homebrew installer checksum mismatch")
+VERIFY
+    then
+        rm -f "$installer"
+        return 1
+    fi
+    local status=0
+    NONINTERACTIVE=1 /bin/bash "$installer" || status=$?
+    rm -f "$installer"
+    return "$status"
+}
+
 install_homebrew_on_ubuntu() {
     echo "Installing Ubuntu prerequisites for Homebrew..."
     mapfile -t apt_packages < <(sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' "$REPO_ROOT/packages/apt.txt")
@@ -51,7 +76,7 @@ install_homebrew_on_ubuntu() {
 
     if ! command -v brew >/dev/null 2>&1 && [ ! -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
         echo "Installing Homebrew..."
-        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        install_homebrew_from_pin
     fi
     load_brew_environment
 }
@@ -81,7 +106,7 @@ ensure_homebrew() {
 
 install_brew_packages() {
     echo "Installing Homebrew packages..."
-    brew bundle install --jobs=1 --file="$REPO_ROOT/Brewfile"
+    HOMEBREW_NO_INSTALL_UPGRADE=1 brew bundle install --no-upgrade --jobs=1 --file="$REPO_ROOT/Brewfile"
 }
 
 install_bun_language_servers() {
@@ -118,14 +143,16 @@ generate_zsh_caches() {
 install_pre_commit() {
     export PATH="$HOME/.local/bin:$PATH"
     echo "Installing pre-commit via uv..."
-    uv tool install pre-commit
-    pre-commit install --install-hooks
-    pre-commit install --hook-type commit-msg --install-hooks
+    local version
+    version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["pre_commit_version"])' "$REPO_ROOT/packages/bootstrap.json")
+    uv tool install "pre-commit==$version"
+    (cd "$REPO_ROOT" && pre-commit install --install-hooks)
+    (cd "$REPO_ROOT" && pre-commit install --hook-type commit-msg --install-hooks)
 }
 
 ensure_homebrew
 install_brew_packages
-create_symlinks "$REPO_ROOT" "$HOME" "$FORCE"
+deploy_dotfiles "$REPO_ROOT" "$HOME" "$FORCE"
 echo "Configuring WSL startup..."
 "$REPO_ROOT/scripts/install-wsl-config.sh" "$FORCE"
 install_bun_language_servers
@@ -134,6 +161,7 @@ install_pre_commit
 
 echo "Restoring locked Neovim plugins and initializing Mason-managed language servers..."
 "$REPO_ROOT/scripts/run-nvim-check.sh" 'vim.cmd("Lazy! restore")'
+"$REPO_ROOT/scripts/run-nvim-check.sh" 'dofile(vim.fn.stdpath("config") .. "/install-lsp.lua")'
 
 echo "Installing configured Tree-sitter parsers..."
 "$REPO_ROOT/scripts/run-nvim-check.sh" \

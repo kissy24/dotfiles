@@ -23,6 +23,7 @@ is_true() {
 
 collect_github_repositories() {
     {
+        printf '%s\n' Homebrew/install pre-commit/pre-commit LuaLS/lua-language-server artempyanykh/marksman golang/tools mason-org/mason-registry
         sed -nE "s/^[[:space:]]*[{'\"]?[[:space:]]*['\"]([[:alnum:]_.-]+\/[[:alnum:]_.-]+)['\"].*/\1/p" \
             "$REPO_ROOT"/.config/nvim/lua/plugins/*.lua
         sed -nE 's/.*github[[:space:]]*=[[:space:]]*"([[:alnum:]_.-]+\/[[:alnum:]_.-]+)".*/\1/p' \

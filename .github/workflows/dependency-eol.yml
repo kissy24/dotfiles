@@ -12,9 +12,10 @@ on:
       - .config/sheldon/**
       - .github/workflows/**
       - .pre-commit-config.yaml
-      - packages/bun-lsp/bun.lock
+      - packages/**
       - scripts/check-dependency-eol.sh
       - scripts/check-dependency-cooldown.sh
+      - scripts/dependency_observations.py
 
 permissions:
   contents: read
@@ -43,7 +44,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Reject dependencies released within the last 7 days
+      - name: Require trusted observations for Git dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/check-dependency-cooldown.sh

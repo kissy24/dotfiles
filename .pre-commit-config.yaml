@@ -36,3 +36,9 @@ repos:
         name: Detect hardcoded secrets in working tree
         entry: betterleaks dir --redact --verbose .
         stages: [manual]
+      - id: betterleaks
+        alias: betterleaks-history
+        name: Detect hardcoded secrets in all reachable Git history
+        entry: betterleaks git --redact --verbose --log-opts=--all .
+        always_run: true
+        stages: [manual]

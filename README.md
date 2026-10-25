@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/github/license/kissy24/dotfiles)](LICENSE)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/kissy24/dotfiles)
 
-macOSおよびUbuntu/WSL向けの個人開発環境です。共通のコマンドラインツールはHomebrewでインストールし、セットアップスクリプトが設定ファイルを`$HOME`以下へシンボリックリンクします。
+macOSおよびUbuntu/WSL向けの個人開発環境です。共通のコマンドラインツールはHomebrewでインストールし、セットアップ時にコミット済み設定のスナップショットを作り、`$HOME`以下から参照します。作業コピーの編集・ブランチ切替は利用中の設定に反映されません。
 
 ## 必要な環境
 
@@ -24,11 +24,30 @@ cd dotfiles
 ./setup.sh
 ```
 
-既存のdotfilesはデフォルトでは変更せずにスキップします。管理対象のシンボリックリンクへ置き換える場合は`./setup.sh --force`を使います。置換対象は削除せず、同じ親ディレクトリの`<元の名前>.backup-<日時>.<ランダム文字列>/original`へ退避します。既に正しいリンクになっている場合はバックアップを作りません。バックアップはアンインストール後も残ります。
+既存の無関係なdotfilesはデフォルトでは変更せずにスキップします。以前このcheckoutが作った直接リンクは、バックアップしてスナップショットへのリンクへ移行します。管理対象のシンボリックリンクへ置き換える場合は`./setup.sh --force`を使います。置換対象は削除せず、同じ親ディレクトリの`<元の名前>.backup-<日時>.<ランダム文字列>/original`へ退避します。既に正しいリンクになっている場合はバックアップを作りません。バックアップはアンインストール後も残ります。
 
 元の設定へ戻す場合は、`./uninstall.sh`で管理対象のリンクを解除してから、表示された退避先の`original`を元のパスへ移動してください。復元先にファイルやディレクトリが残っている場合は、内容を確認して別の場所へ退避してから戻します。複数のバックアップがある場合は復元したいものを選びます。Windows側の`.wslconfig`も同じ方式で退避します。
 
-パッケージの宣言は`Brewfile`、`packages/apt.txt`、`packages/bun-lsp/package.json`にあります。SheldonとMasonの依存関係は、それぞれの設定ファイルで管理します。
+パッケージの宣言は`Brewfile`、`packages/apt.txt`、`packages/bun-lsp/package.json`にあります。SheldonとMasonの依存関係は、それぞれの設定ファイルで管理します。HomebrewインストーラーのSHA・SHA256とpre-commit本体の版は`packages/bootstrap.json`で管理します。
+
+## 設定の反映とレビュー
+
+設定は`${XDG_DATA_HOME:-~/.local/share}/dotfiles/releases/`へ`git archive HEAD`で取り出し、`current`リンクを切り替えて反映します。未追跡ファイル・認証情報はコピーせず、管理対象に未コミットの変更がある場合や、追跡対象のシンボリックリンクがある場合は拒否します。過去のスナップショットは復旧用に残します。
+
+設定だけを反映する場合は、差分をレビューしてコミットした後に実行します。
+
+```sh
+./scripts/deploy-config.sh
+```
+
+依存関係やLSPの版も変えた場合は`./setup.sh`を実行します。初回の移行後は、`git pull`やcheckoutだけでは日常環境の設定は変わりません。レビュー・開発には別worktreeを使ってください。
+
+```sh
+git fetch origin
+git worktree add -b review/example ../dotfiles-review origin/main
+```
+
+未信頼PRのスクリプトやNeovim設定を実行して確かめる場合は、認証情報を持たない使い捨てVM・CI runnerを使います。worktreeだけでは実行したコードを隔離できません。特に初回移行前は、利用中の設定を指すcheckoutで未信頼PRへ切り替えないでください。
 
 ## 導入する環境
 
@@ -63,7 +82,7 @@ wsl.exe --shutdown
 
 以前のセットアップが作った`~/.config/gh`のディレクトリリンクは、次回セットアップ時に通常のディレクトリへ移行します。中のローカルファイルは権限を保ってコピーし、旧リンクもバックアップします。リポジトリ内に残っているGit管理対象外の`hosts.yml`などは削除しません。別の場所を指す利用者独自のディレクトリリンクは、`--force`でも変更せずスキップします。
 
-NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合はNeovimで`:Lazy update`を実行し、ロックファイルの差分と動作を検証してコミットしてください。`nvim-treesitter`とHomebrewの`tree-sitter-cli`を使い、Markdown、Python、Go、TypeScript、TSX、Luaのパーサーをセットアップ時にインストールします。Go Modules用の`gomod`、`gosum`、`gowork`も対象です。Markdownを開くと`render-markdown.nvim`が読み込まれ、管理対象の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMasonで管理し、TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
+NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合は、隔離した検証環境で`:Lazy update`を実行し、更新した`lazy-lock.json`を作業コピーへ戻して差分と動作を検証し、コミットしてください。日常環境のNeovimから更新したロックファイルは配備済みスナップショット側にあるため、そのままではGitに反映されません。`nvim-treesitter`とHomebrewの`tree-sitter-cli`を使い、Markdown、Python、Go、TypeScript、TSX、Luaのパーサーをセットアップ時にインストールします。Go Modules用の`gomod`、`gosum`、`gowork`も対象です。Markdownを開くと`render-markdown.nvim`が読み込まれ、管理対象の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMason設定内の`dotfiles_versions`で版を固定し、セットアップ時にインストール済みの版も確認・同期します。Neovim起動だけでLSPをインストールする処理は無効です。TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
 
 ### Herdr
 
@@ -128,6 +147,8 @@ Rust/Cargoを別途利用する場合は、必要に応じて`[[ -r "$HOME/.carg
 
 ### パッケージ更新
 
+`setup.sh`はHomebrewの既存パッケージを通常アップグレードしません。新規パッケージの導入に必須な依存の変更はHomebrewの判断で発生する場合があります。日常の更新には`pkgupd`を使います。
+
 `pkgupd`はHomebrewの更新候補をローカルで初めて観測してから7日間待ち、同じバージョンが継続しているパッケージだけを更新します。待機中に候補バージョンが変わった場合は、そのバージョンの待機期間を初めから数え直します。観測状態は`${XDG_STATE_HOME:-~/.local/state}/pkgupd/homebrew.tsv`に保存します。
 
 ```sh
@@ -169,11 +190,11 @@ GitHub ActionsでUbuntuとmacOSのセットアップスクリプトを検証し�
 pre-commit run --all-files
 ```
 
-GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定しています。CIの`GITHUB_TOKEN`は`contents: read`に制限し、checkout後のGit認証情報も保存しません。
+GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定しています。検証CIの`GITHUB_TOKEN`は`contents: read`に制限し、checkout後のGit認証情報も保存しません。観測記録を更新するmain専用ジョブだけが`contents: write`を持ちます。
 
-pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。
+pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。加えて`Scan Secret History`はPR・mainへのPush・週次実行で全履歴を取得し、`betterleaks-history`でPR途中のコミットを含む到達可能な履歴全体を走査します。後続コミットで削除された秘密も対象です。ローカルでは`pre-commit run betterleaks-history --hook-stage manual --all-files`を使います。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、SHAのバージョンコメント付きクールダウン検査、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、スナップショットの分離、削除済み秘密の履歴検出、初回観測時刻の境界・欠損・未来日時・過去日付コミットの拒否、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
 依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 
@@ -183,13 +204,24 @@ GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh
 
 更新頻度の低さだけではEOLと判定せず、HomebrewとGitHubが提供する明示的なライフサイクル情報だけを失敗条件にします。
 
-同じCIで、固定済み依存関係に7日間のクールダウンも適用します。pre-commitとGitHub Actionsは参照先コミットの日時、Bunのロックファイル内にあるnpmパッケージは公開日時を検査し、期間内の依存があれば失敗します。ローカルでは次のコマンドを実行します。
+Git依存の7日間待機は、コミット作者が指定できる日時を使用しません。`Observe Dependency Versions`がmainと公開中PRの宣言を**データとしてのみ**読み、GitHubのサーバー時刻で初回観測を記録します。PRコードのcheckout・import・実行や依存のインストールは行いません。mainへのPush、6時間ごとの定期実行、mainからの手動実行が対象です。
+
+記録は同じリポジトリの`chore/dependency-observations`ブランチに保存します。PRの検査はこの信頼されたブランチを読み、PR内の記録ファイルやキャッシュは信頼しません。検証ジョブには書き込み権限を与えません。観測記録の欠損、未観測のSHA、7日未満・未来の時刻は失敗になります。別リポジトリの同じSHAも別の依存として扱います。待機期間を環境変数で短縮する機能はありません。
+
+初回移行時だけ、承認済みのmainに既に固定されているSHAを基準として登録します。新しく固定・追加するSHAは例外に含めません。管理者がレビューしたコードから、書き込み権限を持つtokenで一度だけ初期化します。再初期化による承認済み基準の拡張は拒否します。
 
 ```sh
+GITHUB_TOKEN="$(gh auth token)" python3 scripts/dependency_observations.py initialize
+```
+
+新しい版を含むPRは、観測後7日間CIが失敗するのが正常です。初回観測後に同じSHAを維持したまま7日経過したらCIを再実行してください。移行PRで追加したobserverはmainへマージされるまで自動実行されないため、その間は管理者がレビュー済みコードから`observe`を実行します。観測ブランチの削除・改変は検査の信頼性に影響するため、管理者とmainのobserver以外に書き込み権限を与えないでください。
+
+```sh
+GITHUB_TOKEN="$(gh auth token)" python3 scripts/dependency_observations.py observe
 GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-cooldown.sh
 ```
 
-検査期間は`COOLDOWN_DAYS`で変更できます。バージョンを固定していないHomebrewと、ロックファイルだけではリポジトリを一意に特定できないNeovimプラグインは対象外です。
+Git待機の対象はGitHub Actions、pre-commit hook、Neovim、Sheldon、Homebrewインストーラーの固定SHAです。Bunのnpm依存は引き続きレジストリ側の公開日時を使います。Homebrew formula自体はローリング配布のままで、更新時の待機は`pkgupd`が担当します。pre-commit本体とMasonのLSPは版固定ですが、Gitの初回観測チェックの対象ではありません。版固定は既知の安全性や上流の配布物の不変性を保証するものではありません。
 
 ## ライセンス
 
