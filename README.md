@@ -152,6 +152,8 @@ PKGUPD_COOLDOWN_DAYS=14 pkgupd
 
 テストとスモークテストは`tests/`に、セットアップ・保守用スクリプトと共通処理は`scripts/`に配置しています。`scripts/run-nvim-check.sh`はセットアップとテストで共用します。
 
+Neovimの`.config/nvim/lua/plugins/`は、1プラグインの設定を1つのLuaファイルにまとめています。Mason・補完・Fidget・oil-gitも専用ファイルで設定し、プラグイン間の読み込み順は`dependencies`で指定します。追加設定のない補完ソースや共通ライブラリは、利用側の`dependencies`に参照だけを記載します。
+
 GitHub ActionsでUbuntuとmacOSのセットアップスクリプトを検証します。ローカル検査はセットアップ時にuv経由でインストールされます。
 
 ```sh

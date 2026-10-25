@@ -4,10 +4,6 @@ return {
         "nvim-tree/nvim-web-devicons",
         "malewicz1337/oil-git.nvim",
     },
-    config = function(_, opts)
-        require("oil").setup(opts)
-        require("oil-git").setup()
-    end,
     opts = {
         default_file_explorer = true,
         columns = { "icon" },

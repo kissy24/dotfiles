@@ -1,5 +1,6 @@
 local oil = require("oil")
 assert(package.loaded["oil-git"], "oil-git.nvim did not initialize")
+assert(require("oil-git")._is_initialized(), "oil-git.nvim initialization did not finish")
 local root = assert(vim.uv.fs_realpath(assert(vim.env.DOTFILES_OIL_TEST_DIR)))
 local file = root .. "/child/file with spaces.txt"
 local toggle = assert(vim.fn.maparg("<leader>j", "n", false, true).callback)
