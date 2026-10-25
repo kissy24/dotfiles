@@ -40,6 +40,7 @@ remove_brew_packages() {
     done < <(brew_packages_from "$REPO_ROOT/Brewfile")
 }
 
+remove_symlinks "${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles/current" "$HOME"
 remove_symlinks "$REPO_ROOT" "$HOME"
 "$REPO_ROOT/scripts/install-wsl-config.sh" remove
 

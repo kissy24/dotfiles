@@ -20,6 +20,9 @@ trap cleanup EXIT
 
 echo "Checking setup backups and GitHub CLI migration..."
 ./tests/test-dotfile-links.sh
+./tests/test-config-deployment.sh
+./tests/test-setup-policy.sh
+nvim --headless -u NONE -i NONE -l tests/test-mason-pins.lua
 
 echo "Checking Neovim failure propagation..."
 ./tests/test-nvim-check.sh

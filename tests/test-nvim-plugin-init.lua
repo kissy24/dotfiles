@@ -7,8 +7,12 @@ assert(require("mason.settings").current.ui.icons.package_installed == "✓", "M
 
 local mason_lsp = require("mason-lspconfig.settings").current
 assert(mason_lsp.automatic_enable == true, "Mason LSP automatic enablement was lost")
-assert(vim.deep_equal(mason_lsp.ensure_installed, { "lua_ls", "marksman", "gopls" }),
-    "Mason language server selection changed")
+assert(vim.deep_equal(mason_lsp.ensure_installed, {}), "Editor startup must not install language servers")
+local pins = require("plugins.mason-lspconfig").opts.dotfiles_versions
+assert(#pins == 3, "Mason language server selection changed")
+for _, spec in ipairs(pins) do
+    assert(spec:match("^[^@]+@[^@]+$"), "Mason language server must have an exact version")
+end
 
 local lsp = vim.lsp.config
 assert(lsp.lua_ls.settings.Lua.diagnostics.globals[1] == "vim", "Lua LSP settings were lost")
