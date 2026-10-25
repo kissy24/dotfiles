@@ -24,6 +24,9 @@ echo "Checking setup backups and GitHub CLI migration..."
 echo "Checking Neovim failure propagation..."
 ./scripts/test-nvim-check.sh
 
+echo "Checking locked Neovim plugin revisions..."
+./scripts/run-nvim-check.sh 'dofile("scripts/test-nvim-lock.lua")'
+
 echo "Checking CLI startup..."
 git --version >/dev/null
 lazygit --version >/dev/null
@@ -37,8 +40,11 @@ echo "Checking cached Zsh completions..."
 ZSH_COMPLETION_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/zsh"
 test -s "$ZSH_COMPLETION_DIR/uv.zsh"
 test -s "$ZSH_COMPLETION_DIR/herdr.zsh"
-zsh -dfc 'autoload -Uz compinit && compinit -C; source "$1"; source "$2"' \
+zsh -dfc 'autoload -Uz compinit && compinit -i; source "$1"; source "$2"' \
     _ "$ZSH_COMPLETION_DIR/uv.zsh" "$ZSH_COMPLETION_DIR/herdr.zsh"
+
+echo "Checking Zsh completion permission checks..."
+./scripts/test-zsh-completion.sh
 
 echo "Checking Zsh environment initialization with an existing Cargo environment..."
 mkdir -p "$TMP_ROOT/zsh-home/.cargo"
@@ -118,6 +124,9 @@ test "$(bun -e 'console.log(1 + 1)')" = "2"
 
 echo "Checking package update cooldown..."
 ./scripts/test-pkgupd.sh
+
+echo "Checking dependency cooldown parsing..."
+./scripts/test-dependency-cooldown.sh
 
 echo "Checking Go compilation and execution..."
 printf 'package main\nimport "fmt"\nfunc main() { fmt.Print("ok") }\n' > "$TMP_ROOT/main.go"

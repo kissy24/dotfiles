@@ -1,5 +1,6 @@
 # ~/.zshrc
-autoload -Uz compinit && compinit -C
+# キャッシュを使いつつ、毎回権限を検査して安全でない補完を除外する。
+autoload -Uz compinit && compinit -i
 
 # 履歴ファイルの設定
 HISTFILE=~/.zsh_history

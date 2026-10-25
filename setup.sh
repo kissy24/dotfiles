@@ -132,8 +132,8 @@ install_bun_language_servers
 generate_zsh_caches
 install_pre_commit
 
-echo "Syncing Neovim plugins and Mason-managed language servers..."
-"$REPO_ROOT/scripts/run-nvim-check.sh" 'vim.cmd("Lazy! sync")'
+echo "Restoring locked Neovim plugins and initializing Mason-managed language servers..."
+"$REPO_ROOT/scripts/run-nvim-check.sh" 'vim.cmd("Lazy! restore")'
 
 echo "Installing configured Tree-sitter parsers..."
 "$REPO_ROOT/scripts/run-nvim-check.sh" \
