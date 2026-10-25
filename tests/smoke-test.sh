@@ -166,15 +166,8 @@ assert(attached, "ts_ls did not initialize")
 
 echo "Checking Neovim Markdown rendering with managed parsers..."
 mkdir -p "$TMP_ROOT/markdown"
-printf '# Smoke test\n\n- Markdown rendering\n' > "$TMP_ROOT/markdown/smoke.md"
-./scripts/run-nvim-check.sh '
-assert(vim.treesitter.language.add("markdown"), "managed markdown parser is unavailable")
-assert(vim.treesitter.language.add("markdown_inline"), "managed markdown_inline parser is unavailable")
-local parser = vim.treesitter.get_parser(0, "markdown")
-assert(#parser:parse() > 0, "Markdown parsing failed")
-assert(package.loaded["render-markdown"], "render-markdown.nvim did not load")
-assert(vim.fn.exists(":RenderMarkdown") == 2, "RenderMarkdown command is unavailable")
-' "$TMP_ROOT/markdown/smoke.md"
+cp tests/fixtures/markdown.md "$TMP_ROOT/markdown/smoke.md"
+./scripts/run-nvim-check.sh 'dofile("tests/test-markdown-render.lua")' "$TMP_ROOT/markdown/smoke.md"
 
 echo "Checking the Oil left sidebar and file navigation..."
 mkdir -p "$TMP_ROOT/oil/child"
