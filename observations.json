@@ -19,6 +19,10 @@
     "folke/lazy.nvim@306a05526ada86a7b30af95c5cc81ffba93fef97": {
       "baseline": true
     },
+    "homebrew/install@85d1a3fc80d8a63932f632aca8f787de11d14a64": {
+      "candidate": "f0e30a28098177df30d72b0560e1c0e4dec4e22f",
+      "first_seen": "2026-10-25T09:17:50+00:00"
+    },
     "hrsh7th/cmp-buffer@b74fab3656eea9de20a9b8116afa3cfc4ec09657": {
       "baseline": true
     },
@@ -84,6 +88,14 @@
     },
     "williamboman/mason.nvim@2a6940af80375532e5e9e7c1f2fc6319a1b7a69d": {
       "baseline": true
+    },
+    "zsh-users/zsh-autosuggestions@85919cd1ffa7d2d5412f6d3fe437ebdbeeec4fc5": {
+      "candidate": "f0e30a28098177df30d72b0560e1c0e4dec4e22f",
+      "first_seen": "2026-10-25T09:17:50+00:00"
+    },
+    "zsh-users/zsh-syntax-highlighting@e6683f20e5c38d3e5447f45845d04ddda75d0f23": {
+      "candidate": "f0e30a28098177df30d72b0560e1c0e4dec4e22f",
+      "first_seen": "2026-10-25T09:17:50+00:00"
     }
   },
   "schema": 1
