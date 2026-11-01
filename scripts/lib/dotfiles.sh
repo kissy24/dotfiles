@@ -41,7 +41,7 @@ migrate_gh_directory() {
 }
 
 create_symlinks() {
-    local repo_root=$1 target_home=$2 force=$3
+    local repo_root=$1 target_home=$2 force=$3 legacy_root=${4:-}
     local path src dest
 
     migrate_gh_directory "$repo_root" "$target_home"
@@ -60,7 +60,7 @@ create_symlinks() {
             continue
         fi
         if [ -e "$dest" ] || [ -L "$dest" ]; then
-            if [ "$force" -ne 1 ]; then
+            if [ "$force" -ne 1 ] && { [ -z "$legacy_root" ] || [ ! -L "$dest" ] || [ "$(readlink "$dest")" != "$legacy_root/$path" ]; }; then
                 echo "- Skipping existing path: $dest (use --force to replace)"
                 continue
             fi
@@ -89,4 +89,44 @@ remove_symlinks() {
             echo "- Skipping unmanaged path: $dest"
         fi
     done < <(managed_dotfile_paths; printf '%s\n' .config/gh)
+}
+
+# Publish committed files only. Branch switches and edits cannot change this copy.
+deploy_dotfiles() {
+    local repo_root=$1 target_home=$2 force=$3
+    local data_home=${XDG_DATA_HOME:-$target_home/.local/share}
+    local deployment="$data_home/dotfiles" revision staging path
+    local -a paths=()
+    while IFS= read -r path; do paths+=("$path"); done < <(managed_dotfile_paths)
+    revision=$(git -C "$repo_root" rev-parse HEAD) || return
+    if ! git -C "$repo_root" diff --quiet HEAD -- "${paths[@]}"; then
+        echo "Error: Commit or discard managed configuration edits before deployment." >&2
+        return 1
+    fi
+    mkdir -p "$deployment/releases"
+    chmod 700 "$deployment" "$deployment/releases"
+    staging=$(mktemp -d "$deployment/releases/$revision.XXXXXX") || return
+    if ! git -C "$repo_root" archive HEAD -- "${paths[@]}" | tar -xf - -C "$staging"; then
+        rm -rf "$staging"
+        return 1
+    fi
+    # Tracked links could lead back to an editable checkout or outside the snapshot.
+    if [ -n "$(find "$staging" -type l -print -quit)" ]; then
+        echo "Error: Managed configuration must not contain symbolic links." >&2
+        rm -rf "$staging"
+        return 1
+    fi
+    printf '%s\n' "$revision" > "$staging/.revision"
+    # Preserve GitHub credentials before replacing a legacy directory link.
+    migrate_gh_directory "$repo_root" "$target_home"
+    python3 - "$deployment/current" "$staging" <<'DEPLOY' || return
+import os, sys, tempfile
+current, target = sys.argv[1:]
+with tempfile.TemporaryDirectory(dir=os.path.dirname(current)) as temporary:
+    link = os.path.join(temporary, "current")
+    os.symlink(target, link)
+    os.replace(link, current)
+DEPLOY
+    create_symlinks "$deployment/current" "$target_home" "$force" "$repo_root"
+    echo "Activated configuration commit: $revision"
 }

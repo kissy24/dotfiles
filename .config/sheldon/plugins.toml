@@ -4,6 +4,8 @@ shell = "zsh"
 # 必須プラグイン
 [plugins.zsh-autosuggestions]
 github = "zsh-users/zsh-autosuggestions"
+rev = "85919cd1ffa7d2d5412f6d3fe437ebdbeeec4fc5"
 
 [plugins.zsh-syntax-highlighting]
 github = "zsh-users/zsh-syntax-highlighting"
+rev = "e6683f20e5c38d3e5447f45845d04ddda75d0f23"

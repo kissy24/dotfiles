@@ -31,6 +31,9 @@ jobs:
             bash -n "$script"
           done
           ./tests/test-dotfile-links.sh
+          ./tests/test-config-deployment.sh
+          ./tests/test-setup-policy.sh
+          ./tests/test-dependency-cooldown.sh
           ./setup.sh --help
           ./uninstall.sh --help
           if grep -Eq '^brew "(rust|node|fd)"' Brewfile; then
@@ -83,6 +86,12 @@ jobs:
         run: |
           ./setup.sh --force | tee setup_log.txt
           git diff --exit-code -- .config/nvim/lazy-lock.json
+          cmp .config/nvim/lazy-lock.json "$HOME/.config/nvim/lazy-lock.json"
+          # A checkout edit must not change the deployed shell configuration.
+          cp .zshrc "$RUNNER_TEMP/original-zshrc"
+          printf '\n# snapshot isolation check\n' >> .zshrc
+          cmp "$RUNNER_TEMP/original-zshrc" "$HOME/.zshrc"
+          mv "$RUNNER_TEMP/original-zshrc" .zshrc
 
       - name: Verify tools, integrations, and symlinks
         shell: bash

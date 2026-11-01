@@ -1,5 +1,6 @@
 build-essential
 procps
+python3
 curl
 file
 git
