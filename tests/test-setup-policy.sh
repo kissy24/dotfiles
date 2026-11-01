@@ -11,7 +11,10 @@ cat > "$TMP_ROOT/bin/brew" <<'BREW'
 #!/bin/bash
 set -euo pipefail
 no_upgrade=0
-for arg in "$@"; do [ "$arg" != --no-upgrade ] || no_upgrade=1; done
+for arg in "$@"; do
+    case "$arg" in --jobs*) echo 'Deprecated --jobs flag' >&2; exit 2 ;; esac
+    [ "$arg" != --no-upgrade ] || no_upgrade=1
+done
 if [ "$no_upgrade" = 0 ] || [ "${HOMEBREW_NO_INSTALL_UPGRADE:-0}" != 1 ]; then
     printf 'new\n' > "$POLICY_TEST_DIR/installed"
 fi
