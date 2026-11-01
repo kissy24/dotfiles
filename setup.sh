@@ -106,7 +106,7 @@ ensure_homebrew() {
 
 install_brew_packages() {
     echo "Installing Homebrew packages..."
-    HOMEBREW_NO_INSTALL_UPGRADE=1 brew bundle install --no-upgrade --jobs=1 --file="$REPO_ROOT/Brewfile"
+    HOMEBREW_NO_INSTALL_UPGRADE=1 brew bundle install --no-upgrade --file="$REPO_ROOT/Brewfile"
 }
 
 install_bun_language_servers() {

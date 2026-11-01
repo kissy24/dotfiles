@@ -32,6 +32,7 @@ jobs:
           done
           ./tests/test-dotfile-links.sh
           ./tests/test-config-deployment.sh
+          PYTHONDONTWRITEBYTECODE=1 python3 tests/test_config_directory_migration.py
           ./tests/test-setup-policy.sh
           ./tests/test-dependency-cooldown.sh
           ./setup.sh --help

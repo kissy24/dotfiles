@@ -21,6 +21,7 @@ trap cleanup EXIT
 echo "Checking setup backups and GitHub CLI migration..."
 ./tests/test-dotfile-links.sh
 ./tests/test-config-deployment.sh
+PYTHONDONTWRITEBYTECODE=1 python3 tests/test_config_directory_migration.py
 ./tests/test-setup-policy.sh
 nvim --headless -u NONE -i NONE -l tests/test-mason-pins.lua
 

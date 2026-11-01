@@ -80,6 +80,14 @@ wsl.exe --shutdown
 
 `setup.sh`はUbuntuでZshを導入し、`.zshrc`、Herdr、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。GitHub CLIも`~/.config/gh/config.yml`だけを管理し、認証情報の`hosts.yml`などは保持します。
 
+以前の`~/.config`全体がこのcheckoutの`.config`を指す構成も、`./scripts/deploy-config.sh`または`./setup.sh`で移行できます。この旧形式の移行に`--force`は不要です。絶対パス・末尾の`/`・相対パスのリンクを識別し、まずホーム内の一時領域へ内容を権限付きでコピーします。準備が成功してから親リンク自体をバックアップし、通常の`~/.config`ディレクトリへ切り替えます。リポジトリ内の元ファイルは変更・削除しません。
+
+この移行コピーには、Git管理外のアプリ設定やGitHub認証情報も含めて保持します。管理対象の設定はスナップショットへのリンクに替え、コピー内の元の設定は`<名前>.backup-<日時>.<ランダム文字列>/original`へ退避します。管理対象ディレクトリ内のローカル専用ファイルもそのバックアップに残ります。管理外の相対シンボリックリンクは、移動後も元の参照先を維持するよう絶対パスへ変換します。移行用に元の`.config`相当の空き容量が必要です。
+
+**HerdrなどのソケットやFIFOがある場合は、移行を中止して元の構成を保持します。** 作業を保存し、関連するサービス・セッションを停止してから再実行してください。停止後も特殊ファイルが残る場合は、使用されていないことを確認して整理する必要があります。セットアップがサービスを強制停止したり、ソケットを勝手に削除したりすることはありません。コピー失敗時も親リンクを保持し、最後の切り替えに失敗した場合は元のリンクへ戻します。
+
+移行対象と判定できない親ディレクトリリンクの配下には、`--force`でも書き込みません。アンインストールも親リンク経由の削除をスキップします。移行前の`~/.config`全体のリンクは、アンインストールでは残します。
+
 以前のセットアップが作った`~/.config/gh`のディレクトリリンクは、次回セットアップ時に通常のディレクトリへ移行します。中のローカルファイルは権限を保ってコピーし、旧リンクもバックアップします。リポジトリ内に残っているGit管理対象外の`hosts.yml`などは削除しません。別の場所を指す利用者独自のディレクトリリンクは、`--force`でも変更せずスキップします。
 
 NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合は、隔離した検証環境で`:Lazy update`を実行し、更新した`lazy-lock.json`を作業コピーへ戻して差分と動作を検証し、コミットしてください。日常環境のNeovimから更新したロックファイルは配備済みスナップショット側にあるため、そのままではGitに反映されません。`nvim-treesitter`とHomebrewの`tree-sitter-cli`を使い、Markdown、Python、Go、TypeScript、TSX、Luaのパーサーをセットアップ時にインストールします。Go Modules用の`gomod`、`gosum`、`gowork`も対象です。Markdownを開くと`render-markdown.nvim`が読み込まれ、管理対象の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMason設定内の`dotfiles_versions`で版を固定し、セットアップ時にインストール済みの版も確認・同期します。Neovim起動だけでLSPをインストールする処理は無効です。TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
@@ -194,7 +202,7 @@ GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定し
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。加えて`Scan Secret History`はPR・mainへのPush・週次実行で全履歴を取得し、`betterleaks-history`でPR途中のコミットを含む到達可能な履歴全体を走査します。後続コミットで削除された秘密も対象です。ローカルでは`pre-commit run betterleaks-history --hook-stage manual --all-files`を使います。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、スナップショットの分離、削除済み秘密の履歴検出、初回観測時刻の境界・欠損・未来日時・過去日付コミットの拒否、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、スナップショットの分離、旧`~/.config`リンクの移行・権限と認証情報の保持・コピー失敗時の復旧、削除済み秘密の履歴検出、初回観測時刻の境界・欠損・未来日時・過去日付コミットの拒否、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
 依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 

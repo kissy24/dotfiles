@@ -23,10 +23,35 @@ managed_dotfile_paths() {
 EOF
 }
 
+# Do not mutate a managed leaf through a symlinked parent inside the target home.
+has_symlink_parent() {
+    local target_home=$1 path=$2 parent
+    parent=${path%/*}
+    [ "$parent" != "$path" ] || return 1
+    while :; do
+        [ ! -L "$target_home/$parent" ] || return 0
+        case "$parent" in
+            */*) parent=${parent%/*} ;;
+            *) break ;;
+        esac
+    done
+    return 1
+}
+
+migrate_config_directory() {
+    local repo_root=$1 target_home=$2 link_root=$3 path
+    local -a paths=()
+    [ -L "$target_home/.config" ] || return 0
+    while IFS= read -r path; do paths+=("$path"); done < <(managed_dotfile_paths)
+    python3 "$(dirname "${BASH_SOURCE[0]}")/migrate-config.py" \
+        "$repo_root" "$target_home" "$link_root" "${paths[@]}"
+}
+
 migrate_gh_directory() {
     local repo_root=$1 target_home=$2
     local dest="$target_home/.config/gh" staging
 
+    has_symlink_parent "$target_home" .config/gh && return 0
     # Only migrate the directory link created by earlier versions of setup.
     if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$repo_root/.config/gh" ]; then
         staging=$(mktemp -d "$target_home/.config/.gh-migration.XXXXXX")
@@ -44,14 +69,14 @@ create_symlinks() {
     local repo_root=$1 target_home=$2 force=$3 legacy_root=${4:-}
     local path src dest
 
+    migrate_config_directory "${legacy_root:-$repo_root}" "$target_home" "$repo_root" || return
     migrate_gh_directory "$repo_root" "$target_home"
     echo "Creating symlinks..."
     while IFS= read -r path; do
         src="$repo_root/$path"
         dest="$target_home/$path"
-        # Do not write through a directory link managed by someone else.
-        if [ "$path" = .config/gh/config.yml ] && [ -L "$target_home/.config/gh" ]; then
-            echo "- Skipping unmanaged GitHub CLI directory link: $target_home/.config/gh"
+        if has_symlink_parent "$target_home" "$path"; then
+            echo "- Skipping path below a directory link: $dest"
             continue
         fi
         mkdir -p "$(dirname "$dest")"
@@ -78,8 +103,9 @@ remove_symlinks() {
     echo "Removing managed symlinks..."
     while IFS= read -r path; do
         dest="$target_home/$path"
-        # An old directory link is removed below; never delete through it.
-        if [ "$path" = .config/gh/config.yml ] && [ -L "$target_home/.config/gh" ]; then
+        # Remove only the managed leaf; never delete through a linked parent.
+        if has_symlink_parent "$target_home" "$path"; then
+            echo "- Skipping path below a directory link: $dest"
             continue
         fi
         if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$repo_root/$path" ]; then
@@ -117,6 +143,11 @@ deploy_dotfiles() {
         return 1
     fi
     printf '%s\n' "$revision" > "$staging/.revision"
+    # Detach the legacy parent first, before any nested backup or GitHub migration.
+    if ! migrate_config_directory "$repo_root" "$target_home" "$deployment/current"; then
+        rm -rf "$staging"
+        return 1
+    fi
     # Preserve GitHub credentials before replacing a legacy directory link.
     migrate_gh_directory "$repo_root" "$target_home"
     python3 - "$deployment/current" "$staging" <<'DEPLOY' || return
