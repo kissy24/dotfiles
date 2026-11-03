@@ -92,6 +92,8 @@ wsl.exe --shutdown
 
 NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合は、隔離した検証環境で`:Lazy update`を実行し、更新した`lazy-lock.json`を作業コピーへ戻して差分と動作を検証し、コミットしてください。日常環境のNeovimから更新したロックファイルは配備済みスナップショット側にあるため、そのままではGitに反映されません。`nvim-treesitter`とHomebrewの`tree-sitter-cli`を使い、Markdown、Python、Go、TypeScript、TSX、Luaのパーサーをセットアップ時にインストールします。Go Modules用の`gomod`、`gosum`、`gowork`も対象です。Markdownを開くと`render-markdown.nvim`が読み込まれ、管理対象の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMason設定内の`dotfiles_versions`で版を固定し、セットアップ時にインストール済みの版も確認・同期します。Neovim起動だけでLSPをインストールする処理は無効です。TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
 
+TypeScriptは`typescript-language-server`が必要とする`tsserver`を含む6系に固定しています。7系への移行にはLSP構成の変更が必要です。Bun依存を更新する際は`packages/bun-lsp/`で`bun update --minimum-release-age 604800 --lockfile-only --ignore-scripts`を実行し、公開から7日経過した候補だけを採用します。TypeScriptの固定版を変更する場合も、同じ待機条件を指定してください。更新後は依存関係のクールダウン検査とスモークテストで、Bun上の全LSPの初期化、およびTypeScript・Pythonの型診断を確認します。
+
 ### Herdr
 
 WezTermを起動すると、Herdrが利用可能な場合はバックグラウンドセッションを新規作成または再接続します。Herdrが未導入の場合や、更新後のクライアントと常駐中の旧サーバーのバージョン不整合などでHerdrが異常終了した場合は、WezTermを閉じずに通常のZshを開きます。ほかの端末からは、作業ディレクトリで`herdr`または短縮エイリアスの`hr`を実行して接続できます。設定は`Ctrl-b`プレフィックス、端末のカラーパレット、マウス操作、新しいペインへのカレントディレクトリ継承を使用します。
