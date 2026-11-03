@@ -156,17 +156,25 @@ end
 echo "Checking Neovim plugin loading, TypeScript parsing, and Bun-managed LSP..."
 mkdir -p "$TMP_ROOT/typescript"
 printf '{"private":true}\n' > "$TMP_ROOT/typescript/package.json"
-printf 'const answer: number = 42\n' > "$TMP_ROOT/typescript/smoke.ts"
-./scripts/run-nvim-check.sh '
+printf 'const answer: number = "wrong"\n' > "$TMP_ROOT/typescript/smoke.ts"
+DOTFILES_TEST_LSP=ts_ls ./scripts/run-nvim-check.sh '
 assert(vim.fn.exists(":Lazy") == 2, "Lazy command is unavailable")
 local parser = vim.treesitter.get_parser(0, "typescript")
 assert(#parser:parse() > 0, "TypeScript parsing failed")
-local attached = vim.wait(15000, function()
-    local clients = vim.lsp.get_clients({ bufnr = 0, name = "ts_ls" })
-    return #clients > 0 and clients[1].initialized
-end, 100)
-assert(attached, "ts_ls did not initialize")
+dofile("tests/test-bun-lsp.lua")
 ' "$TMP_ROOT/typescript/smoke.ts"
+
+echo "Checking Python, HTML, CSS, and JSON language servers through Bun..."
+mkdir -p "$TMP_ROOT/bun-lsp"
+printf '{"typeCheckingMode":"basic"}\n' > "$TMP_ROOT/bun-lsp/pyrightconfig.json"
+printf 'answer: int = "wrong"\n' > "$TMP_ROOT/bun-lsp/smoke.py"
+printf '<!doctype html><html><body>smoke</body></html>\n' > "$TMP_ROOT/bun-lsp/smoke.html"
+printf 'body { color: red; }\n' > "$TMP_ROOT/bun-lsp/smoke.css"
+printf '{"answer":42}\n' > "$TMP_ROOT/bun-lsp/smoke.json"
+for spec in pyright:py html:html cssls:css jsonls:json; do
+    DOTFILES_TEST_LSP="${spec%%:*}" ./scripts/run-nvim-check.sh \
+        'dofile("tests/test-bun-lsp.lua")' "$TMP_ROOT/bun-lsp/smoke.${spec##*:}"
+done
 
 echo "Checking Neovim Markdown rendering with managed parsers..."
 mkdir -p "$TMP_ROOT/markdown"
