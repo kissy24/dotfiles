@@ -1,5 +1,6 @@
 require("base.options")
 require("base.mappings")
+require("base.completion")
 require("base.lazy")
 
 vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {

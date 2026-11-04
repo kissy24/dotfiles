@@ -1,14 +1,6 @@
 return {
     "neovim/nvim-lspconfig",
-    dependencies = {
-        "hrsh7th/nvim-cmp",
-        "hrsh7th/cmp-nvim-lsp",
-        "j-hui/fidget.nvim",
-    },
     config = function()
-        local capabilities = require("cmp_nvim_lsp").default_capabilities()
-
-        vim.lsp.config("*", { capabilities = capabilities })
         vim.lsp.config("lua_ls", {
             settings = {
                 Lua = {
@@ -32,6 +24,15 @@ return {
                     },
                     staticcheck        = true,
                 },
+            },
+        })
+
+        -- Native completion uses one start column for the whole menu. Avoid
+        -- bracket-access candidates (e.g. Symbol) whose edit starts before the
+        -- dot and would hide ordinary TypeScript member completions.
+        vim.lsp.config("ts_ls", {
+            init_options = {
+                preferences = { includeCompletionsWithInsertText = false },
             },
         })
 
@@ -60,6 +61,10 @@ return {
                 local bufnr = args.buf
                 local client = vim.lsp.get_client_by_id(args.data.client_id)
                 if not client then return end
+
+                if client:supports_method("textDocument/completion") then
+                    vim.lsp.completion.enable(true, client.id, bufnr, { autotrigger = true })
+                end
 
                 -- キーマップ
                 local opts = { noremap = true, silent = true, buffer = bufnr }
