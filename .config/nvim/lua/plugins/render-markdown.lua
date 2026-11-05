@@ -41,7 +41,12 @@ return {
             number = { default = vim.wo.number, rendered = false },
             relativenumber = { default = vim.wo.relativenumber, rendered = false },
             list = { default = vim.wo.list, rendered = false },
-            cursorline = { default = vim.wo.cursorline, rendered = false },
+            cursorline = { default = vim.wo.cursorline, rendered = true },
+            cursorlineopt = { default = vim.wo.cursorlineopt, rendered = "line" },
+            winhighlight = {
+                default = vim.wo.winhighlight,
+                rendered = "CursorLine:RenderMarkdownCursorLine",
+            },
             wrap = { default = vim.wo.wrap, rendered = true },
             linebreak = { default = vim.wo.linebreak, rendered = true },
             breakindent = { default = vim.wo.breakindent, rendered = true },

@@ -15,7 +15,10 @@ return {
                     RenderMarkdownBullet = { fg = colors.subtext0 },
                     RenderMarkdownTableHead = { fg = colors.lavender, bold = true },
                     RenderMarkdownTableRow = { fg = colors.overlay1 },
-                    RenderMarkdownCheckedText = { fg = colors.overlay1, strikethrough = true },
+                    RenderMarkdownCursorLine = { bg = colors.surface0 },
+                    RenderMarkdownUnchecked = { fg = colors.yellow, bold = true },
+                    RenderMarkdownChecked = { fg = colors.green, bold = true },
+                    RenderMarkdownCheckedText = { fg = colors.subtext0, strikethrough = true },
                 }
                 local headings = {
                     colors.lavender, colors.blue, colors.text,
