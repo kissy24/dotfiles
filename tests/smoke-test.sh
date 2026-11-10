@@ -34,6 +34,9 @@ echo "Checking locked Neovim plugin revisions..."
 echo "Checking Neovim plugin initialization..."
 ./scripts/run-nvim-check.sh 'dofile("tests/test-nvim-plugin-init.lua")'
 
+echo "Checking fzf-lua search, previews, and keymaps..."
+nvim --headless -u NONE -i NONE -l tests/test-fzf-lua.lua
+
 echo "Checking native completion, LSP progress, and Gitsigns blame..."
 nvim --headless -u NONE -i NONE -l tests/test-native-editor.lua
 

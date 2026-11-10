@@ -53,7 +53,7 @@ git worktree add -b review/example ../dotfiles-review origin/main
 
 - Zsh向けのStarship、Sheldon、zoxide、fzf連携
 - Herdrによる永続セッション、ワークスペース、タブ、ペイン、AIエージェント状態の管理
-- Lazy.nvim、Tree-sitter、補完、Telescope、Oil、Git連携、LSP、Markdownレンダリングを備えた安定版Neovim
+- Lazy.nvim、Tree-sitter、補完、fzf-lua、Oil、Git連携、LSP、Markdownレンダリングを備えた安定版Neovim
 - Bunに統一したJavaScript/TypeScript環境（Node.jsとnpmはインストールしません）
 - goplsを含むGo開発環境
 - uvによるpre-commitとPythonツール管理
@@ -128,6 +128,29 @@ hrw ~/Projects/docfiles docs
 | 設定再読み込み | `Ctrl-b Shift-r` |
 
 Codexのセッション識別とHerdr再起動後のネイティブ復元を有効にする場合は、`herdr integration install codex`を一度実行します。この操作は`~/.codex`のhook設定を更新するため、共通セットアップからは自動実行しません。
+
+### Neovimの検索（fzf-lua）
+
+ノーマルモードで`Space` → `f` → 次のキーを順に押します。まず`Space f f`でファイル名を入力し、矢印キーで候補を選んで`Enter`で開けます。
+
+| キー | 操作 | 従来のキー |
+| --- | --- | --- |
+| `Space f f` | ファイル名を検索 | `ff` |
+| `Space f g` | ファイル内の文字列を検索 | `fg` |
+| `Space f b` | 開いているバッファを選択 | `fb` |
+| `Space f h` | Neovimヘルプを検索 | `fn` |
+| `Space f k` | 説明付きのキー操作一覧を検索 | — |
+| `Space f r` | 前回の検索を再開 | — |
+
+検索画面では`↑`／`↓`または`Ctrl-P`／`Ctrl-N`で移動、`Enter`で開き、`Esc`で中止します。`F1`は操作ヘルプ、`F4`はプレビューの表示切替、`Shift-↑`／`Shift-↓`はプレビューのスクロールです。`Ctrl-S`／`Ctrl-V`で上下／左右に分割して開けます。コマンドからは`:FzfLua files`や`:FzfLua live_grep`も使えます。
+
+検索範囲はNeovimの現在のディレクトリ（`:pwd`で確認、`:cd パス`で変更）です。プロジェクトのルートで`nvim`を起動してください。ファイル名はあいまい検索、本文は正規表現ではなく文字列そのものを検索します。本文検索は小文字だけなら大文字・小文字を区別せず、大文字を含めると区別します。
+
+隠しファイルも検索しますが、`.git`と`.gitignore`等で無視されたファイルは除外し、シンボリックリンクをたどりません。`Alt-H`で隠しファイルの表示を切り替えられます。除外解除とリンク追跡のショートカットは無効です。検索結果がない場合はディレクトリと除外設定を確認してください。**秘密情報を自動判別する機能ではないため、`.env`等はプロジェクトの`.gitignore`で管理してください。** 開いているバッファの一覧には検索除外対象も含まれます。
+
+Telescopeを削除し、保守中の[fzf-lua](https://github.com/ibhagwan/fzf-lua)をロックファイルのSHAに固定します。既存のfzfとripgrepを利用し、追加のCLI・ビルド処理・アイコン用依存は導入しません。Plenaryは既存のLazyGitが使用するため残します。起動時は遅延読み込みし、検索時に外部サービスへ送信する設定はありません。検索語のfzf履歴ファイルへの保存は無効にし、再開情報はセッション内に保持します。
+
+プレビューは1 MiBまでの内蔵テキスト表示に限定し、構文強調・modeline処理・画像ビューア・Markdown描画を利用しません。ripgrepの外部設定を読み込まず、文字列中の` --`も追加オプションとして解釈しません。通常のファイル編集時には既存の構文強調とMarkdown表示を利用できます。
 
 ### Neovimの標準補完・LSP進捗・Git履歴
 
@@ -216,7 +239,7 @@ GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定し
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。加えて`Scan Secret History`はPR・mainへのPush・週次実行で全履歴を取得し、`betterleaks-history`でPR途中のコミットを含む到達可能な履歴全体を走査します。後続コミットで削除された秘密も対象です。ローカルでは`pre-commit run betterleaks-history --hook-stage manual --all-files`を使います。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、標準補完の候補表示・確定・中止と検索・コマンド・パス補完、標準LSP進捗表示とGitsignsの行履歴、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、スナップショットの分離、旧`~/.config`リンクの移行・権限と認証情報の保持・コピー失敗時の復旧、削除済み秘密の履歴検出、初回観測時刻の境界・欠損・未来日時・過去日付コミットの拒否、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、標準補完の候補表示・確定・中止と検索・コマンド・パス補完、標準LSP進捗表示とGitsignsの行履歴、fzf-luaの検索・除外・プレビュー・キー操作、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、スナップショットの分離、旧`~/.config`リンクの移行・権限と認証情報の保持・コピー失敗時の復旧、削除済み秘密の履歴検出、初回観測時刻の境界・欠損・未来日時・過去日付コミットの拒否、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
 依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 

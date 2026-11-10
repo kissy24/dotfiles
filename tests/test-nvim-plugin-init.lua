@@ -26,11 +26,17 @@ assert(#vim.api.nvim_get_autocmds({ event = "LspAttach" }) > 0, "LSP attach hand
 
 local plugins = require("lazy.core.config").plugins
 for _, name in ipairs({ "nvim-cmp", "cmp-buffer", "cmp-path", "cmp-cmdline", "cmp-nvim-lsp",
-    "fidget.nvim", "git-blame.nvim" }) do
+    "fidget.nvim", "git-blame.nvim", "telescope.nvim" }) do
     assert(not plugins[name], name .. " must not be installed")
 end
 assert(not plugins["lazygit.nvim"]._.loaded, "LazyGit should remain lazy-loaded")
 assert(vim.fn.exists(":LazyGit") == 2, "LazyGit command was not registered")
 assert(vim.fn.maparg("<leader>lg", "n") ~= "", "LazyGit mapping was lost")
+assert(not plugins["fzf-lua"]._.loaded, "fzf-lua should remain lazy-loaded")
+assert(vim.fn.exists(":FzfLua") == 2, "FzfLua command was not registered")
+for _, key in ipairs({ "<leader>ff", "<leader>fg", "<leader>fb", "<leader>fh",
+    "<leader>fk", "<leader>fr", "ff", "fg", "fb", "fn" }) do
+    assert(vim.fn.maparg(key, "n", false, true).desc, "Search mapping needs a description: " .. key)
+end
 
 print("Neovim plugin initialization tests passed.")
