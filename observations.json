@@ -38,6 +38,10 @@
     "hrsh7th/nvim-cmp@2ffe79f1f021def8dd1fcd81deb16f1bb0d989f3": {
       "baseline": true
     },
+    "ibhagwan/fzf-lua@22f0bbd3140a8a3b34fec75e5a640513ca6d4ce3": {
+      "candidate": "c1f3e4da4f519967819b4808be2a3cdf6880f2e2",
+      "first_seen": "2026-11-10T02:22:02+00:00"
+    },
     "j-hui/fidget.nvim@9e0201673e08e997e7cf52afca5565c70bd117f3": {
       "baseline": true
     },
