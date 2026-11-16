@@ -23,6 +23,16 @@ managed_dotfile_paths() {
 EOF
 }
 
+deployment_payload_paths() {
+    managed_dotfile_paths
+    # Helpers stay inside the immutable snapshot; they are not home-directory links.
+    cat <<'EOF'
+scripts/homebrew_release_age.py
+scripts/release_age.py
+scripts/dependency_observations.py
+EOF
+}
+
 # Do not mutate a managed leaf through a symlinked parent inside the target home.
 has_symlink_parent() {
     local target_home=$1 path=$2 parent
@@ -123,8 +133,8 @@ deploy_dotfiles() {
     local data_home=${XDG_DATA_HOME:-$target_home/.local/share}
     local deployment="$data_home/dotfiles" revision staging path
     local -a paths=()
-    while IFS= read -r path; do paths+=("$path"); done < <(managed_dotfile_paths)
     revision=$(git -C "$repo_root" rev-parse HEAD) || return
+    while IFS= read -r path; do paths+=("$path"); done < <(deployment_payload_paths)
     if ! git -C "$repo_root" diff --quiet HEAD -- "${paths[@]}"; then
         echo "Error: Commit or discard managed configuration edits before deployment." >&2
         return 1

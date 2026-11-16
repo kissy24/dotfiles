@@ -20,6 +20,8 @@ if [ "$1" = "${PKGUPD_TEST_BREW_FAILURE:-}" ]; then
 fi
 if [ "$1" = "outdated" ]; then
     cat "$PKGUPD_TEST_OUTDATED_JSON"
+elif [ "$1" = "info" ]; then
+    printf '{"casks":[{"tap":"homebrew/cask","version":"3.0.0","url":"https://example.test/app.zip","sha256":"no_check"}]}\n'
 fi
 EOF
 chmod +x "$FAKE_BIN/brew"
@@ -31,45 +33,38 @@ write_outdated() {
         "$formula_version" "$cask_version" > "$OUTDATED_JSON"
 }
 
-run_pkgupd() {
-    local now_epoch=$1
-    PATH="$FAKE_BIN:$PATH" \
-        XDG_STATE_HOME="$STATE_HOME" \
-        PKGUPD_COOLDOWN_DAYS=7 \
-        PKGUPD_NOW_EPOCH="$now_epoch" \
-        PKGUPD_TEST_BREW_LOG="$BREW_LOG" \
-        PKGUPD_TEST_OUTDATED_JSON="$OUTDATED_JSON" \
-        "$REPO_ROOT/.local/bin/pkgupd" --homebrew-only >/dev/null
-}
-
+# Unknown publication remains unknown, even with an old legacy observation file.
+mkdir -p "$STATE_HOME/pkgupd"
+printf 'formula\tdemo-formula\t2.0.0\t0\n' > "$STATE_HOME/pkgupd/homebrew.tsv"
 write_outdated 2.0.0 3.0.0
-run_pkgupd 100000
-if grep -q '^upgrade ' "$BREW_LOG"; then
-    echo "pkgupd upgraded a newly observed version." >&2
-    exit 1
+for _attempt in 1 2; do
+    PATH="$FAKE_BIN:$PATH" XDG_STATE_HOME="$STATE_HOME" \
+        PKGUPD_COOLDOWN_DAYS=0 PKGUPD_NOW_EPOCH=9999999999 \
+        PKGUPD_TEST_BREW_LOG="$BREW_LOG" PKGUPD_TEST_OUTDATED_JSON="$OUTDATED_JSON" \
+        "$REPO_ROOT/.local/bin/pkgupd" --homebrew-only > "$TMP_ROOT/output" 2>&1
+    if grep -q '^upgrade ' "$BREW_LOG"; then
+        echo "pkgupd upgraded an artifact with unknown publication time." >&2
+        exit 1
+    fi
+    grep -q 'demo-formula 2.0.0.*published_at=null' "$TMP_ROOT/output"
+    grep -q 'demo-cask 3.0.0.*published_at=null' "$TMP_ROOT/output"
+    grep -q 'manual review' "$TMP_ROOT/output"
+done
+
+echo "pkgupd retains notifications and holds unknown publication dates."
+
+# Inject a verified selection only at the test process boundary to exercise the
+# shell's upgrade/failure paths. The real adapter is tested separately in Python.
+REAL_PYTHON=$(command -v python3)
+cat > "$FAKE_BIN/python3" <<'PYTHON'
+#!/bin/bash
+if [[ $1 == */scripts/homebrew_release_age.py ]]; then
+    printf 'cask\tdemo-cask\n'
+else
+    exec "$PKGUPD_TEST_PYTHON" "$@"
 fi
-
-: > "$BREW_LOG"
-run_pkgupd $((100000 + 7 * 86400 - 1))
-if grep -q '^upgrade ' "$BREW_LOG"; then
-    echo "pkgupd upgraded before the cooldown elapsed." >&2
-    exit 1
-fi
-
-write_outdated 2.1.0 3.1.0
-: > "$BREW_LOG"
-run_pkgupd $((100000 + 7 * 86400))
-if grep -q '^upgrade ' "$BREW_LOG"; then
-    echo "pkgupd did not reset the cooldown for a new target version." >&2
-    exit 1
-fi
-
-: > "$BREW_LOG"
-run_pkgupd $((100000 + 14 * 86400))
-grep -q '^upgrade --formula demo-formula$' "$BREW_LOG"
-grep -q '^upgrade --cask demo-cask$' "$BREW_LOG"
-
-echo "pkgupd cooldown tests passed."
+PYTHON
+chmod +x "$FAKE_BIN/python3"
 
 # Simulate Linux without invoking the host's package managers or sudo.
 APT_LOG=$TMP_ROOT/apt.log
@@ -98,7 +93,7 @@ run_linux_pkgupd() {
     local status=0
     PATH="$FAKE_BIN:$PATH" \
         XDG_STATE_HOME="$STATE_HOME" \
-        PKGUPD_COOLDOWN_DAYS=0 \
+        PKGUPD_TEST_PYTHON="$REAL_PYTHON" \
         PKGUPD_TEST_BREW_LOG="$BREW_LOG" \
         PKGUPD_TEST_OUTDATED_JSON="$OUTDATED_JSON" \
         PKGUPD_TEST_APT_LOG="$APT_LOG" \
