@@ -18,9 +18,13 @@ import urllib.parse
 import urllib.request
 import uuid
 
+from release_age import age_error, epoch, COOLDOWN_SECONDS
+
 REPOSITORY = "kissy24/dotfiles"
 STATE_BRANCH = "chore/dependency-observations"
 STATE_FILE = "observations.json"
+# Existing, reviewed main pins are migration approvals, not publication evidence.
+MIGRATION_MAIN = "a83ade427f8c29ca2399615e5f74a112362f5cdb"
 SHA = re.compile(r"[0-9a-f]{40}\Z")
 REPO = r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"
 
@@ -28,7 +32,7 @@ REPO = r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"
 def relevant(path):
     return (path in {".pre-commit-config.yaml", ".config/sheldon/plugins.toml",
                      ".config/nvim/lazy-lock.json", "packages/bootstrap.json",
-                     "packages/bun-lsp/bun.lock"}
+                     "packages/bun-lsp/bun.lock", "packages/dependency-exceptions.json"}
             or (path.startswith(".github/workflows/") and path.endswith((".yml", ".yaml")))
             or (path.startswith(".config/nvim/lua/") and path.endswith(".lua")))
 
@@ -103,11 +107,69 @@ def dependencies(files, strict=True):
         if name not in repos:
             raise ValueError("Cannot map locked Neovim plugin: " + name)
         add(repos[name], pin["commit"])
-    npm = set(re.findall(r'^\s*"[^"]+": \["(@?[^"\n]+)@([^"\n]+)",',
-                         files.get("packages/bun-lsp/bun.lock", ""), re.M))
+    npm = set(npm_pins(files))
     if not github:
         raise ValueError("No pinned Git dependencies found")
     return github, npm
+
+
+def bun_lock_data(source):
+    """Decode trailing-comma JSON without rewriting string contents or running Bun."""
+    decoder = json.JSONDecoder()
+    output, index = [], 0
+    while index < len(source):
+        char = source[index]
+        if char == '"':
+            _, end = decoder.raw_decode(source, index)
+            output.append(source[index:end])
+            index = end
+            continue
+        if char == "," and source[index + 1:].lstrip().startswith(("}", "]")):
+            index += 1
+            continue
+        output.append(char)
+        index += 1
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate Bun lock key: " + key)
+            result[key] = value
+        return result
+    return json.loads("".join(output), object_pairs_hook=unique)
+
+
+def npm_pins(files):
+    pins = {}
+    lock = files.get("packages/bun-lsp/bun.lock", "")
+    if not lock:
+        return pins
+    data = bun_lock_data(lock)
+    if data.get("lockfileVersion") != 1 or not isinstance(data.get("packages"), dict):
+        raise ValueError("Unsupported Bun lock format")
+    for entry in data["packages"].values():
+        if not isinstance(entry, list) or len(entry) != 4 or entry[1] != "" or not isinstance(entry[0], str):
+            raise ValueError("Only integrity-pinned npm registry entries are supported")
+        name, version = entry[0].rsplit("@", 1)
+        if not re.fullmatch(r"(?:@[a-z0-9_.-]+/)?[a-z0-9_.-]+", name):
+            raise ValueError("Invalid npm package name")
+        if not re.fullmatch(r"[0-9][0-9A-Za-z.+-]*", version):
+            raise ValueError("npm version must be exact")
+        if not isinstance(entry[3], str) or not re.fullmatch(r"sha512-[A-Za-z0-9+/]+={0,2}", entry[3]):
+            raise ValueError("npm registry entry requires SHA512 integrity: " + name)
+        key = name, version
+        if key in pins and pins[key] != entry[3]:
+            raise ValueError("Conflicting npm integrity: " + name)
+        pins[key] = entry[3]
+    if not pins:
+        raise ValueError("No supported npm packages found in the Bun lockfile")
+    return pins
+
+
+def npm_publication(data, name, version, integrity):
+    if data["versions"][version]["dist"].get("integrity") != integrity:
+        raise ValueError("npm registry integrity mismatch: " + name + "@" + version)
+    return data["time"][version]
 
 
 class GitHub:
@@ -115,8 +177,12 @@ class GitHub:
         self.cache = {}
 
     def request(self, path, data=None, method=None):
-        if not path.startswith("/") or ".." in path:
+        segments = urllib.parse.unquote(path.split("?", 1)[0]).split("/")
+        if not path.startswith("/") or path.startswith("//") or ".." in segments:
             raise ValueError("Invalid API path")
+        cacheable = data is None and method is None
+        if cacheable and path in self.cache:
+            return self.cache[path]
         headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
         token = os.environ.get("GITHUB_TOKEN")
         if token:
@@ -134,7 +200,10 @@ class GitHub:
             body = response.read(8 * 1024 * 1024 + 1)
             if len(body) > 8 * 1024 * 1024:
                 raise ValueError("API response too large")
-            return json.loads(body)
+            result = json.loads(body)
+            if cacheable:
+                self.cache[path] = result
+            return result
 
     def files(self, repository, sha):
         if not re.fullmatch(REPO, repository) or not SHA.fullmatch(sha):
@@ -188,47 +257,163 @@ class GitHub:
             self.request(prefix + "/git/refs", {"ref": "refs/heads/" + STATE_BRANCH, "sha": commit["sha"]})
 
 
-def epoch(value):
-    return int(dt.datetime.fromisoformat(value.replace("Z", "+00:00")).timestamp())
+def public_commit(api, key, require_default=True):
+    repository, sha = key.split("@")
+    metadata = api.request("/repos/" + repository)
+    if metadata.get("private") is not False or metadata.get("archived") or metadata.get("disabled"):
+        raise ValueError("Dependency must be public and maintained: " + repository)
+    commit = api.request("/repos/" + repository + "/commits/" + sha)
+    if commit.get("sha") != sha:
+        raise ValueError("Dependency commit does not match: " + key)
+    # The commit API alone can resolve objects from a fork network. Require the
+    # exact commit to be reachable from this repository's default branch.
+    if require_default:
+        branch = urllib.parse.quote(metadata["default_branch"], safe="")
+        comparison = api.request("/repos/" + repository + "/compare/" + sha + "..." + branch)
+        if comparison.get("status") not in {"ahead", "identical"}:
+            raise ValueError("Commit is not on the public default-branch history: " + key)
+    return metadata["id"]
 
 
-def check_observations(keys, ledger, now, days=7):
+def release_publication(api, key):
+    """Only an immutable release binds its publication time to today's exact SHA.
+
+    Mutable release/tag associations are not historical evidence. They fall
+    back to verified public observation, never a commit or tagger timestamp.
+    """
+    repository, sha = key.split("@")
+    for page in range(1, 11):
+        releases = api.request(f"/repos/{repository}/releases?per_page=100&page={page}")
+        for release in releases:
+            if release.get("draft") or not release.get("immutable"):
+                continue
+            tag = urllib.parse.quote(release["tag_name"], safe="")
+            commit = api.request(f"/repos/{repository}/commits/{tag}")
+            if commit.get("sha") == sha:
+                published = release["published_at"]
+                epoch(published)
+                return published
+        if len(releases) < 100:
+            return None
+    raise ValueError("Too many releases; cannot determine publication: " + key)
+
+
+def check_observations(keys, ledger, now, identities=None):
     errors = []
     for key in sorted(keys):
-        record = ledger["observations"].get(key)
-        if record is None:
-            errors.append(key + ": not yet observed by the trusted observer")
-        elif record.get("baseline") is True:
+        record = ledger["observations"].get(key, {})
+        if record.get("baseline") is True:
             print("OK (migration baseline): " + key)
+            continue
+        if (not record.get("verified_public_at") or identities is None
+                or record.get("repository_id") != identities.get(key)):
+            errors.append(key + ": no verified public observation (legacy first_seen is not evidence)")
+            continue
+        error = age_error(key, record["verified_public_at"], now)
+        if error:
+            errors.append(error)
         else:
-            age = now - epoch(record["first_seen"])
-            if age < days * 86400:
-                errors.append(key + ": fewer than 7 days since first observation (" + record["first_seen"] + ")")
-            else:
-                print("OK (observed): " + key)
+            print("OK (verified public observation): " + key)
     return errors
 
 
+def registry_json(url):
+    with urllib.request.urlopen(url, timeout=60) as response:
+        return json.load(response)
+
+
+def trusted_exceptions(api, now):
+    # A proposed PR cannot approve its own exception: read main, not the checkout.
+    try:
+        result = api.request(f"/repos/{REPOSITORY}/contents/packages/dependency-exceptions.json?ref=main")
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            return {}
+        raise
+    data = json.loads(base64.b64decode(result["content"]))["exceptions"]
+    allowed = {}
+    for key, record in data.items():
+        if not (re.fullmatch(REPO + r"@[0-9a-f]{40}", key)
+                or re.fullmatch(r"npm:(?:@[a-z0-9_.-]+/)?[a-z0-9_.-]+@[0-9][0-9A-Za-z.+-]*", key)
+                or re.fullmatch(r"pypi:pre-commit@[0-9]+\.[0-9]+\.[0-9]+", key)):
+            raise ValueError("Exception must identify an exact dependency: " + key)
+        if not record.get("reason") or not str(record.get("approval_url", "")).startswith(
+                "https://github.com/" + REPOSITORY + "/pull/"):
+            raise ValueError("Exception requires a reason and approval PR: " + key)
+        remaining = epoch(record["expires_at"]) - now
+        if remaining > COOLDOWN_SECONDS:
+            raise ValueError("Exception cannot last more than 7 days: " + key)
+        if remaining > 0:
+            allowed[key] = record
+    return allowed
+
+
 def check(root):
-    keys, npm = dependencies(local_files(root))
+    files = local_files(root)
+    keys, npm = dependencies(files)
     api = GitHub()
     ledger, _ = api.ledger()
     if ledger is None:
-        raise ValueError("Trusted ledger is missing; initialize it explicitly before checking dependencies")
+        ledger = {"observations": {}}  # Dated releases do not require a local ledger.
     now = int(dt.datetime.now(dt.timezone.utc).timestamp())
-    errors = check_observations(keys, ledger, now)
+    # Freeze the migration to reviewed main; PR declarations cannot add approvals.
+    approved, _ = dependencies(api.files(REPOSITORY, MIGRATION_MAIN), strict=False)
+    exceptions = trusted_exceptions(api, now)
+    errors = []
+    for key in sorted(keys):
+        if key in approved:
+            print("OK (approved main migration): " + key)
+            continue
+        try:
+            published = release_publication(api, key)
+            identity = public_commit(api, key, require_default=published is None)
+            if key in exceptions:
+                print("OK (explicit time-limited exception): " + key)
+                continue
+            if published is not None:
+                error = age_error(key, published, now)
+                if error:
+                    errors.append(error)
+                else:
+                    print("OK (release published " + published + "): " + key)
+            else:
+                errors.extend(check_observations({key}, ledger, now, {key: identity}))
+        except (ValueError, KeyError, urllib.error.HTTPError) as error:
+            errors.append(key + ": " + str(error))
+    integrities = npm_pins(files)
     for name, version in sorted(npm):
-        url = "https://registry.npmjs.org/" + urllib.parse.quote(name, safe="@/")
-        with urllib.request.urlopen(url, timeout=60) as response:
-            published = json.load(response)["time"][version]
-        if now - epoch(published) < 7 * 86400:
-            errors.append(name + "@" + version + ": fewer than 7 days since npm publication")
+        data = registry_json("https://registry.npmjs.org/" + urllib.parse.quote(name, safe="@/"))
+        published = npm_publication(data, name, version, integrities[(name, version)])
+        error = age_error(name + "@" + version, published, now)
+        if error and "npm:" + name + "@" + version not in exceptions:
+            errors.append(error)
+    bootstrap = json.loads(files.get("packages/bootstrap.json", "{}"))
+    if bootstrap:
+        version = bootstrap["pre_commit_version"]
+        data = registry_json("https://pypi.org/pypi/pre-commit/" + version + "/json")
+        uploads = data["urls"]
+        if not uploads or any(item.get("yanked") for item in uploads):
+            errors.append("pre-commit: missing or yanked distribution")
+        else:
+            published = max((item["upload_time_iso_8601"] for item in uploads), key=epoch)
+            error = age_error("pre-commit@" + version, published, now)
+            if error and "pypi:pre-commit@" + version not in exceptions:
+                errors.append(error)
     if errors:
         for error in errors:
             print("ERROR: " + error, file=sys.stderr)
         return 1
-    print("All dependencies satisfy the cooldown policy.")
+    print("All managed pins satisfy the publication-age policy.")
     return 0
+
+
+def server_time():
+    # Obtain the timestamp AFTER verifying the public object, not before it.
+    request = urllib.request.Request("https://api.github.com/rate_limit?observation=" + uuid.uuid4().hex,
+                                     headers={"Cache-Control": "no-cache"})
+    with urllib.request.urlopen(request, timeout=60) as response:
+        from email.utils import parsedate_to_datetime
+        return parsedate_to_datetime(response.headers["Date"]).isoformat()
 
 
 def observe(initialize=False, candidate=None):
@@ -239,13 +424,6 @@ def observe(initialize=False, candidate=None):
     if not initialize and ledger is None:
         raise ValueError("Explicit initialization is required")
     main = api.request(f"/repos/{REPOSITORY}/git/ref/heads/main")["object"]["sha"]
-    # GitHub's server clock, never a contributor-supplied Git commit timestamp.
-    # A freshly created GitHub blob/commit is not a clock. Read the HTTPS Date header.
-    request = urllib.request.Request("https://api.github.com/rate_limit?observation=" + uuid.uuid4().hex,
-                                     headers={"Cache-Control": "no-cache"})
-    with urllib.request.urlopen(request, timeout=60) as response:
-        from email.utils import parsedate_to_datetime
-        timestamp = parsedate_to_datetime(response.headers["Date"]).isoformat()
     if initialize:
         keys, _ = dependencies(api.files(REPOSITORY, main), strict=False)
         ledger = {"schema": 1, "baseline_commit": main, "observations": {
@@ -268,8 +446,22 @@ def observe(initialize=False, candidate=None):
         except (ValueError, KeyError, urllib.error.HTTPError) as error:
             print("Cannot observe candidate " + sha + ": " + type(error).__name__, file=sys.stderr)
             continue
-        for key in keys:
-            ledger["observations"].setdefault(key, {"first_seen": timestamp, "candidate": sha})
+        for key in sorted(keys):
+            old = ledger["observations"].get(key, {})
+            if old.get("baseline"):
+                continue
+            try:
+                published = release_publication(api, key)
+                identity = public_commit(api, key, require_default=published is None)
+                if published is not None:
+                    continue  # No local waiting period for independently dated releases.
+                if old.get("verified_public_at") and old.get("repository_id") == identity:
+                    continue
+                ledger["observations"][key] = {
+                    "verified_public_at": server_time(), "repository_id": identity, "candidate": sha,
+                }
+            except (ValueError, KeyError, urllib.error.HTTPError) as error:
+                print("Cannot verify public dependency " + key + ": " + str(error), file=sys.stderr)
     if initialize or json.dumps(ledger, sort_keys=True) != before:
         api.write_ledger(ledger, parent)
         print("Updated trusted dependency observations.")

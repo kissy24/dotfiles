@@ -74,3 +74,36 @@ PY
     fi
 done
 echo 'Installer checksum mismatches stop execution, including with Python optimization.'
+
+# A rejected dependency must stop the real setup entry point before any package
+# manager or deployment is called. All files and commands below are test doubles.
+mkdir -p "$TMP_ROOT/preflight/scripts/lib"
+cp "$REPO_ROOT/setup.sh" "$TMP_ROOT/preflight/setup.sh"
+: > "$TMP_ROOT/preflight/scripts/lib/dotfiles.sh"
+cat > "$TMP_ROOT/preflight/scripts/check-dependency-cooldown.sh" <<'CHECK'
+#!/bin/bash
+test "${GITHUB_TOKEN:-}" = test-only-token || exit 24
+exit 23
+CHECK
+chmod +x "$TMP_ROOT/preflight/scripts/check-dependency-cooldown.sh"
+cat > "$TMP_ROOT/bin/brew" <<'BREW'
+#!/bin/bash
+touch "$POLICY_TEST_DIR/package-manager-called"
+exit 1
+BREW
+status=0
+GITHUB_TOKEN=test-only-token PATH="$TMP_ROOT/bin:$PATH" POLICY_TEST_DIR="$TMP_ROOT" \
+    bash "$TMP_ROOT/preflight/setup.sh" --force > "$TMP_ROOT/preflight-output" 2>&1 || status=$?
+test "$status" -eq 23
+test ! -e "$TMP_ROOT/package-manager-called"
+
+# Successful preflight must not leave credentials in dependency child processes.
+gate=$(sed -n '/^dependency_check_token=/,/^unset dependency_check_token/p' "$REPO_ROOT/setup.sh")
+cat > "$TMP_ROOT/preflight/scripts/check-dependency-cooldown.sh" <<'CHECK'
+#!/bin/bash
+test "${GITHUB_TOKEN:-}" = test-only-token
+CHECK
+GITHUB_TOKEN=test-only-token GH_TOKEN=test-only-token \
+    bash -c 'set -euo pipefail; REPO_ROOT=$1; eval "$2"; test -z "${GITHUB_TOKEN:-}"; test -z "${GH_TOKEN:-}"' \
+    _ "$TMP_ROOT/preflight" "$gate"
+echo 'Publication preflight stops setup before changes and scopes API credentials.'

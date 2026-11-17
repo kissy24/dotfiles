@@ -132,10 +132,10 @@ test "$(_ZO_DATA_DIR="$TMP_ROOT/zoxide-data" zoxide query project)" = "$TMP_ROOT
 echo "Checking Bun execution..."
 test "$(bun -e 'console.log(1 + 1)')" = "2"
 
-echo "Checking package update cooldown..."
+echo "Checking publication-aware updates and unknown-date notifications..."
 ./tests/test-pkgupd.sh
 
-echo "Checking dependency cooldown parsing..."
+echo "Checking publication evidence, integrity, and verified Git observations..."
 ./tests/test-dependency-cooldown.sh
 
 echo "Checking Go compilation and execution..."

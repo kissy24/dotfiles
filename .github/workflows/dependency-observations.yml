@@ -27,7 +27,7 @@ jobs:
         with:
           ref: main
           persist-credentials: false
-      - name: Observe declarations without executing PR code
+      - name: Verify public fallback commits without executing PR code
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/dependency_observations.py observe

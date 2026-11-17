@@ -16,6 +16,7 @@ on:
       - scripts/check-dependency-eol.sh
       - scripts/check-dependency-cooldown.sh
       - scripts/dependency_observations.py
+      - scripts/release_age.py
 
 permissions:
   contents: read
@@ -44,7 +45,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Require trusted observations for Git dependencies
+      - name: Check publication age and verified public fallback
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/check-dependency-cooldown.sh
