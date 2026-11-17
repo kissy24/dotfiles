@@ -20,8 +20,9 @@
       "baseline": true
     },
     "homebrew/install@85d1a3fc80d8a63932f632aca8f787de11d14a64": {
-      "candidate": "f0e30a28098177df30d72b0560e1c0e4dec4e22f",
-      "first_seen": "2026-10-25T09:17:50+00:00"
+      "candidate": "f486d30257c4ea84e1f0832c7003deede90d5b1f",
+      "repository_id": 23519392,
+      "verified_public_at": "2026-11-17T11:34:05+00:00"
     },
     "hrsh7th/cmp-buffer@b74fab3656eea9de20a9b8116afa3cfc4ec09657": {
       "baseline": true
@@ -40,7 +41,8 @@
     },
     "ibhagwan/fzf-lua@22f0bbd3140a8a3b34fec75e5a640513ca6d4ce3": {
       "candidate": "c1f3e4da4f519967819b4808be2a3cdf6880f2e2",
-      "first_seen": "2026-11-10T02:22:02+00:00"
+      "repository_id": 384850341,
+      "verified_public_at": "2026-11-17T11:34:12+00:00"
     },
     "j-hui/fidget.nvim@9e0201673e08e997e7cf52afca5565c70bd117f3": {
       "baseline": true
@@ -94,12 +96,14 @@
       "baseline": true
     },
     "zsh-users/zsh-autosuggestions@85919cd1ffa7d2d5412f6d3fe437ebdbeeec4fc5": {
-      "candidate": "f0e30a28098177df30d72b0560e1c0e4dec4e22f",
-      "first_seen": "2026-10-25T09:17:50+00:00"
+      "candidate": "f486d30257c4ea84e1f0832c7003deede90d5b1f",
+      "repository_id": 13886476,
+      "verified_public_at": "2026-11-17T11:34:06+00:00"
     },
     "zsh-users/zsh-syntax-highlighting@e6683f20e5c38d3e5447f45845d04ddda75d0f23": {
-      "candidate": "f0e30a28098177df30d72b0560e1c0e4dec4e22f",
-      "first_seen": "2026-10-25T09:17:50+00:00"
+      "candidate": "f486d30257c4ea84e1f0832c7003deede90d5b1f",
+      "repository_id": 1197428,
+      "verified_public_at": "2026-11-17T11:34:08+00:00"
     }
   },
   "schema": 1
