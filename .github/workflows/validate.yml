@@ -83,6 +83,8 @@ jobs:
           grep -R -q 'nvim-treesitter/nvim-treesitter' .config/nvim
 
       - name: Run complete setup
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           ./setup.sh --force | tee setup_log.txt
@@ -150,6 +152,8 @@ jobs:
           fi
 
       - name: Verify safe conflict behavior
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
           rm "$HOME/.zshrc"

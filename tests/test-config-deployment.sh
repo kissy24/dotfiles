@@ -17,19 +17,42 @@ while IFS= read -r path; do
             printf 'trusted\n' > "$fixture_repo/$path/config.txt" ;;
         *) printf 'trusted\n' > "$fixture_repo/$path" ;;
     esac
-done < <(managed_dotfile_paths)
+done < <(deployment_payload_paths)
+cp "$REPO_ROOT/.local/bin/pkgupd" "$fixture_repo/.local/bin/pkgupd"
+chmod +x "$fixture_repo/.local/bin/pkgupd"
+cp "$REPO_ROOT/scripts/"{homebrew_release_age,release_age,dependency_observations}.py "$fixture_repo/scripts/"
 git -C "$fixture_repo" init -q
 git -C "$fixture_repo" config user.name 'Deployment Test'
 git -C "$fixture_repo" config user.email test@example.invalid
 git -C "$fixture_repo" config core.hooksPath /dev/null
 git -C "$fixture_repo" config commit.gpgsign false
-git -C "$fixture_repo" add -- .zshrc .zshenv .local .config
+git -C "$fixture_repo" add -- .zshrc .zshenv .local .config scripts
 git -C "$fixture_repo" commit -qm 'Initial trusted config'
 # Migrate the old direct links without --force, keeping a backup.
 create_symlinks "$fixture_repo" "$target_home" 0 >/dev/null
 deploy_dotfiles "$fixture_repo" "$target_home" 0 >/dev/null
 test "$(readlink "$target_home/.zshrc")" = "$XDG_DATA_HOME/dotfiles/current/.zshrc"
 test -n "$(find "$target_home" -name '.zshrc.backup-*' -print)"
+# The deployed command must find its helpers without accessing the source tree.
+mkdir -p "$TMP_ROOT/bin"
+cat > "$TMP_ROOT/bin/brew" <<'BREW'
+#!/bin/bash
+case "$1" in
+    outdated) printf '{"formulae":[{"name":"demo","current_version":"1.0"}]}\n' ;;
+    upgrade) exit 99 ;;
+esac
+BREW
+chmod +x "$TMP_ROOT/bin/brew"
+PATH="$TMP_ROOT/bin:$PATH" "$target_home/.local/bin/pkgupd" --homebrew-only > "$TMP_ROOT/update.log" 2>&1 || {
+    cat "$TMP_ROOT/update.log" >&2
+    exit 1
+}
+grep -q 'demo 1.0.*published_at=null' "$TMP_ROOT/update.log"
+printf '\n# unreviewed helper change\n' >> "$fixture_repo/scripts/release_age.py"
+if deploy_dotfiles "$fixture_repo" "$target_home" 0 >/dev/null 2>&1; then
+    echo 'Dirty helper deployment unexpectedly succeeded' >&2; exit 1
+fi
+git -C "$fixture_repo" checkout -- scripts/release_age.py
 # An untracked secret is never included in a snapshot.
 printf 'private local value\n' > "$fixture_repo/.config/nvim/local-secret.txt"
 deploy_dotfiles "$fixture_repo" "$target_home" 0 >/dev/null

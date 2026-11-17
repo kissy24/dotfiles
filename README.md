@@ -11,6 +11,7 @@ macOSおよびUbuntu/WSL向けの個人開発環境です。共通のコマン�
 - ZshとWezTerm
 - `HackGen Console NF`
 - macOSではHomebrew
+- GitとPython 3.9以上（導入前の公開日時検査に使用）
 
 Ubuntuでは、セットアップスクリプトがaptの前提パッケージとHomebrewをインストールします。Zsh、WezTerm、フォントは別途インストールしてください。
 
@@ -33,6 +34,8 @@ cd dotfiles
 ## 設定の反映とレビュー
 
 設定は`${XDG_DATA_HOME:-~/.local/share}/dotfiles/releases/`へ`git archive HEAD`で取り出し、`current`リンクを切り替えて反映します。未追跡ファイル・認証情報はコピーせず、管理対象に未コミットの変更がある場合や、追跡対象のシンボリックリンクがある場合は拒否します。過去のスナップショットは復旧用に残します。
+
+`pkgupd`が利用するPython補助ファイルも同じコミットからスナップショットへ含めます。補助ファイルの未コミット変更がある場合も配備を拒否します。
 
 設定だけを反映する場合は、差分をレビューしてコミットした後に実行します。
 
@@ -131,6 +134,8 @@ Codexのセッション識別とHerdr再起動後のネイティブ復元を有�
 
 ### Neovimの検索（fzf-lua）
 
+導入は後述の「依存関係の公開後待機ルール」に従います。固定SHAの公開日時を証明できない場合は、mainのobserverが公開を確認した`verified_public_at`から7日待ちます。待機中は`setup.sh`が依存導入前に停止します。Draft PRの検査結果と再検査期限を確認してください。
+
 ノーマルモードで`Space` → `f` → 次のキーを順に押します。まず`Space f f`でファイル名を入力し、矢印キーで候補を選んで`Enter`で開けます。
 
 | キー | 操作 | 従来のキー |
@@ -194,17 +199,17 @@ Rust/Cargoを別途利用する場合は、必要に応じて`[[ -r "$HOME/.carg
 
 `setup.sh`はHomebrewの既存パッケージを通常アップグレードしません。新規パッケージの導入に必須な依存の変更はHomebrewの判断で発生する場合があります。日常の更新には`pkgupd`を使います。
 
-`pkgupd`はHomebrewの更新候補をローカルで初めて観測してから7日間待ち、同じバージョンが継続しているパッケージだけを更新します。待機中に候補バージョンが変わった場合は、そのバージョンの待機期間を初めから数え直します。観測状態は`${XDG_STATE_HOME:-~/.local/state}/pkgupd/homebrew.tsv`に保存します。
+`pkgupd`は更新候補を検出し、**実際に取得する配布物の信頼できる公開日時から7日**経過したものだけを自動更新します。ローカルの初回検出から数える方式は廃止しました。古い`homebrew.tsv`は参照せず、削除もしません。
 
 ```sh
 pkgupd
 ```
 
-UbuntuではHomebrewのみにクールダウンを適用し、APTのシステム・セキュリティ更新は遅延させず従来どおり適用します。Homebrewの処理に失敗してもAPTの更新を試みます。各パッケージマネージャーは途中で失敗したら後続処理を停止し、最後に両方の終了コードを表示して、いずれかが失敗した場合は`pkgupd`も失敗を返します。Homebrewが対象パッケージのインストールに必要と判断した依存関係は、同時に更新される場合があります。Homebrewだけを処理する場合は`pkgupd --homebrew-only`、待機日数を変更する場合は`PKGUPD_COOLDOWN_DAYS`を使用します。
+Homebrewの取得処理は`scripts/homebrew_release_age.py`、共通の7日判定は`scripts/release_age.py`です。取得できない日時は`published_at=null`とし、候補名・バージョン・日時不明の理由・手動確認が必要なことを標準エラーへ表示します。何日待っても不明を既知へ変換せず、Gitのコミット日付等で推定しません。通知はターミナル出力で行い、外部メッセージ送信はありません。
 
-```sh
-PKGUPD_COOLDOWN_DAYS=14 pkgupd
-```
+現時点で自動更新できるのは、公式caskのうち、GitHubの変更不能なRelease assetを直接取得し、公開日時とSHA256が一致し、別パッケージへの依存や自己更新がないものです。Formulaのbottle・ビルドやその他の配布元は、配布物の公開日時を証明する取得処理がないため`null`として保留します。上流ソースの古い公開日を、新しいbottleの公開日として流用しません。必要な更新は、表示された対象の公式公開情報・変更内容を確認して個別に手動適用してください。
+
+Ubuntu/DebianのAPTシステム・セキュリティ更新は遅延させません。Homebrewが失敗してもAPTの処理は試み、どちらかが失敗すれば非ゼロで終了します。Homebrewだけを処理する場合は`pkgupd --homebrew-only`です。日時不明による保留は更新処理の障害とは区別し、候補を表示して正常終了します。`PKGUPD_COOLDOWN_DAYS`や`PKGUPD_NOW_EPOCH`による待機短縮・時刻変更は使用しません。
 
 ## アンインストール
 
@@ -239,7 +244,7 @@ GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定し
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。加えて`Scan Secret History`はPR・mainへのPush・週次実行で全履歴を取得し、`betterleaks-history`でPR途中のコミットを含む到達可能な履歴全体を走査します。後続コミットで削除された秘密も対象です。ローカルでは`pre-commit run betterleaks-history --hook-stage manual --all-files`を使います。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、標準補完の候補表示・確定・中止と検索・コマンド・パス補完、標準LSP進捗表示とGitsignsの行履歴、fzf-luaの検索・除外・プレビュー・キー操作、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、スナップショットの分離、旧`~/.config`リンクの移行・権限と認証情報の保持・コピー失敗時の復旧、削除済み秘密の履歴検出、初回観測時刻の境界・欠損・未来日時・過去日付コミットの拒否、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、標準補完の候補表示・確定・中止と検索・コマンド・パス補完、標準LSP進捗表示とGitsignsの行履歴、fzf-luaの検索・除外・プレビュー・キー操作、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、スナップショットの分離、旧`~/.config`リンクの移行・権限と認証情報の保持・コピー失敗時の復旧、削除済み秘密の履歴検出、公開日時の境界・欠損・未来日時、未公開SHAと古い観測記録の拒否、npm integrityとHomebrew日時不明通知、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
 依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 
@@ -249,24 +254,36 @@ GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh
 
 更新頻度の低さだけではEOLと判定せず、HomebrewとGitHubが提供する明示的なライフサイクル情報だけを失敗条件にします。
 
-Git依存の7日間待機は、コミット作者が指定できる日時を使用しません。`Observe Dependency Versions`がmainと公開中PRの宣言を**データとしてのみ**読み、GitHubのサーバー時刻で初回観測を記録します。PRコードのcheckout・import・実行や依存のインストールは行いません。mainへのPush、6時間ごとの定期実行、mainからの手動実行が対象です。
+### 依存関係の公開後待機ルール
 
-記録は同じリポジトリの`chore/dependency-observations`ブランチに保存します。PRの検査はこの信頼されたブランチを読み、PR内の記録ファイルやキャッシュは信頼しません。検証ジョブには書き込み権限を与えません。観測記録の欠損、未観測のSHA、7日未満・未来の時刻は失敗になります。別リポジトリの同じSHAも別の依存として扱います。待機期間を環境変数で短縮する機能はありません。
+判定対象は「最新版」ではなく、導入する正確な版・SHA・配布物です。信頼できる公開日時から7日経過していれば、このリポジトリで初めて採用する版も即時に候補にできます。新しい版が出ても、固定した候補の待機はリセットしません。共通の日時判定は`scripts/release_age.py`で管理し、各配布元の取得処理から公開日時または`null`を受け取ります。
 
-初回移行時だけ、承認済みのmainに既に固定されているSHAを基準として登録します。新しく固定・追加するSHAは例外に含めません。管理者がレビューしたコードから、書き込み権限を持つtokenで一度だけ初期化します。再初期化による承認済み基準の拡張は拒否します。
+| 対象 | 判定と証拠 |
+| --- | --- |
+| Bunのnpm依存（ロック内の直接・間接依存） | npmの`time[version]`と`dist.integrity`をロックのSHA512と照合。独自URL・integrityなしは拒否 |
+| Git依存（Actions、pre-commit hook、Neovim、Sheldon、Homebrew installer） | GitHubの変更不能なReleaseの`published_at`とタグの解決先SHAが固定SHAと一致すれば、その公開日時から7日 |
+| 公開日時とSHAの対応を証明できないGit依存 | 公開リポジトリの実在コミットとdefault branch履歴への到達可能性を確認した初回観測から7日 |
+| pre-commit本体 | PyPIの固定版の配布ファイル公開日時。後から追加された配布ファイルも考慮し、yanked・配布なしは拒否 |
+| Homebrewの自動更新 | 上記「パッケージ更新」を参照。日時不明は`published_at=null`として通知し、保留 |
+
+GitHub Releaseの`created_at`、Gitのauthor/committer/tagger日時は公開日時として使いません。変更可能なタグとReleaseの古い日付だけでは、現在のコードが以前から公開されていた証明にならないため、実物確認付き観測へ回します。Releaseのないfzf-lua等もこの補助方式です。ネットワーク・APIの失敗を「7日経過済み」として扱いません。
+
+`Observe Dependency Versions`はmainのコードだけを実行し、mainと公開中PRの宣言をデータとして読みます。依存先が公開・保守中で、固定SHAが実在し、そのリポジトリのdefault branch履歴から到達できることをAPIで確認した**後**に、GitHubサーバー時刻を`verified_public_at`として記録します。PRのコードや依存コードは実行しません。リポジトリIDも保存して、同名リポジトリの作り直しを別物として扱います。公開Releaseから判定できる候補に、追加のローカル待機を課しません。
+
+台帳は`chore/dependency-observations`ブランチに保存し、mainへのPush、6時間ごとの定期実行、mainからの手動実行で更新します。旧`first_seen`は実物確認の証拠として使わず、新observerで確認し直した時点から数えます。既に採用済みのGit依存だけは、移行前の承認済みmain `a83ade427f8c29ca2399615e5f74a112362f5cdb`の宣言を固定した移行承認として維持します。これは公開日時の証明ではなく、新しいSHAを追加できる包括的な免除でもありません。
+
+セットアップはパッケージ導入・設定配備より先に管理対象のGit/npm/PyPI検査を実行し、失敗なら停止します。CIの完全セットアップも同じ入口を使います。秘密情報履歴CIもhookの導入前に検査します。APIトークンはセットアップの検査子プロセスにだけ渡し、依存のインストール処理には引き継ぎません。GitHub API制限に達する場合は、`gh auth login`済みの環境または検査用の`GITHUB_TOKEN`を利用してください。
+
+**検査範囲には限界があります。** Homebrewの初回セットアップ、Homebrew自身、APT、Masonが解決する配布物、Tree-sitterの文法、pre-commit/PyPIの推移依存すべての公開日時をこの検査で保証するものではありません。初回Homebrew導入は明示的な`setup.sh`実行による導入として扱い、既存パッケージの自動アップグレードはしません。これらの宣言を変更する場合も、同じ方針で公開情報・同一性・間接依存を確認し、証拠を取得できないものは手動確認対象としてPRに明記します。7日経過は安全性の保証ではなく、既知の脆弱性・EOL・署名・ハッシュ・レビューの代替にはなりません。
+
+緊急セキュリティ修正は、ユーザーの明示承認を得て`packages/dependency-exceptions.json`へ正確な対象・理由・承認PR URL・期限（最大7日）を記録します。Gitは`owner/repo@完全SHA`、npmは`npm:名前@固定版`、PyPIは`pypi:pre-commit@固定版`をキーとし、値には`reason`、`approval_url`、`expires_at`（タイムゾーン付きISO 8601）を指定します。検査は**main上の承認済みファイルだけ**を参照するため、依存変更PRで追加した自己承認は効きません。例外で省略できるのは待機時間だけで、存在・公開状態・integrityの検証は省略しません。現在の例外は空です。
+
+待機条件だけが未達の候補は、他の検証結果と未達理由を明記したDraft PRとして提案できます。実物観測が必要ならmainのobserverを実行し、表示された期限後に同じSHAでCIを再実行します。旧observerから新observerへの移行は、この変更がmainへマージされた後に有効になります。待機中は完全セットアップCIが停止することが正常で、成功・導入完了とは報告しません。
 
 ```sh
-GITHUB_TOKEN="$(gh auth token)" python3 scripts/dependency_observations.py initialize
-```
-
-新しい版を含むPRは、観測後7日間CIが失敗するのが正常です。初回観測後に同じSHAを維持したまま7日経過したらCIを再実行してください。移行PRで追加したobserverはmainへマージされるまで自動実行されないため、その間は管理者がレビュー済みコードから`observe`を実行します。観測ブランチの削除・改変は検査の信頼性に影響するため、管理者とmainのobserver以外に書き込み権限を与えないでください。
-
-```sh
-GITHUB_TOKEN="$(gh auth token)" python3 scripts/dependency_observations.py observe
 GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-cooldown.sh
+gh workflow run dependency-observations.yml --ref main
 ```
-
-Git待機の対象はGitHub Actions、pre-commit hook、Neovim、Sheldon、Homebrewインストーラーの固定SHAです。Bunのnpm依存は引き続きレジストリ側の公開日時を使います。Homebrew formula自体はローリング配布のままで、更新時の待機は`pkgupd`が担当します。pre-commit本体とMasonのLSPは版固定ですが、Gitの初回観測チェックの対象ではありません。版固定は既知の安全性や上流の配布物の不変性を保証するものではありません。
 
 ## ライセンス
 

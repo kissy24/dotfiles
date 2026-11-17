@@ -150,6 +150,16 @@ install_pre_commit() {
     (cd "$REPO_ROOT" && pre-commit install --hook-type commit-msg --install-hooks)
 }
 
+# Stop before installing packages or deploying configuration. Keep API credentials
+# scoped to the checker, rather than exposing them to dependency setup programs.
+dependency_check_token=${GITHUB_TOKEN:-${GH_TOKEN:-}}
+unset GITHUB_TOKEN GH_TOKEN
+if [ -z "$dependency_check_token" ] && command -v gh >/dev/null 2>&1; then
+    dependency_check_token=$(gh auth token 2>/dev/null || true)
+fi
+GITHUB_TOKEN="$dependency_check_token" "$REPO_ROOT/scripts/check-dependency-cooldown.sh"
+unset dependency_check_token
+
 ensure_homebrew
 install_brew_packages
 deploy_dotfiles "$REPO_ROOT" "$HOME" "$FORCE"

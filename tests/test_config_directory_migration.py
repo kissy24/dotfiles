@@ -46,7 +46,8 @@ class MigrationTests(unittest.TestCase):
         self.repo.mkdir()
         self.home.mkdir()
         self.paths = subprocess.check_output(['bash', '-c', 'source "$1"; managed_dotfile_paths', '_', str(LIB)], text=True).splitlines()
-        for name in self.paths:
+        payload = subprocess.check_output(['bash', '-c', 'source "$1"; deployment_payload_paths', '_', str(LIB)], text=True).splitlines()
+        for name in payload:
             path = self.repo / name
             if name in {'.config/nvim', '.config/wezterm', '.config/sheldon', '.config/lazygit'}:
                 path = path / 'init.txt'
@@ -57,7 +58,7 @@ class MigrationTests(unittest.TestCase):
         self.git('config', 'user.email', 'test@example.invalid')
         self.git('config', 'core.hooksPath', '/dev/null')
         self.git('config', 'commit.gpgsign', 'false')
-        self.git('add', '--', *self.paths)
+        self.git('add', '--', *payload)
         self.git('commit', '-qm', 'Initial fixture')
         for name in ('gh/hosts.yml', 'nvim/local-only.lua', 'personal/settings.json', 'herdr/runtime.log'):
             path = self.repo / '.config' / name
