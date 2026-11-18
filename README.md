@@ -101,7 +101,7 @@ Herdr更新後に旧サーバーとの不整合が表示された場合は、セ
 
 Windows版WezTermではウィンドウをマウスで移動できるようにネイティブタイトルバーを表示します。macOSとLinuxではタイトルバーを非表示にします。
 
-Herdrのタブバーは常に表示され、クリックで切り替えられます。1つのプロジェクトを1つのWorkspaceとして扱い、その中の表示や用途をタブで分けます。新しいタブは名前の入力を求めず即座に作成します。macOSでは`Cmd-t`でタブ、`Cmd-Shift-t`でWorkspaceを作成し、`Cmd-w`、`Cmd-Shift-[`／`Cmd-Shift-]`、`Cmd-1`〜`Cmd-9`も使用できます。WindowsおよびLinuxでは`Ctrl-Shift-t`でタブ、`Ctrl-Shift-n`でWorkspaceを作成し、`Ctrl-Shift-w`と`Ctrl-Tab`／`Ctrl-Shift-Tab`も使用できます。これらはWezTermがHerdrのキー操作へ変換し、従来の`Ctrl-b`操作も引き続き利用できます。
+HerdrのタブバーはWorkspace内のタブが1枚のときは非表示です。2枚以上になると表示され、クリックでタブを切り替えられます。1つのプロジェクトを1つのWorkspaceとして扱い、その中の表示や用途をタブで分けます。新しいタブは名前の入力を求めず即座に作成します。macOSでは`Cmd-t`でタブ、`Cmd-Shift-t`でWorkspaceを作成し、`Cmd-w`、`Cmd-Shift-[`／`Cmd-Shift-]`、`Cmd-1`〜`Cmd-9`も使用できます。WindowsおよびLinuxでは`Ctrl-Shift-t`でタブ、`Ctrl-Shift-n`でWorkspaceを作成し、`Ctrl-Shift-w`と`Ctrl-Tab`／`Ctrl-Shift-Tab`も使用できます。これらはWezTermがHerdrのキー操作へ変換し、従来の`Ctrl-b`操作も引き続き利用できます。
 
 作業ディレクトリと同名のWorkspaceを直接作成する場合は、Zsh関数の`hrw`を使用します。引数を省略するとカレントディレクトリを使い、任意でディレクトリと表示名を指定できます。
 
