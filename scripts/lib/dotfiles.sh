@@ -23,16 +23,6 @@ managed_dotfile_paths() {
 EOF
 }
 
-deployment_payload_paths() {
-    managed_dotfile_paths
-    # Helpers stay inside the immutable snapshot; they are not home-directory links.
-    cat <<'EOF'
-scripts/homebrew_release_age.py
-scripts/release_age.py
-scripts/dependency_observations.py
-EOF
-}
-
 # Do not mutate a managed leaf through a symlinked parent inside the target home.
 has_symlink_parent() {
     local target_home=$1 path=$2 parent
@@ -46,15 +36,6 @@ has_symlink_parent() {
         esac
     done
     return 1
-}
-
-migrate_config_directory() {
-    local repo_root=$1 target_home=$2 link_root=$3 path
-    local -a paths=()
-    [ -L "$target_home/.config" ] || return 0
-    while IFS= read -r path; do paths+=("$path"); done < <(managed_dotfile_paths)
-    python3 "$(dirname "${BASH_SOURCE[0]}")/migrate-config.py" \
-        "$repo_root" "$target_home" "$link_root" "${paths[@]}"
 }
 
 migrate_gh_directory() {
@@ -79,7 +60,6 @@ create_symlinks() {
     local repo_root=$1 target_home=$2 force=$3 legacy_root=${4:-}
     local path src dest
 
-    migrate_config_directory "${legacy_root:-$repo_root}" "$target_home" "$repo_root" || return
     migrate_gh_directory "$repo_root" "$target_home"
     echo "Creating symlinks..."
     while IFS= read -r path; do
@@ -127,47 +107,11 @@ remove_symlinks() {
     done < <(managed_dotfile_paths; printf '%s\n' .config/gh)
 }
 
-# Publish committed files only. Branch switches and edits cannot change this copy.
+# Keep configuration in the checkout. Retain legacy parent directory links,
+# and replace only known snapshot leaf links without requiring --force.
 deploy_dotfiles() {
     local repo_root=$1 target_home=$2 force=$3
     local data_home=${XDG_DATA_HOME:-$target_home/.local/share}
-    local deployment="$data_home/dotfiles" revision staging path
-    local -a paths=()
-    revision=$(git -C "$repo_root" rev-parse HEAD) || return
-    while IFS= read -r path; do paths+=("$path"); done < <(deployment_payload_paths)
-    if ! git -C "$repo_root" diff --quiet HEAD -- "${paths[@]}"; then
-        echo "Error: Commit or discard managed configuration edits before deployment." >&2
-        return 1
-    fi
-    mkdir -p "$deployment/releases"
-    chmod 700 "$deployment" "$deployment/releases"
-    staging=$(mktemp -d "$deployment/releases/$revision.XXXXXX") || return
-    if ! git -C "$repo_root" archive HEAD -- "${paths[@]}" | tar -xf - -C "$staging"; then
-        rm -rf "$staging"
-        return 1
-    fi
-    # Tracked links could lead back to an editable checkout or outside the snapshot.
-    if [ -n "$(find "$staging" -type l -print -quit)" ]; then
-        echo "Error: Managed configuration must not contain symbolic links." >&2
-        rm -rf "$staging"
-        return 1
-    fi
-    printf '%s\n' "$revision" > "$staging/.revision"
-    # Detach the legacy parent first, before any nested backup or GitHub migration.
-    if ! migrate_config_directory "$repo_root" "$target_home" "$deployment/current"; then
-        rm -rf "$staging"
-        return 1
-    fi
-    # Preserve GitHub credentials before replacing a legacy directory link.
-    migrate_gh_directory "$repo_root" "$target_home"
-    python3 - "$deployment/current" "$staging" <<'DEPLOY' || return
-import os, sys, tempfile
-current, target = sys.argv[1:]
-with tempfile.TemporaryDirectory(dir=os.path.dirname(current)) as temporary:
-    link = os.path.join(temporary, "current")
-    os.symlink(target, link)
-    os.replace(link, current)
-DEPLOY
-    create_symlinks "$deployment/current" "$target_home" "$force" "$repo_root"
-    echo "Activated configuration commit: $revision"
+    create_symlinks "$repo_root" "$target_home" "$force" "$data_home/dotfiles/current"
+    echo "Configuration links point to checkout: $repo_root"
 }

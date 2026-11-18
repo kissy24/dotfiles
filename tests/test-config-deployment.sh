@@ -17,23 +17,25 @@ while IFS= read -r path; do
             printf 'trusted\n' > "$fixture_repo/$path/config.txt" ;;
         *) printf 'trusted\n' > "$fixture_repo/$path" ;;
     esac
-done < <(deployment_payload_paths)
+done < <(managed_dotfile_paths)
+mkdir -p "$fixture_repo/scripts"
 cp "$REPO_ROOT/.local/bin/pkgupd" "$fixture_repo/.local/bin/pkgupd"
 chmod +x "$fixture_repo/.local/bin/pkgupd"
 cp "$REPO_ROOT/scripts/"{homebrew_release_age,release_age,dependency_observations}.py "$fixture_repo/scripts/"
-git -C "$fixture_repo" init -q
-git -C "$fixture_repo" config user.name 'Deployment Test'
-git -C "$fixture_repo" config user.email test@example.invalid
-git -C "$fixture_repo" config core.hooksPath /dev/null
-git -C "$fixture_repo" config commit.gpgsign false
-git -C "$fixture_repo" add -- .zshrc .zshenv .local .config scripts
-git -C "$fixture_repo" commit -qm 'Initial trusted config'
-# Migrate the old direct links without --force, keeping a backup.
-create_symlinks "$fixture_repo" "$target_home" 0 >/dev/null
+# Revert known snapshot links, preserving the old release and link backups.
+snapshot="$XDG_DATA_HOME/dotfiles/releases/previous"
+mkdir -p "$snapshot"
+cp -R "$fixture_repo/." "$snapshot/"
+ln -s "$snapshot" "$XDG_DATA_HOME/dotfiles/current"
+create_symlinks "$XDG_DATA_HOME/dotfiles/current" "$target_home" 0 >/dev/null
 deploy_dotfiles "$fixture_repo" "$target_home" 0 >/dev/null
-test "$(readlink "$target_home/.zshrc")" = "$XDG_DATA_HOME/dotfiles/current/.zshrc"
-test -n "$(find "$target_home" -name '.zshrc.backup-*' -print)"
-# The deployed command must find its helpers without accessing the source tree.
+while IFS= read -r path; do
+    test "$(readlink "$target_home/$path")" = "$fixture_repo/$path"
+done < <(managed_dotfile_paths)
+test "$(readlink "$target_home"/.zshrc.backup-*/original)" = "$XDG_DATA_HOME/dotfiles/current/.zshrc"
+test "$(readlink "$XDG_DATA_HOME/dotfiles/current")" = "$snapshot"
+grep -qx trusted "$snapshot/.zshrc"
+# The linked command must resolve its helpers in the checkout.
 mkdir -p "$TMP_ROOT/bin"
 cat > "$TMP_ROOT/bin/brew" <<'BREW'
 #!/bin/bash
@@ -48,41 +50,28 @@ PATH="$TMP_ROOT/bin:$PATH" "$target_home/.local/bin/pkgupd" --homebrew-only > "$
     exit 1
 }
 grep -q 'demo 1.0.*published_at=null' "$TMP_ROOT/update.log"
-printf '\n# unreviewed helper change\n' >> "$fixture_repo/scripts/release_age.py"
-if deploy_dotfiles "$fixture_repo" "$target_home" 0 >/dev/null 2>&1; then
-    echo 'Dirty helper deployment unexpectedly succeeded' >&2; exit 1
-fi
-git -C "$fixture_repo" checkout -- scripts/release_age.py
-# An untracked secret is never included in a snapshot.
-printf 'private local value\n' > "$fixture_repo/.config/nvim/local-secret.txt"
+# Checkout edits, including local config, are visible without deploying again.
+printf 'edited\n' > "$fixture_repo/.zshrc"
+printf 'local value\n' > "$fixture_repo/.config/nvim/local.txt"
+grep -qx edited "$target_home/.zshrc"
+grep -qx 'local value' "$target_home/.config/nvim/local.txt"
+grep -qx trusted "$snapshot/.zshrc"
+# Repeated deployment creates neither snapshots nor extra backups.
+before=$(find "$target_home" -name '*.backup-*' -print | sort)
 deploy_dotfiles "$fixture_repo" "$target_home" 0 >/dev/null
-test ! -e "$target_home/.config/nvim/local-secret.txt"
-# Editing or checking out a different revision cannot change active config.
-printf 'unreviewed\n' > "$fixture_repo/.zshrc"
-grep -qx trusted "$target_home/.zshrc"
-if deploy_dotfiles "$fixture_repo" "$target_home" 0 >/dev/null 2>&1; then
-    echo 'Dirty config deployment unexpectedly succeeded' >&2; exit 1
-fi
-git -C "$fixture_repo" add -- .zshrc
-git -C "$fixture_repo" commit -qm 'Different branch content'
-grep -qx trusted "$target_home/.zshrc"
-# Only explicit deployment changes the active configuration.
-deploy_dotfiles "$fixture_repo" "$target_home" 0 >/dev/null
-grep -qx unreviewed "$target_home/.zshrc"
-# Existing unrelated paths remain untouched.
-rm "$target_home/.zshrc"
+test "$before" = "$(find "$target_home" -name '*.backup-*' -print | sort)"
+test "$(find "$XDG_DATA_HOME/dotfiles/releases" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')" = 1
+# Unrelated files and links remain untouched, even at a managed leaf.
+rm "$target_home/.zshrc" "$target_home/.zshenv"
 printf 'local config\n' > "$target_home/.zshrc"
+ln -s missing-relative-target "$target_home/.zshenv"
 deploy_dotfiles "$fixture_repo" "$target_home" 0 >/dev/null
 grep -qx 'local config' "$target_home/.zshrc"
-# Tracked symlinks cannot escape from the snapshot.
-rm "$fixture_repo/.zshrc"
-ln -s "$fixture_repo/.zshenv" "$fixture_repo/.zshrc"
-git -C "$fixture_repo" add -- .zshrc
-git -C "$fixture_repo" commit -qm 'Symlink escape test'
-if deploy_dotfiles "$fixture_repo" "$target_home" 1 >/dev/null 2>&1; then
-    echo 'Symlink escape deployment unexpectedly succeeded' >&2; exit 1
-fi
+test "$(readlink "$target_home/.zshenv")" = missing-relative-target
+remove_symlinks "$fixture_repo" "$target_home" >/dev/null
+test ! -L "$target_home/.config/nvim"
+test "$(readlink "$target_home/.zshenv")" = missing-relative-target
 grep -qx 'local config' "$target_home/.zshrc"
-remove_symlinks "$XDG_DATA_HOME/dotfiles/current" "$target_home" >/dev/null
-test ! -L "$target_home/.zshenv"
-echo 'Configuration snapshots isolate live settings from edits and branch changes.'
+grep -qx edited "$fixture_repo/.zshrc"
+grep -qx trusted "$snapshot/.zshrc"
+echo 'Direct configuration links reflect checkout edits and preserve previous snapshots.'
