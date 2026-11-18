@@ -32,5 +32,13 @@ end
 assert(not plugins["lazygit.nvim"]._.loaded, "LazyGit should remain lazy-loaded")
 assert(vim.fn.exists(":LazyGit") == 2, "LazyGit command was not registered")
 assert(vim.fn.maparg("<leader>lg", "n") ~= "", "LazyGit mapping was lost")
+assert(not plugins["telescope.nvim"]._.loaded, "Telescope should remain lazy-loaded")
+assert(vim.fn.exists(":Telescope") == 2, "Telescope command was not registered")
+for _, key in ipairs({ "<leader>ff", "<leader>fg", "<leader>fb", "<leader>fh", "<leader>fk", "<leader>fr" }) do
+    assert(vim.fn.maparg(key, "n", false, true).desc, "Search mapping needs a description: " .. key)
+end
+for _, key in ipairs({ "ff", "fg", "fb", "fn" }) do
+    assert(vim.fn.maparg(key, "n") == "", "Search must not replace native f motion: " .. key)
+end
 
 print("Neovim plugin initialization tests passed.")

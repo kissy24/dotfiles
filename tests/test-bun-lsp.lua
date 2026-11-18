@@ -5,6 +5,8 @@ assert(vim.wait(15000, function()
     return client and client.initialized
 end, 100), name .. " did not initialize")
 assert(client.config.cmd[1] == "bun", name .. " must run through Bun")
+assert(vim.fn.maparg("<leader>cf", "n", false, true).desc, "LSP format mapping is missing")
+assert(vim.fn.maparg("<leader>f", "n") == "", "LSP format must not shadow the search prefix")
 
 -- Initialization alone does not prove that tsserver or Pyright can analyze code.
 -- Both fixtures deliberately assign a string to a numeric variable on line 1.
