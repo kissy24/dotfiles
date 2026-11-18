@@ -56,7 +56,7 @@ git worktree add -b review/example ../dotfiles-review origin/main
 
 - Zsh向けのStarship、Sheldon、zoxide、fzf連携
 - Herdrによる永続セッション、ワークスペース、タブ、ペイン、AIエージェント状態の管理
-- Lazy.nvim、Tree-sitter、補完、Telescope、Oil、Git連携、LSP、Markdownレンダリングを備えた安定版Neovim
+- Lazy.nvim、補完、Telescope、Oil、Git連携、LSP、Markdownレンダリングを備えた安定版Neovim
 - Bunに統一したJavaScript/TypeScript環境（Node.jsとnpmはインストールしません）
 - goplsを含むGo開発環境
 - uvによるpre-commitとPythonツール管理
@@ -89,7 +89,7 @@ wsl.exe --shutdown
 
 以前のセットアップが作った`~/.config/gh`のディレクトリリンクは、次回セットアップ時に通常のディレクトリへ移行します。中のローカルファイルは権限を保ってコピーし、旧リンクもバックアップします。リポジトリ内に残っているGit管理対象外の`hosts.yml`などは削除しません。別の場所を指す利用者独自のディレクトリリンクは、`--force`でも変更せずスキップします。
 
-NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合は、隔離した検証環境で`:Lazy update`を実行し、更新した`lazy-lock.json`を作業コピーへ戻して差分と動作を検証し、コミットしてください。日常環境のNeovimでロックファイルを更新するとcheckoutも直接変更されるため、依存関係の公開後待機を含む検証は隔離環境で先に行ってください。`nvim-treesitter`とHomebrewの`tree-sitter-cli`を使い、Markdown、Python、Go、TypeScript、TSX、Luaのパーサーをセットアップ時にインストールします。Go Modules用の`gomod`、`gosum`、`gowork`も対象です。Markdownを開くと`render-markdown.nvim`が読み込まれ、管理対象の`markdown`と`markdown_inline`パーサーで表示を拡張します。Lua、Markdown、GoのLanguage ServerはMason設定内の`dotfiles_versions`で版を固定し、セットアップ時にインストール済みの版も確認・同期します。Neovim起動だけでLSPをインストールする処理は無効です。TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
+NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合は、隔離した検証環境で`:Lazy update`を実行し、更新した`lazy-lock.json`を作業コピーへ戻して差分と動作を検証し、コミットしてください。日常環境のNeovimでロックファイルを更新するとcheckoutも直接変更されるため、依存関係の公開後待機を含む検証は隔離環境で先に行ってください。Markdown表示には`render-markdown.nvim`とNeovim同梱の`markdown`・`markdown_inline`パーサーを使います。Lua、Markdown、GoのLanguage ServerはMason設定内の`dotfiles_versions`で版を固定し、セットアップ時にインストール済みの版も確認・同期します。Neovim起動だけでLSPをインストールする処理は無効です。TypeScript/JavaScript、HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
 
 TypeScriptは`typescript-language-server`が必要とする`tsserver`を含む6系に固定しています。7系への移行にはLSP構成の変更が必要です。Bun依存を更新する際は`packages/bun-lsp/`で`bun update --minimum-release-age 604800 --lockfile-only --ignore-scripts`を実行し、公開から7日経過した候補だけを採用します。TypeScriptの固定版を変更する場合も、同じ待機条件を指定してください。更新後は依存関係のクールダウン検査とスモークテストで、Bun上の全LSPの初期化、およびTypeScript・Pythonの型診断を確認します。
 
@@ -238,7 +238,7 @@ GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定し
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。加えて`Scan Secret History`はPR・mainへのPush・週次実行で全履歴を取得し、`betterleaks-history`でPR途中のコミットを含む到達可能な履歴全体を走査します。後続コミットで削除された秘密も対象です。ローカルでは`pre-commit run betterleaks-history --hook-stage manual --all-files`を使います。
 
-スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、管理対象の全Tree-sitterパーサー、ヘッドレスNeovim上でのTypeScript Language Server接続、標準補完の候補表示・確定・中止と検索・コマンド・パス補完、標準LSP進捗表示とGitsignsの行履歴、Telescopeの検索・除外・プレビュー・キー操作、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、checkoutへの直接参照、旧スナップショットからのリンク切り替え、旧`~/.config`リンク・稼働中ソケット・権限と認証情報の保持、削除済み秘密の履歴検出、公開日時の境界・欠損・未来日時、未公開SHAと古い観測記録の拒否、npm integrityとHomebrew日時不明通知、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
+スモークテストでは、各CLIの起動、ripgrepとfzfによる検索、隔離したHerdrサーバーの起動・接続・停止、zoxideのデータベース操作、`pkgupd`の候補バージョンと待機期間の判定、Bun・Go・Pythonのコード実行、ヘッドレスNeovim上でのTypeScript Language Server接続、標準補完の候補表示・確定・中止と検索・コマンド・パス補完、標準LSP進捗表示とGitsignsの行履歴、Telescopeの検索・除外・プレビュー・キー操作、Markdownパーサーと`render-markdown.nvim`の初期化を確認します。Neovimの検証とセットアップ用Luaコード内の例外・assert失敗は、非ゼロの終了コードで通知します。意図的な失敗による終了コードの回帰テストと、隔離した一時ディレクトリ上でのバックアップ・GitHub CLI移行・アンインストールのテストも実行します。補完キャッシュ作成後の権限変更、Homebrew／APTそれぞれの失敗、checkoutへの直接参照、旧スナップショットからのリンク切り替え、旧`~/.config`リンク・稼働中ソケット・権限と認証情報の保持、削除済み秘密の履歴検出、公開日時の境界・欠損・未来日時、未公開SHAと古い観測記録の拒否、npm integrityとHomebrew日時不明通知、Neovimのインストール済みコミットとロックファイルの一致も検証します。Herdrの対話UI、GUI表示、GitHub認証は手動確認の対象です。
 
 依存関係のEOL検査は毎週月曜日と関連ファイルを変更するPull Requestで実行します。Homebrew formulaの`deprecated`・`disabled`、Neovim・Sheldon・pre-commit・GitHub Actionsで利用するGitHubリポジトリの`archived`・`disabled`を検出すると失敗します。ローカルでも次のコマンドで実行できます。
 
@@ -268,7 +268,7 @@ GitHub Releaseの`created_at`、Gitのauthor/committer/tagger日時は公開日�
 
 セットアップはパッケージ導入・設定配備より先に管理対象のGit/npm/PyPI検査を実行し、失敗なら停止します。CIの完全セットアップも同じ入口を使います。秘密情報履歴CIもhookの導入前に検査します。APIトークンはセットアップの検査子プロセスにだけ渡し、依存のインストール処理には引き継ぎません。GitHub API制限に達する場合は、`gh auth login`済みの環境または検査用の`GITHUB_TOKEN`を利用してください。
 
-**検査範囲には限界があります。** Homebrewの初回セットアップ、Homebrew自身、APT、Masonが解決する配布物、Tree-sitterの文法、pre-commit/PyPIの推移依存すべての公開日時をこの検査で保証するものではありません。初回Homebrew導入は明示的な`setup.sh`実行による導入として扱い、既存パッケージの自動アップグレードはしません。これらの宣言を変更する場合も、同じ方針で公開情報・同一性・間接依存を確認し、証拠を取得できないものは手動確認対象としてPRに明記します。7日経過は安全性の保証ではなく、既知の脆弱性・EOL・署名・ハッシュ・レビューの代替にはなりません。
+**検査範囲には限界があります。** Homebrewの初回セットアップ、Homebrew自身、APT、Masonが解決する配布物、pre-commit/PyPIの推移依存すべての公開日時をこの検査で保証するものではありません。初回Homebrew導入は明示的な`setup.sh`実行による導入として扱い、既存パッケージの自動アップグレードはしません。これらの宣言を変更する場合も、同じ方針で公開情報・同一性・間接依存を確認し、証拠を取得できないものは手動確認対象としてPRに明記します。7日経過は安全性の保証ではなく、既知の脆弱性・EOL・署名・ハッシュ・レビューの代替にはなりません。
 
 緊急セキュリティ修正は、ユーザーの明示承認を得て`packages/dependency-exceptions.json`へ正確な対象・理由・承認PR URL・期限（最大7日）を記録します。Gitは`owner/repo@完全SHA`、npmは`npm:名前@固定版`、PyPIは`pypi:pre-commit@固定版`をキーとし、値には`reason`、`approval_url`、`expires_at`（タイムゾーン付きISO 8601）を指定します。検査は**main上の承認済みファイルだけ**を参照するため、依存変更PRで追加した自己承認は効きません。例外で省略できるのは待機時間だけで、存在・公開状態・integrityの検証は省略しません。現在の例外は空です。
 
