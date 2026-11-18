@@ -173,10 +173,6 @@ echo "Restoring locked Neovim plugins and initializing Mason-managed language se
 "$REPO_ROOT/scripts/run-nvim-check.sh" 'vim.cmd("Lazy! restore")'
 "$REPO_ROOT/scripts/run-nvim-check.sh" 'dofile(vim.fn.stdpath("config") .. "/install-lsp.lua")'
 
-echo "Installing configured Tree-sitter parsers..."
-"$REPO_ROOT/scripts/run-nvim-check.sh" \
-    "local parsers = require('plugins.treesitter')[1].opts.parsers; local task = require('nvim-treesitter').install(parsers, { max_jobs = 4 }); assert(task:wait(300000), 'Tree-sitter parser installation failed')"
-
 echo "Locking Sheldon plugins..."
 sheldon lock
 

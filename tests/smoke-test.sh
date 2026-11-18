@@ -44,7 +44,6 @@ echo "Checking CLI startup..."
 git --version >/dev/null
 lazygit --version >/dev/null
 gh --version >/dev/null
-tree-sitter --version >/dev/null
 STARSHIP_CONFIG="$PWD/.config/starship.toml" \
     starship prompt --cmd-duration 500 >/dev/null
 sheldon source >/dev/null
@@ -148,25 +147,12 @@ test "$(go run "$TMP_ROOT/main.go")" = "ok"
 echo "Checking Python execution through uv..."
 test "$(uv run --no-project --python "$(command -v python3)" python -c 'print(1 + 1)')" = "2"
 
-echo "Checking configured Tree-sitter parsers..."
-./scripts/run-nvim-check.sh '
-local treesitter = require("nvim-treesitter")
-local installed = treesitter.get_installed("parsers")
-for _, lang in ipairs(require("plugins.treesitter")[1].opts.parsers) do
-    assert(vim.list_contains(installed, lang), lang .. " parser is not managed by nvim-treesitter")
-    assert(vim.treesitter.language.add(lang), lang .. " parser is unavailable")
-    assert(#vim.treesitter.get_string_parser("", lang):parse() > 0, lang .. " parsing failed")
-end
-'
-
-echo "Checking Neovim plugin loading, TypeScript parsing, and Bun-managed LSP..."
+echo "Checking Neovim plugin loading and Bun-managed TypeScript LSP..."
 mkdir -p "$TMP_ROOT/typescript"
 printf '{"private":true}\n' > "$TMP_ROOT/typescript/package.json"
 printf 'const answer: number = "wrong"\n' > "$TMP_ROOT/typescript/smoke.ts"
 DOTFILES_TEST_LSP=ts_ls ./scripts/run-nvim-check.sh '
 assert(vim.fn.exists(":Lazy") == 2, "Lazy command is unavailable")
-local parser = vim.treesitter.get_parser(0, "typescript")
-assert(#parser:parse() > 0, "TypeScript parsing failed")
 dofile("tests/test-bun-lsp.lua")
 ' "$TMP_ROOT/typescript/smoke.ts"
 
@@ -182,7 +168,7 @@ for spec in pyright:py html:html cssls:css jsonls:json; do
         'dofile("tests/test-bun-lsp.lua")' "$TMP_ROOT/bun-lsp/smoke.${spec##*:}"
 done
 
-echo "Checking Neovim Markdown rendering with managed parsers..."
+echo "Checking Neovim Markdown rendering with bundled parsers..."
 mkdir -p "$TMP_ROOT/markdown"
 cp tests/fixtures/markdown.md "$TMP_ROOT/markdown/smoke.md"
 ./scripts/run-nvim-check.sh 'dofile("tests/test-markdown-render.lua")' "$TMP_ROOT/markdown/smoke.md"

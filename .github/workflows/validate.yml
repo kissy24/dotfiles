@@ -37,13 +37,12 @@ jobs:
           ./tests/test-dependency-cooldown.sh
           ./setup.sh --help
           ./uninstall.sh --help
-          if grep -Eq '^brew "(rust|node|fd)"' Brewfile; then
+          if grep -Eq '^brew "(rust|node|fd|tree-sitter-cli)"' Brewfile; then
             echo "Brewfile contains a removed dependency." >&2
             exit 1
           fi
           grep -q '^brew "bun"' Brewfile
           grep -q '^brew "neovim"' Brewfile
-          grep -q '^brew "tree-sitter-cli"' Brewfile
           grep -q '^brew "herdr"' Brewfile
           for path in \
             .config/herdr/herdr-client.log \
@@ -80,7 +79,6 @@ jobs:
             echo "Brewfile still contains the replaced tmux dependency." >&2
             exit 1
           fi
-          grep -R -q 'nvim-treesitter/nvim-treesitter' .config/nvim
 
       - name: Run complete setup
         env:
@@ -106,7 +104,7 @@ jobs:
           fi
           export PATH="$HOME/.local/bin:$PATH"
 
-          for tool in zsh nvim tree-sitter starship lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
+          for tool in zsh nvim starship lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
             command -v "$tool"
           done
 
