@@ -11,6 +11,6 @@ return {
             "gopls@v0.24.0",    -- Go
         },
         ensure_installed = {},
-        automatic_enable = true,
+        automatic_enable = { exclude = { "ts_ls" } },
     },
 }

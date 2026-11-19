@@ -1,11 +1,12 @@
 -- Verify that splitting plugin specs preserves startup configuration and dependencies.
+assert(vim.fn.exists(":Lazy") == 2, "Lazy command is unavailable")
 assert(vim.g.colors_name == "catppuccin-mocha", "Catppuccin did not initialize")
 assert(package.loaded["gitsigns"], "Gitsigns did not initialize")
 assert(require("mason").has_setup, "Mason did not initialize")
 assert(require("mason.settings").current.ui.icons.package_installed == "✓", "Mason options were lost")
 
 local mason_lsp = require("mason-lspconfig.settings").current
-assert(mason_lsp.automatic_enable == true, "Mason LSP automatic enablement was lost")
+assert(vim.tbl_contains(mason_lsp.automatic_enable.exclude, "ts_ls"), "Mason must skip existing ts_ls installations")
 assert(vim.deep_equal(mason_lsp.ensure_installed, {}), "Editor startup must not install language servers")
 local pins = require("plugins.mason-lspconfig").opts.dotfiles_versions
 assert(#pins == 3, "Mason language server selection changed")
@@ -18,7 +19,7 @@ assert(lsp.lua_ls.settings.Lua.diagnostics.globals[1] == "vim", "Lua LSP setting
 assert(lsp.gopls.settings.gopls.staticcheck, "Go LSP settings were lost")
 assert(vim.lsp.protocol.make_client_capabilities().textDocument.completion.completionItem.snippetSupport,
     "LSP completion capabilities were lost")
-for _, name in ipairs({ "ts_ls", "html", "cssls", "jsonls", "pyright" }) do
+for _, name in ipairs({ "html", "cssls", "jsonls", "pyright" }) do
     assert(lsp[name].cmd[1] == "bun", name .. " no longer uses Bun")
     assert(vim.lsp.is_enabled(name), name .. " was not enabled")
 end

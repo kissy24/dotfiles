@@ -27,20 +27,10 @@ return {
             },
         })
 
-        -- Native completion uses one start column for the whole menu. Avoid
-        -- bracket-access candidates (e.g. Symbol) whose edit starts before the
-        -- dot and would hide ordinary TypeScript member completions.
-        vim.lsp.config("ts_ls", {
-            init_options = {
-                preferences = { includeCompletionsWithInsertText = false },
-            },
-        })
-
         -- npm由来のLanguage ServerはNode/MasonではなくBunで管理する。
         local data_home = vim.env.XDG_DATA_HOME or (vim.env.HOME .. "/.local/share")
         local bun_lsp_bin = data_home .. "/dotfiles-lsp/node_modules/.bin/"
         local bun_servers = {
-            ts_ls = "typescript-language-server",
             html = "vscode-html-language-server",
             cssls = "vscode-css-language-server",
             jsonls = "vscode-json-language-server",
@@ -88,7 +78,7 @@ return {
                     group    = group,
                     buffer   = bufnr,
                     callback = function()
-                        -- organizeImports（Go / TypeScript 等）
+                        -- organizeImports
                         local params = vim.lsp.util.make_range_params(0, "utf-8")
                         params.context = { only = { "source.organizeImports" } }
                         local results = vim.lsp.buf_request_sync(

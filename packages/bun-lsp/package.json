@@ -3,8 +3,6 @@
   "private": true,
   "dependencies": {
     "pyright": "latest",
-    "typescript": "6.0.3",
-    "typescript-language-server": "latest",
     "vscode-langservers-extracted": "latest"
   }
 }

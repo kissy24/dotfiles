@@ -1,8 +1,8 @@
 -- Drive a real configured Neovim through RPC; exercise menus, not just options.
 local root = vim.fn.tempname()
 vim.fn.mkdir(root, "p")
-vim.fn.writefile({ '{"private":true}' }, root .. "/package.json")
-vim.fn.writefile({ "const message = 'hello';", "message." }, root .. "/completion.ts")
+vim.fn.writefile({ "{}" }, root .. "/pyrightconfig.json")
+vim.fn.writefile({ "message = 'hello'", "message." }, root .. "/completion.py")
 vim.fn.writefile({ "nativeBufferCandidate", "" }, root .. "/words.txt")
 local function git(...)
     local args = { "git", "-C", root }
@@ -77,14 +77,14 @@ local ok, err = xpcall(function()
     wait("return vim.fn.getcmdline():match('words.txt$') ~= nil", "Path was not completed")
     keys("<C-c>")
     wait("return vim.fn.mode() == 'n'", "Path command did not close")
-    lua("vim.cmd('edit! ' .. vim.fn.fnameescape(...))", root .. "/completion.ts")
-    wait([[local c = vim.lsp.get_clients({bufnr=0, name='ts_ls'})[1]
-        return c and c.initialized and #vim.api.nvim_get_autocmds({event="InsertCharPre", buffer=0}) > 0]], "TypeScript LSP did not initialize")
+    lua("vim.cmd('edit! ' .. vim.fn.fnameescape(...))", root .. "/completion.py")
+    wait([[local c = vim.lsp.get_clients({bufnr=0, name='pyright'})[1]
+        return c and c.initialized and #vim.api.nvim_get_autocmds({event="InsertCharPre", buffer=0}) > 0]], "Pyright did not initialize")
     lua("vim.api.nvim_win_set_cursor(0, {2, 8})")
-    keys("AtoU")
-    wait(has_item("toUpperCase"), "LSP autocompletion did not appear after typing letters")
+    keys("Aisdec")
+    wait(has_item("isdecimal"), "LSP autocompletion did not appear after typing letters")
     keys("<C-n><CR><Esc>")
-    wait("return vim.api.nvim_get_current_line():find('message.toUpperCase', 1, true) ~= nil",
+    wait("return vim.api.nvim_get_current_line():find('message.isdecimal', 1, true) ~= nil",
         "Native LSP completion was not accepted")
     keys("A<C-e><C-Space>")
     wait("return vim.fn.pumvisible() == 1", "Manual native completion did not appear")
@@ -104,7 +104,7 @@ local ok, err = xpcall(function()
     wait("return vim.fn.mode() == 'n'", "Snippet selection did not close")
     -- Send real progress through the LSP handler and inspect the rendered statusline.
     lua([[vim.o.columns = 200; vim.schedule(function()
-        local c = vim.lsp.get_clients({name='ts_ls'})[1]
+        local c = vim.lsp.get_clients({name='pyright'})[1]
         vim.lsp.handlers['$/progress'](nil, {token='native-test', value={kind='begin', title='Native progress'}}, {client_id=c.id})
     end)]])
     wait("return require('lualine').statusline(true):find('Native progress', 1, true) ~= nil",
