@@ -147,14 +147,16 @@ test "$(go run "$TMP_ROOT/main.go")" = "ok"
 echo "Checking Python execution through uv..."
 test "$(uv run --no-project --python "$(command -v python3)" python -c 'print(1 + 1)')" = "2"
 
-echo "Checking Neovim plugin loading and Bun-managed TypeScript LSP..."
+echo "Checking that JS and TS buffers keep ts_ls disabled..."
 mkdir -p "$TMP_ROOT/typescript"
 printf '{"private":true}\n' > "$TMP_ROOT/typescript/package.json"
-printf 'const answer: number = "wrong"\n' > "$TMP_ROOT/typescript/smoke.ts"
-DOTFILES_TEST_LSP=ts_ls ./scripts/run-nvim-check.sh '
-assert(vim.fn.exists(":Lazy") == 2, "Lazy command is unavailable")
-dofile("tests/test-bun-lsp.lua")
-' "$TMP_ROOT/typescript/smoke.ts"
+for ext in js jsx ts tsx; do
+    touch "$TMP_ROOT/typescript/smoke.$ext"
+    ./scripts/run-nvim-check.sh '
+        assert(not vim.lsp.is_enabled("ts_ls"), "ts_ls was enabled")
+        assert(#vim.lsp.get_clients({ name = "ts_ls" }) == 0, "ts_ls started")
+    ' "$TMP_ROOT/typescript/smoke.$ext"
+done
 
 echo "Checking Python, HTML, CSS, and JSON language servers through Bun..."
 mkdir -p "$TMP_ROOT/bun-lsp"
