@@ -225,7 +225,7 @@ Ubuntu/DebianのAPTシステム・セキュリティ更新は遅延させませ�
 
 Neovimの`.config/nvim/lua/plugins/`は、1プラグインの設定を1つのLuaファイルにまとめています。Mason・oil-gitも専用ファイルで設定し、プラグイン間の読み込み順は`dependencies`で指定します。追加設定のない共通ライブラリは、利用側の`dependencies`に参照だけを記載します。
 
-GitHub ActionsでUbuntuとmacOSのセットアップスクリプトを検証します。ローカル検査はセットアップ時にuv経由でインストールされます。
+GitHub ActionsでUbuntuとmacOSのセットアップスクリプトを検証します。ローカル検査はセットアップ時にuv経由でインストールされます。pre-commitとPython hookに必要なwheelは `packages/bootstrap-wheels.json` に固定し、PyPIにある各ファイルの公開日時とSHA256を照合してから一時ディレクトリに取得します。インストール時にはこのディレクトリだけをパッケージ取得元として使います。
 
 ```sh
 ./tests/smoke-test.sh

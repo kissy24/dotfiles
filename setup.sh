@@ -140,15 +140,21 @@ generate_zsh_caches() {
     zsh -dfc 'autoload -Uz compinit && compinit -i -d "$1"' _ "$zcompdump"
 }
 
-install_pre_commit() {
+install_pre_commit() (
     export PATH="$HOME/.local/bin:$PATH"
     echo "Installing pre-commit via uv..."
-    local version
-    version=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["pre_commit_version"])' "$REPO_ROOT/packages/bootstrap.json")
-    uv tool install "pre-commit==$version"
+    local version stage
+    stage=$(mktemp -d)
+    trap 'rm -rf "$stage"' EXIT
+    python3 "$REPO_ROOT/scripts/bootstrap_wheels.py" "$stage/wheels"
+    export PIP_CONFIG_FILE=/dev/null PIP_NO_INDEX=1 PIP_FIND_LINKS="$stage/wheels"
+    export PIP_NO_CACHE_DIR=1 VIRTUALENV_NO_PERIODIC_UPDATE=1
+    version=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["pre_commit_version"])' "$REPO_ROOT/packages/bootstrap.json")
+    uv --no-config --no-cache tool install --no-index --find-links "$stage/wheels" --no-build \
+        --python '>=3.11,<3.15' "pre-commit==$version"
     (cd "$REPO_ROOT" && pre-commit install --install-hooks)
     (cd "$REPO_ROOT" && pre-commit install --hook-type commit-msg --install-hooks)
-}
+)
 
 # Stop before installing packages or deploying configuration. Keep API credentials
 # scoped to the checker, rather than exposing them to dependency setup programs.
