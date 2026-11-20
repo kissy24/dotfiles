@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Read dependency declarations as data and keep first observations outside PRs.
-
-Only the trusted main-branch observer receives contents:write. The PR checker
-can read the ledger but cannot create records or approve a migration baseline.
-"""
+"""Verify dependency publication against upstream registries and trusted Actions runs."""
 import argparse
 import base64
 import datetime as dt
@@ -16,13 +12,11 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-import uuid
 
 from release_age import age_error, epoch, COOLDOWN_SECONDS
 
 REPOSITORY = "kissy24/dotfiles"
-STATE_BRANCH = "chore/dependency-observations"
-STATE_FILE = "observations.json"
+OBSERVER = ".github/workflows/dependency-observations.yml"
 # Existing, reviewed main pins are migration approvals, not publication evidence.
 MIGRATION_MAIN = "a83ade427f8c29ca2399615e5f74a112362f5cdb"
 SHA = re.compile(r"[0-9a-f]{40}\Z")
@@ -176,22 +170,17 @@ class GitHub:
     def __init__(self):
         self.cache = {}
 
-    def request(self, path, data=None, method=None):
+    def request(self, path):
         segments = urllib.parse.unquote(path.split("?", 1)[0]).split("/")
         if not path.startswith("/") or path.startswith("//") or ".." in segments:
             raise ValueError("Invalid API path")
-        cacheable = data is None and method is None
-        if cacheable and path in self.cache:
+        if path in self.cache:
             return self.cache[path]
         headers = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
         token = os.environ.get("GITHUB_TOKEN")
         if token:
             headers["Authorization"] = "Bearer " + token
-        if data is not None:
-            headers["Content-Type"] = "application/json"
-        request = urllib.request.Request("https://api.github.com" + path,
-                                         data=None if data is None else json.dumps(data).encode(),
-                                         headers=headers, method=method)
+        request = urllib.request.Request("https://api.github.com" + path, headers=headers)
         # Never send the token to a different host via redirect.
         class NoRedirect(urllib.request.HTTPRedirectHandler):
             def redirect_request(self, req, fp, code, msg, hdrs, newurl):
@@ -201,8 +190,7 @@ class GitHub:
             if len(body) > 8 * 1024 * 1024:
                 raise ValueError("API response too large")
             result = json.loads(body)
-            if cacheable:
-                self.cache[path] = result
+            self.cache[path] = result
             return result
 
     def files(self, repository, sha):
@@ -227,34 +215,6 @@ class GitHub:
             files[entry["path"]] = self.cache[key]
         return files
 
-    def ledger(self):
-        try:
-            ref = self.request(f"/repos/{REPOSITORY}/git/ref/heads/{STATE_BRANCH}")
-        except urllib.error.HTTPError as error:
-            if error.code == 404:
-                return None, None
-            raise
-        sha = ref["object"]["sha"]
-        data = self.request(f"/repos/{REPOSITORY}/contents/{STATE_FILE}?ref={sha}")
-        ledger = json.loads(base64.b64decode(data["content"]))
-        if ledger.get("schema") != 1 or not isinstance(ledger.get("observations"), dict):
-            raise ValueError("Invalid observation ledger")
-        return ledger, sha
-
-    def write_ledger(self, ledger, parent):
-        prefix = f"/repos/{REPOSITORY}"
-        content = json.dumps(ledger, indent=2, sort_keys=True) + "\n"
-        blob = self.request(prefix + "/git/blobs", {"content": content, "encoding": "utf-8"})
-        tree = self.request(prefix + "/git/trees", {"tree": [
-            {"path": STATE_FILE, "mode": "100644", "type": "blob", "sha": blob["sha"]}]})
-        commit = self.request(prefix + "/git/commits", {
-            "message": "chore: record dependency observations", "tree": tree["sha"],
-            "parents": [parent] if parent else []})
-        if parent:
-            self.request(prefix + "/git/refs/heads/" + STATE_BRANCH,
-                         {"sha": commit["sha"], "force": False}, "PATCH")
-        else:
-            self.request(prefix + "/git/refs", {"ref": "refs/heads/" + STATE_BRANCH, "sha": commit["sha"]})
 
 
 def public_commit(api, key, require_default=True):
@@ -298,23 +258,35 @@ def release_publication(api, key):
     raise ValueError("Too many releases; cannot determine publication: " + key)
 
 
-def check_observations(keys, ledger, now, identities=None):
-    errors = []
-    for key in sorted(keys):
-        record = ledger["observations"].get(key, {})
-        if record.get("baseline") is True:
-            print("OK (migration baseline): " + key)
-            continue
-        if (not record.get("verified_public_at") or identities is None
-                or record.get("repository_id") != identities.get(key)):
-            errors.append(key + ": no verified public observation (legacy first_seen is not evidence)")
-            continue
-        error = age_error(key, record["verified_public_at"], now)
-        if error:
-            errors.append(error)
-        else:
-            print("OK (verified public observation): " + key)
-    return errors
+def observation_error(api, key, identity, now):
+    """Only GitHub-timestamped jobs from the canonical main observer count."""
+    prefix = f"/repos/{REPOSITORY}/actions"
+    cutoff = dt.datetime.fromtimestamp(now - COOLDOWN_SECONDS, dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    workflow = OBSERVER.split("/")[-1]
+    query = f"branch=main&status=success&created=%3C%3D{cutoff}&per_page=100"
+    expected = f"Observed {identity} {key}"
+    for page in range(1, 11):
+        runs = api.request(f"{prefix}/workflows/{workflow}/runs?{query}&page={page}")["workflow_runs"]
+        for run in runs:
+            if (run["path"] != OBSERVER or run["head_branch"] != "main"
+                    or run["head_repository"]["full_name"] != REPOSITORY
+                    or run["event"] not in {"schedule", "push", "workflow_dispatch"}
+                    or run["conclusion"] != "success"):
+                continue
+            for job_page in range(1, 4):  # A GitHub Actions matrix has at most 256 jobs.
+                jobs = api.request(f"{prefix}/runs/{int(run['id'])}/jobs?per_page=100&page={job_page}")["jobs"]
+                for job in jobs:
+                    if job["name"] != expected or job["conclusion"] != "success":
+                        continue
+                    if not age_error(key, job["completed_at"], now):
+                        # Exclude runs from an unrelated tag or fork with a similar ref name.
+                        public_commit(api, REPOSITORY + "@" + run["head_sha"])
+                        return None
+                if len(jobs) < 100:
+                    break
+        if len(runs) < 100:
+            break
+    return key + ": no successful main observer job at least 7 days old"
 
 
 def registry_json(url):
@@ -352,9 +324,6 @@ def check(root):
     files = local_files(root)
     keys, npm = dependencies(files)
     api = GitHub()
-    ledger, _ = api.ledger()
-    if ledger is None:
-        ledger = {"observations": {}}  # Dated releases do not require a local ledger.
     now = int(dt.datetime.now(dt.timezone.utc).timestamp())
     # Freeze the migration to reviewed main; PR declarations cannot add approvals.
     approved, _ = dependencies(api.files(REPOSITORY, MIGRATION_MAIN), strict=False)
@@ -377,7 +346,9 @@ def check(root):
                 else:
                     print("OK (release published " + published + "): " + key)
             else:
-                errors.extend(check_observations({key}, ledger, now, {key: identity}))
+                error = observation_error(api, key, identity, now)
+                if error:
+                    errors.append(error)
         except (ValueError, KeyError, urllib.error.HTTPError) as error:
             errors.append(key + ": " + str(error))
     integrities = npm_pins(files)
@@ -407,76 +378,40 @@ def check(root):
     return 0
 
 
-def server_time():
-    # Obtain the timestamp AFTER verifying the public object, not before it.
-    request = urllib.request.Request("https://api.github.com/rate_limit?observation=" + uuid.uuid4().hex,
-                                     headers={"Cache-Control": "no-cache"})
-    with urllib.request.urlopen(request, timeout=60) as response:
-        from email.utils import parsedate_to_datetime
-        return parsedate_to_datetime(response.headers["Date"]).isoformat()
-
-
-def observe(initialize=False, candidate=None):
+def observe():
     api = GitHub()
-    ledger, parent = api.ledger()
-    if initialize and ledger is not None:
-        raise ValueError("Migration baseline already exists; refusing to expand it")
-    if not initialize and ledger is None:
-        raise ValueError("Explicit initialization is required")
     main = api.request(f"/repos/{REPOSITORY}/git/ref/heads/main")["object"]["sha"]
-    if initialize:
-        keys, _ = dependencies(api.files(REPOSITORY, main), strict=False)
-        ledger = {"schema": 1, "baseline_commit": main, "observations": {
-            key: {"baseline": True} for key in sorted(keys)}}
-    before = json.dumps(ledger, sort_keys=True)
+    approved, _ = dependencies(api.files(REPOSITORY, MIGRATION_MAIN), strict=False)
     candidates = [(REPOSITORY, main)]
-    if candidate:
-        candidates.append((REPOSITORY, candidate))
-    else:
-        for page in range(1, 11):
-            pulls = api.request(f"/repos/{REPOSITORY}/pulls?state=open&per_page=100&page={page}")
-            candidates += [(p["head"]["repo"]["full_name"], p["head"]["sha"]) for p in pulls if p["head"]["repo"]]
-            if len(pulls) < 100:
-                break
-        else:
-            raise ValueError("Too many open PRs")
+    for page in range(1, 11):
+        pulls = api.request(f"/repos/{REPOSITORY}/pulls?state=open&per_page=100&page={page}")
+        candidates.extend((p["head"]["repo"]["full_name"], p["head"]["sha"]) for p in pulls if p["head"]["repo"])
+        if len(pulls) < 100:
+            break
+    observations = set()
     for repository, sha in candidates:
         try:
             keys, _ = dependencies(api.files(repository, sha), strict=False)
         except (ValueError, KeyError, urllib.error.HTTPError) as error:
-            print("Cannot observe candidate " + sha + ": " + type(error).__name__, file=sys.stderr)
+            print(f"Invalid candidate {sha}: {type(error).__name__}", file=sys.stderr)
             continue
-        for key in sorted(keys):
-            old = ledger["observations"].get(key, {})
-            if old.get("baseline"):
-                continue
+        for key in sorted(keys - approved):
             try:
-                published = release_publication(api, key)
-                identity = public_commit(api, key, require_default=published is None)
-                if published is not None:
-                    continue  # No local waiting period for independently dated releases.
-                if old.get("verified_public_at") and old.get("repository_id") == identity:
-                    continue
-                ledger["observations"][key] = {
-                    "verified_public_at": server_time(), "repository_id": identity, "candidate": sha,
-                }
+                if release_publication(api, key) is None:
+                    identity = public_commit(api, key)
+                    observations.add(f"{identity} {key}")
             except (ValueError, KeyError, urllib.error.HTTPError) as error:
-                print("Cannot verify public dependency " + key + ": " + str(error), file=sys.stderr)
-    if initialize or json.dumps(ledger, sort_keys=True) != before:
-        api.write_ledger(ledger, parent)
-        print("Updated trusted dependency observations.")
-    else:
-        print("No new dependency observations.")
+                print(f"Cannot observe {key}: {error}", file=sys.stderr)
+    with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+        print("observations=" + json.dumps(sorted(observations)), file=output)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["check", "observe", "initialize"])
-    parser.add_argument("--candidate", help="Additional commit in the canonical repository to observe")
-    args = parser.parse_args()
-    if args.command == "check":
+    parser.add_argument("command", choices=["check", "observe"])
+    if parser.parse_args().command == "check":
         return check(Path(__file__).resolve().parent.parent)
-    observe(args.command == "initialize", args.candidate)
+    observe()
     return 0
 
 
