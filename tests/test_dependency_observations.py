@@ -5,6 +5,7 @@ import importlib.util
 import io
 from pathlib import Path
 import unittest
+import tempfile
 import sys
 import json
 import base64
@@ -26,38 +27,29 @@ NOW = module.epoch("2026-01-20T00:00:00Z")
 
 
 class ObservationTests(unittest.TestCase):
-    def check(self, record, key=KEY):
-        with contextlib.redirect_stdout(io.StringIO()):
-            return module.check_observations({key}, {"observations": record}, NOW, {key: IDENTITY})
-
-    def test_unknown_and_backdated_commits_fail_closed(self):
-        self.assertTrue(self.check({}))
-        # An ancient committer date is never used as evidence of observation.
-        self.assertTrue(self.check({KEY: {"first_seen": "2026-01-19T00:00:00Z",
-                                          "committer_date": "2000-01-01T00:00:00Z"}}))
-
-    def test_seven_day_boundary_and_future(self):
-        self.assertFalse(self.check({KEY: {"verified_public_at": "2026-01-13T00:00:00Z", "repository_id": IDENTITY}}))
-        self.assertTrue(self.check({KEY: {"verified_public_at": "2026-01-13T00:00:01Z", "repository_id": IDENTITY}}))
-        self.assertTrue(self.check({KEY: {"verified_public_at": "2026-01-21T00:00:00Z", "repository_id": IDENTITY}}))
-
-    def test_baseline_only_approves_exact_repository_and_sha(self):
-        ledger = {KEY: {"baseline": True}}
-        self.assertFalse(self.check(ledger))
-        self.assertTrue(self.check(ledger, "example/action@" + OTHER))
-        self.assertTrue(self.check(ledger, "attacker/action@" + SHA))
-
-    def test_legacy_observation_and_recreated_repository_do_not_pass(self):
-        self.assertTrue(self.check({KEY: {"first_seen": "2000-01-01T00:00:00Z"}}))
-        self.assertTrue(self.check({KEY: {"verified_public_at": "2000-01-01T00:00:00Z",
-                                         "repository_id": IDENTITY + 1}}))
-
-    def test_baseline_cannot_be_expanded_by_reinitialization(self):
-        api = module.GitHub()
-        with patch.object(module, "GitHub", return_value=api), \
-                patch.object(api, "ledger", return_value=({"observations": {}}, SHA)):
-            with self.assertRaisesRegex(ValueError, "refusing to expand"):
-                module.observe(initialize=True)
+    def test_observation_requires_trusted_workflow_identity_and_job_time(self):
+        run = {"path": module.OBSERVER, "head_branch": "main", "event": "schedule",
+               "conclusion": "success", "head_sha": OTHER, "id": 123,
+               "head_repository": {"full_name": module.REPOSITORY}}
+        job = {"name": f"Observed {IDENTITY} {KEY}", "conclusion": "success", "completed_at": "2026-01-13T00:00:00Z"}
+        def check(run_fields=None, job_fields=None):
+            api = Mock()
+            def request(path):
+                if "/workflows/" in path:
+                    return {"workflow_runs": [{**run, **(run_fields or {})}]}
+                if "/jobs?" in path:
+                    return {"jobs": [{**job, **(job_fields or {})}]}
+                raise AssertionError(path)
+            api.request.side_effect = request
+            with patch.object(module, "public_commit", return_value=1):
+                return module.observation_error(api, KEY, IDENTITY, NOW)
+        self.assertIsNone(check())
+        for change in ({"path": "other.yml"}, {"head_branch": "other"}, {"event": "pull_request"},
+                       {"head_repository": {"full_name": "foreign/repo"}}, {"conclusion": "failure"}):
+            self.assertTrue(check(run_fields=change))
+        for change in ({"name": f"Observed 456 {KEY}"}, {"name": f"Observed {IDENTITY} example/action@{OTHER}"},
+                       {"completed_at": "2026-01-13T00:00:01Z"}, {"conclusion": "skipped"}):
+            self.assertTrue(check(job_fields=change))
 
     def test_declarations_are_data_and_versions_require_sha(self):
         files = {
@@ -173,7 +165,6 @@ class PublicationTests(unittest.TestCase):
 
     def test_published_version_can_pass_without_any_observation(self):
         api = self.api([])
-        api.ledger.return_value = (None, None)
         api.files.return_value = {".github/workflows/old.yml": "- uses: example/old@" + OTHER}
         files = {".github/workflows/new.yml": "- uses: " + KEY}
         with patch.object(module, "GitHub", return_value=api), \
@@ -183,45 +174,20 @@ class PublicationTests(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(module.check(Path("/not-read")), 0)
 
-    def test_observer_does_not_register_an_unpublished_sha(self):
-        api = self.api([])
-        ledger = {"schema": 1, "observations": {}}
-        api.ledger.return_value = (ledger, OTHER)
-        api.request.return_value = {"object": {"sha": OTHER}}
-        api.request.side_effect = None
-        api.files.return_value = {".github/workflows/test.yml": "- uses: " + KEY}
-        with patch.object(module, "GitHub", return_value=api), \
-                patch.object(module, "release_publication", return_value=None), \
-                patch.object(module, "public_commit", side_effect=ValueError("not publicly reachable")), \
-                patch.object(module, "server_time") as clock, \
-                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
-            module.observe(candidate=SHA)
-        self.assertNotIn(KEY, ledger["observations"])
-        api.write_ledger.assert_not_called()
-        clock.assert_not_called()
-
-    def test_observer_replaces_legacy_time_only_after_public_verification(self):
-        api = self.api([])
-        ledger = {"schema": 1, "observations": {KEY: {"first_seen": "2000-01-01T00:00:00Z"}}}
-        api.ledger.return_value = (ledger, OTHER)
-        api.request.side_effect = None
-        api.request.return_value = {"object": {"sha": OTHER}}
-        api.files.return_value = {".github/workflows/test.yml": "- uses: " + KEY}
-        events = []
-        def verify(*args, **kwargs):
-            events.append("verify")
-            return IDENTITY
-        def clock():
-            self.assertEqual(events[-1], "verify")
-            return "2026-01-20T00:00:00Z"
-        with patch.object(module, "GitHub", return_value=api), \
-                patch.object(module, "release_publication", return_value=None), \
-                patch.object(module, "public_commit", side_effect=verify), \
-                patch.object(module, "server_time", side_effect=clock), \
-                contextlib.redirect_stdout(io.StringIO()):
-            module.observe(candidate=SHA)
-        self.assertEqual(ledger["observations"][KEY]["verified_public_at"], "2026-01-20T00:00:00Z")
-        self.assertNotIn("first_seen", ledger["observations"][KEY])
+    def test_observer_emits_only_publicly_verified_candidates(self):
+        api = Mock()
+        api.request.side_effect = lambda path: [] if "/pulls?" in path else {"object": {"sha": SHA}}
+        api.files.side_effect = lambda repo, sha: {
+            ".github/workflows/test.yml": "- uses: " + ("example/old@" + OTHER if sha == module.MIGRATION_MAIN else KEY)}
+        for result, expected in [(ValueError("not reachable"), []), (IDENTITY, [f"{IDENTITY} {KEY}"])]:
+            with tempfile.TemporaryDirectory() as tmp:
+                output = Path(tmp) / "output"
+                with patch.dict(module.os.environ, {"GITHUB_OUTPUT": str(output)}), \
+                        patch.object(module, "GitHub", return_value=api), \
+                        patch.object(module, "release_publication", return_value=None), \
+                        patch.object(module, "public_commit", side_effect=[result]):
+                    module.observe()
+                self.assertEqual(json.loads(output.read_text().split("=", 1)[1]), expected)
 
     def test_emergency_exception_is_read_only_from_main_and_expires(self):
         api = Mock()

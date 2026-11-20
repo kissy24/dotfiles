@@ -33,6 +33,11 @@ write_outdated() {
         "$formula_version" "$cask_version" > "$OUTDATED_JSON"
 }
 
+# Run the public entry point from a foreign checkout with an unrelated module name.
+mkdir "$TMP_ROOT/project"
+printf 'This is not a Python module.\n' > "$TMP_ROOT/project/pathlib.py"
+cd "$TMP_ROOT/project"
+
 # Unknown publication remains unknown, even with an old legacy observation file.
 mkdir -p "$STATE_HOME/pkgupd"
 printf 'formula\tdemo-formula\t2.0.0\t0\n' > "$STATE_HOME/pkgupd/homebrew.tsv"

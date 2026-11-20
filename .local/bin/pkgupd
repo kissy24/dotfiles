@@ -39,7 +39,8 @@ update_homebrew() (
     command -v brew >/dev/null 2>&1 || { echo "Error: Homebrew not found." >&2; exit 1; }
     command -v python3 >/dev/null 2>&1 || { echo "Error: Python 3 is required." >&2; exit 1; }
     local repo_root
-    repo_root=$(python3 -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().parents[2])' "$0")
+    repo_root=$(python3 -I -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().parents[2])' "$0")
+    cd "$repo_root"
     TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/pkgupd.XXXXXX")
     trap 'rm -rf "$TMP_ROOT"' EXIT
     echo "Updating Homebrew metadata..."
