@@ -127,8 +127,8 @@ def stage(name, record, tags, directory, now):
         raise ValueError("OpenSSL source does not match the verified Homebrew formula")
     source = directory / filename
     verified_bytes(url, digest, source, [])
-    # Homebrew verifies the same checksum when it stages the private local copy.
-    path.write_text(recipe.replace(declaration, f'  url "{source.as_uri()}"\n  sha256 "{digest}"', 1))
+    # Preserve the canonical URL and checksum in the installed formula.
+    path.write_text(recipe)
     return path, deps
 
 
@@ -144,6 +144,27 @@ def prepare(names, installed, records, tags, directory, now):
     return staged
 
 
+def verified_formula_ref(name, contents, env):
+    # New Homebrew accepts a named formula for source builds and postinstall.
+    # A content-addressed local tap also keeps its exact recipe available on retry.
+    tap = "dotfiles-local/verified-" + hashlib.sha256(contents).hexdigest()[:24]
+    root = Path(subprocess.check_output(["brew", "--repository", tap], text=True, env=env).strip())
+    if not root.exists():
+        subprocess.run(["brew", "tap-new", "--no-git", tap], env=env, check=True)
+    path = root / "Formula" / (name + ".rb")
+    if not path.exists():
+        with tempfile.NamedTemporaryFile(dir=path.parent) as tmp:
+            tmp.write(contents)
+            tmp.flush()
+            try:
+                os.link(tmp.name, path)
+            except FileExistsError:
+                pass
+    if path.read_bytes() != contents:
+        raise ValueError("Local tap recipe does not match the verified formula: " + name)
+    return tap + "/" + name
+
+
 def install(staged, env, cellar, pending_dir, native_bottles):
     while staged:
         ready = [name for name, (_, deps) in staged.items() if not any(dep in staged for dep in deps)]
@@ -154,30 +175,39 @@ def install(staged, env, cellar, pending_dir, native_bottles):
             if bottle.suffix == ".rb":
                 version = bottle.parent.name
                 mode = "--build-from-source"
+                contents = bottle.read_bytes()
             else:
                 version = bottle.name.split("--", 1)[1].split(".bottle", 1)[0].rsplit(".", 1)[0]
                 mode = "--force-bottle"
             recipe = Path(name) / version / ".brew" / (name + ".rb")
             if mode == "--force-bottle":
                 with tarfile.open(bottle) as archive:
-                    if not archive.getmember(str(recipe)).isfile():
+                    member = archive.getmember(str(recipe))
+                    if not member.isfile():
                         raise ValueError("Missing formula in locked bottle: " + name)
+                    contents = archive.extractfile(member).read()
             # Keep a marker until the matching keg's post-install has succeeded.
             # A failed or interrupted pour may already be listed by brew.
             marker = pending_dir / name
             resume = marker.exists() and (cellar / recipe).is_file()
             marker.touch()
             options = ["--skip-link"] if name == "python@3.13" else []
-            if native_bottles and mode == "--force-bottle":
+            if native_bottles:
+                ref = verified_formula_ref(name, contents, env) if mode == "--build-from-source" else str(bottle)
+                subprocess.run(["brew", "install", "--formula", mode, "--ignore-dependencies",
+                                *options, ref], env=env, check=True)
                 if resume:
-                    # A retry must re-pour verified bytes and finish post-install.
-                    subprocess.run(["brew", "reinstall", "--force-bottle", *options, str(bottle)], env=env, check=True)
-                else:
-                    subprocess.run(["brew", "install", "--formula", mode, "--ignore-dependencies",
-                                    *options, str(bottle)], env=env, check=True)
+                    # brew may skip a keg left by an interrupted install.
+                    ref = verified_formula_ref(name, contents, env)
+                    info = json.loads(subprocess.check_output(["brew", "info", "--json=v2", "--formula", ref],
+                                                              text=True, env=env))["formulae"][0]
+                    if not options and not info["keg_only"]:
+                        subprocess.run(["brew", "link", name], env=env, check=True)
+                    subprocess.run(["brew", "postinstall", ref], env=env, check=True)
             else:
                 subprocess.run(["brew", "install", "--formula", mode, "--ignore-dependencies",
-                                "--skip-post-install", *options, str(bottle)], env=dict(env, HOMEBREW_DEVELOPER="1"), check=True)
+                                "--skip-post-install", *options, str(bottle)],
+                               env=dict(env, HOMEBREW_DEVELOPER="1"), check=True)
                 subprocess.run(["brew", "postinstall", str(cellar / recipe)], env=env, check=True)
             marker.unlink()
 

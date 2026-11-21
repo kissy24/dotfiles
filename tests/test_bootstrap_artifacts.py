@@ -42,6 +42,30 @@ class ArtifactTests(unittest.TestCase):
                 self.assertNotIn("HOMEBREW_DEVELOPER", postinstall.kwargs["env"])
                 self.assertFalse((directory / name).exists())
 
+    def test_retry_uses_verified_recipe(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            recipe = Path("example/1/.brew/example.rb")
+            installed = root / "Cellar" / recipe
+            installed.parent.mkdir(parents=True)
+            installed.touch()
+            bottle = root / "example--1.all.bottle.tar.gz"
+            with tarfile.open(bottle, "w:gz") as archive:
+                archive.add(installed, arcname=str(recipe))
+            marker = root / "example"
+            marker.touch()
+            tap = root / "local-tap"
+            (tap / "Formula").mkdir(parents=True)
+            metadata = json.dumps({"formulae": [{"keg_only": False}]})
+            with patch.object(bottles.subprocess, "check_output", side_effect=[str(tap), metadata]), \
+                    patch.object(bottles.subprocess, "run") as run:
+                bottles.install({"example": (bottle, [])}, {}, root / "Cellar", root, native_bottles=True)
+            commands = [c.args[0] for c in run.call_args_list]
+            self.assertEqual([cmd[1] for cmd in commands], ["install", "link", "postinstall"])
+            self.assertTrue(commands[-1][-1].startswith("dotfiles-local/verified-"))
+            self.assertEqual((tap / "Formula/example.rb").read_bytes(), installed.read_bytes())
+            self.assertFalse(marker.exists())
+
     def test_all_roots_have_public_evidence(self):
         records = json.loads((bottles.ROOT / "packages/homebrew-bottles.json").read_text())
         now = int(dt.datetime.now(dt.timezone.utc).timestamp())
