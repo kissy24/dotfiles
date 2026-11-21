@@ -189,7 +189,7 @@ Rust/Cargoを別途利用する場合は、必要に応じて`[[ -r "$HOME/.carg
 
 ### パッケージ更新
 
-`setup.sh`はHomebrewの既存パッケージを通常アップグレードしません。不足するパッケージと推移依存は、GitHub Packagesに7日以上前に登録された固定のOCI索引から、OS・CPUに合うbottleを選び、SHA256を確認して導入します。対応するbottleがない場合は対象名を表示して停止します。日常の更新には`pkgupd`を使います。
+`setup.sh`はHomebrewの既存パッケージを通常アップグレードしません。不足するパッケージと推移依存は、GitHub Packagesに7日以上前に登録された固定のOCI索引から、OS・CPUに合うbottleを選び、SHA256を確認して導入します。Intel MacとmacOS Sonomaでは `packages/homebrew-bottles-intel.json` の対応版を優先します。これらのMacのOpenSSLは3.5 LTSの公式ソースを自動ビルドします。対応する検証済みの配布物がない場合は対象名を表示して停止します。日常の更新には`pkgupd`を使います。
 
 `pkgupd`は更新候補を検出し、**実際に取得する配布物の信頼できる公開日時から7日**経過したものだけを自動更新します。ローカルの初回検出から数える方式は廃止しました。古い`homebrew.tsv`は参照せず、削除もしません。
 

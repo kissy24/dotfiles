@@ -9,16 +9,30 @@ on:
 permissions:
   actions: read
   contents: read
-  packages: read
 
 jobs:
+  bottles:
+    name: Verify Homebrew distribution records
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check_bottle_registry.py
+
   validate:
+    needs: bottles
     name: Validate on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-26-intel]
 
     steps:
       - name: Checkout repository
@@ -81,11 +95,6 @@ jobs:
             echo "Brewfile still contains the replaced tmux dependency." >&2
             exit 1
           fi
-
-      - name: Verify public Homebrew package versions before setup
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: python3 scripts/check_bottle_registry.py
 
       - name: Run complete setup
         env:

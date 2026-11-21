@@ -9,28 +9,10 @@ import platform
 import shutil
 import tarfile
 import tempfile
-from urllib.parse import quote
 
 from dependency_observations import GitHub
-from install_bottles import ROOT, host_tags, stage, verified_bytes
-from release_age import age_error, epoch
-
-
-def release_asset(api, spec, filename, now):
-    release = api.request("/repos/" + spec["repository"] + "/releases/tags/" + quote(spec["tag"], safe=""))
-    pin = spec["assets"][filename]
-    matches = [a for a in release["assets"] if a["id"] == pin["id"] and a["name"] == filename]
-    if release["draft"] or len(matches) != 1 or matches[0]["digest"] != "sha256:" + pin["sha256"]:
-        raise ValueError("Release does not contain the pinned asset: " + filename)
-    asset = matches[0]
-    published = max((release["published_at"], asset["updated_at"]), key=epoch)
-    error = age_error(filename, published, now)
-    if error:
-        raise ValueError(error)
-    url = "https://github.com/" + spec["repository"] + "/releases/download/" + spec["tag"] + "/" + filename
-    if asset["browser_download_url"] != url:
-        raise ValueError("Release URL mismatch: " + filename)
-    return url, pin["sha256"]
+from install_bottles import ROOT, host_tags, locked_bottles, stage, verified_bytes
+from release_assets import locked_asset, release_asset
 
 
 def unpack_lua(archive, destination):
@@ -52,15 +34,14 @@ def unpack_lua(archive, destination):
 def install():
     base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share")) / "dotfiles-lsp/native"
     base.mkdir(parents=True, exist_ok=True)
-    api = GitHub()
     now = int(dt.datetime.now(dt.timezone.utc).timestamp())
     specs = json.loads((ROOT / "packages/native-lsp.json").read_text())
-    bottles = json.loads((ROOT / "packages/homebrew-bottles.json").read_text())
+    bottles = locked_bottles(host_tags())
     osname = {"Darwin": "darwin", "Linux": "linux"}[platform.system()]
     arch = {"arm64": "arm64", "aarch64": "arm64", "x86_64": "x64"}[platform.machine()]
     lua = "lua-language-server-" + specs["lua"]["tag"] + "-" + osname + "-" + arch + ".tar.gz"
     marksman = "marksman-macos" if osname == "darwin" else "marksman-linux-" + arch
-    assets = {name: release_asset(api, specs[name], filename, now)
+    assets = {name: locked_asset(specs[name], filename, now)
               for name, filename in (("lua", lua), ("marksman", marksman))}
     identity = hashlib.sha256((assets["lua"][1] + assets["marksman"][1] + bottles["gopls"]["digest"]).encode()).hexdigest()
     target = base / identity
@@ -103,7 +84,9 @@ if __name__ == "__main__":
     if parser.parse_args().check:
         api = GitHub()
         now = int(dt.datetime.now(dt.timezone.utc).timestamp())
-        for spec in json.loads((ROOT / "packages/native-lsp.json").read_text()).values():
+        specs = list(json.loads((ROOT / "packages/native-lsp.json").read_text()).values())
+        specs.append(json.loads((ROOT / "packages/bootstrap.json").read_text())["openssl_source"])
+        for spec in specs:
             for filename in spec["assets"]:
                 release_asset(api, spec, filename, now)
     else:
