@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 import platform
 import re
+import subprocess
 import sys
-import urllib.request
 from urllib.parse import urlsplit
 
 from dependency_observations import GitHub, trusted_exceptions
@@ -19,8 +19,11 @@ LOCK = ROOT / "packages" / "bootstrap-wheels.json"
 
 
 def fetch(url):
-    with urllib.request.urlopen(url, timeout=60) as response:
-        return response.read()
+    return subprocess.check_output([
+        "curl", "-q", "--fail", "--silent", "--show-error", "--proto", "=https",
+        "--proto-redir", "=https", "--location", "--connect-timeout", "20",
+        "--max-time", "120", "--retry", "2", url,
+    ])
 
 
 def stage_package(name, record, directory, now):
