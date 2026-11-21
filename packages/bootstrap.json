@@ -14,5 +14,10 @@
         "published_at": "2026-09-29T14:10:08Z"
       }
     }
+  },
+  "homebrew_portable_ruby": {
+    "version": "4.0.9",
+    "digest": "58021844487b93d5b6ea06a97538f66bf6d7321a18fccb410b26f936b9e4a0bd",
+    "id": 1433286544
   }
 }

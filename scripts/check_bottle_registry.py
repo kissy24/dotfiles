@@ -13,7 +13,7 @@ from release_age import age_error
 PACKAGES = Path(__file__).resolve().parents[1] / "packages"
 
 
-def verify(name, record, now):
+def verify(name, record, now, capture_date=False):
     image = "core/" + name.replace("@", "/").replace("+", "x")
     api = GitHub()
     prefix = "/orgs/Homebrew/packages/container/" + quote(image, safe="")
@@ -28,13 +28,16 @@ def verify(name, record, now):
     error = age_error(name, published, now)
     if error:
         raise ValueError(error)
-    if published != record["published_at"]:
+    if not capture_date and published != record["published_at"]:
         raise ValueError("Registry publication date mismatch: " + name)
     return published
 
 
 def main():
     now = int(dt.datetime.now(dt.timezone.utc).timestamp())
+    bootstrap = json.loads((PACKAGES / "bootstrap.json").read_text())
+    runtime = bootstrap["homebrew_portable_ruby"]
+    print("portable-ruby", verify("portable-ruby", runtime, now, capture_date="published_at" not in runtime), flush=True)
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
         for lock in sorted(PACKAGES.glob("homebrew-bottles*.json")):
             records = json.loads(lock.read_text())
