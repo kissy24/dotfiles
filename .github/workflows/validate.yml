@@ -7,18 +7,38 @@ on:
     branches: [main]
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
+  bottles:
+    name: Verify Homebrew distribution records
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check_bottle_registry.py
+
   validate:
+    needs: bottles
+    if: ${{ !cancelled() }}
     name: Validate on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-26-intel]
 
     steps:
+      - name: Require verified public distributions
+        if: needs.bottles.result != 'success'
+        run: exit 1
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -77,6 +97,19 @@ jobs:
           grep -Eq '^hide_tab_bar_when_single_tab[[:space:]]*=[[:space:]]*true$' .config/herdr/config.toml
           if grep -q '^brew "tmux"' Brewfile; then
             echo "Brewfile still contains the replaced tmux dependency." >&2
+            exit 1
+          fi
+
+      - name: Exercise first-time Homebrew bootstrap on the disposable Ubuntu runner
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          prefix=/home/linuxbrew/.linuxbrew
+          if [ -d "$prefix" ]; then
+            sudo mv "$prefix" "$RUNNER_TEMP/preinstalled-homebrew"
+          fi
+          if command -v brew >/dev/null; then
+            echo "Unexpected preinstalled Homebrew outside the Linuxbrew prefix" >&2
             exit 1
           fi
 

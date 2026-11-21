@@ -19,15 +19,30 @@ jobs:
     if: github.repository == 'kissy24/dotfiles' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pull-requests: read
+    outputs:
+      observations: ${{ steps.verify.outputs.observations }}
     steps:
       - name: Check out trusted main only
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Verify public fallback commits without executing PR code
+      - id: verify
+        name: Verify public fallback commits without executing PR code
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 scripts/dependency_observations.py observe
+
+  record:
+    needs: observe
+    if: needs.observe.outputs.observations != '[]'
+    runs-on: ubuntu-latest
+    permissions: {}
+    strategy:
+      matrix:
+        observation: ${{ fromJSON(needs.observe.outputs.observations) }}
+    name: Observed ${{ matrix.observation }}
+    steps:
+      - run: echo 'Public observation recorded.'

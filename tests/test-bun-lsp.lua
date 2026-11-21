@@ -4,6 +4,9 @@ assert(vim.wait(15000, function()
     client = vim.lsp.get_clients({ bufnr = 0, name = name })[1]
     return client and client.initialized
 end, 100), name .. " did not initialize")
+local data_home = vim.env.XDG_DATA_HOME or (vim.env.HOME .. "/.local/share")
+assert(client.config.cmd_cwd == data_home .. "/dotfiles-lsp", "Bun must start in its managed directory")
+assert(client.config.root_dir == vim.fn.expand("%:p:h"), "LSP workspace must be the edited project")
 assert(client.config.cmd[1] == "bun", name .. " must run through Bun")
 assert(vim.fn.maparg("<leader>cf", "n", false, true).desc, "LSP format mapping is missing")
 assert(vim.fn.maparg("<leader>f", "n") == "", "LSP format must not shadow the search prefix")

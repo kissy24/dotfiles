@@ -1,5 +1,24 @@
 {
   "homebrew_install_commit": "85d1a3fc80d8a63932f632aca8f787de11d14a64",
   "homebrew_install_sha256": "5f333bbe53bc490e51e7ccb1df8779b3dd6ee73a1a7379efda216edb08ccb148",
-  "pre_commit_version": "4.7.0"
+  "pre_commit_version": "4.7.0",
+  "homebrew_version": "7.0.12",
+  "homebrew_commit": "bf464f57275cae0be106b43d190c98564ac59b0e",
+  "openssl_source": {
+    "repository": "openssl/openssl",
+    "tag": "openssl-3.5.9",
+    "assets": {
+      "openssl-3.5.9.tar.gz": {
+        "id": 598377651,
+        "sha256": "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
+        "published_at": "2026-09-29T14:10:08Z"
+      }
+    }
+  },
+  "homebrew_portable_ruby": {
+    "version": "4.0.9",
+    "digest": "58021844487b93d5b6ea06a97538f66bf6d7321a18fccb410b26f936b9e4a0bd",
+    "id": 1433286544,
+    "published_at": "2026-10-23T08:01:14Z"
+  }
 }

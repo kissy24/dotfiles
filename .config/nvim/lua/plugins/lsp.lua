@@ -27,9 +27,19 @@ return {
             },
         })
 
-        -- npm由来のLanguage ServerはNode/MasonではなくBunで管理する。
         local data_home = vim.env.XDG_DATA_HOME or (vim.env.HOME .. "/.local/share")
-        local bun_lsp_bin = data_home .. "/dotfiles-lsp/node_modules/.bin/"
+        local lsp_dir = data_home .. "/dotfiles-lsp"
+        local native = lsp_dir .. "/native/current/"
+        local native_servers = {
+            lua_ls = { native .. "lua/bin/lua-language-server" },
+            marksman = { native .. "marksman", "server" },
+            gopls = { native .. "gopls" },
+        }
+        for name, cmd in pairs(native_servers) do
+            vim.lsp.config(name, { cmd = cmd })
+            vim.lsp.enable(name)
+        end
+        local bun_lsp_bin = lsp_dir .. "/node_modules/.bin/"
         local bun_servers = {
             html = "vscode-html-language-server",
             cssls = "vscode-css-language-server",
@@ -39,6 +49,8 @@ return {
         for server_name, executable in pairs(bun_servers) do
             vim.lsp.config(server_name, {
                 cmd = { "bun", bun_lsp_bin .. executable, "--stdio" },
+                -- Bun reads runtime configuration from its process working directory.
+                cmd_cwd = lsp_dir,
             })
             vim.lsp.enable(server_name)
         end

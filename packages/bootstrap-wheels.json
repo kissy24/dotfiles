@@ -1,0 +1,123 @@
+{
+  "cfgv": {
+    "version": "3.5.0",
+    "wheels": {
+      "cfgv-3.5.0-py2.py3-none-any.whl": "a8dc6b26ad22ff227d2634a65cb388215ce6cc96bbcc5cfde7641ae87e8dacc0"
+    }
+  },
+  "distlib": {
+    "version": "0.4.4",
+    "wheels": {
+      "distlib-0.4.4-py2.py3-none-any.whl": "cf09d55b1e85a89576b036aeb71550bfd68320f3f21761ca329eadadad918638"
+    }
+  },
+  "filelock": {
+    "version": "4.2.10",
+    "wheels": {
+      "filelock-4.2.10-py3-none-any.whl": "9479aaeb4db20b5a53e3da28493edd24720b66b8a0b84030aa56ccdf243d6857"
+    }
+  },
+  "identify": {
+    "version": "2.6.20",
+    "wheels": {
+      "identify-2.6.20-py2.py3-none-any.whl": "6a16b69b93187244e0548cbfd25b3e4a6f9a7a2ad784625c3bec2b8d27b81aaa"
+    }
+  },
+  "nodeenv": {
+    "version": "1.12.0",
+    "wheels": {
+      "nodeenv-1.12.0-py3-none-any.whl": "80644d65c10cc2be12e3e4b54b3367ff288c7ad24ae75c2dcc65454fc7449d4d"
+    }
+  },
+  "packaging": {
+    "version": "26.3",
+    "wheels": {
+      "packaging-26.3-py3-none-any.whl": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+    }
+  },
+  "platformdirs": {
+    "version": "4.14.5",
+    "wheels": {
+      "platformdirs-4.14.5-py3-none-any.whl": "8e778c6fa421516f4d3369449f8df3b0e1b72c0e0005fe88e3ec772d0a14e750"
+    }
+  },
+  "pre-commit": {
+    "version": "4.7.0",
+    "wheels": {
+      "pre_commit-4.7.0-py2.py3-none-any.whl": "2e229038ad3656081b70c27913157e4b636ef306f643f024a8a8e3f0f7b2f877"
+    }
+  },
+  "python-discovery": {
+    "version": "1.9.5",
+    "wheels": {
+      "python_discovery-1.9.5-py3-none-any.whl": "a1fae8fca11e4bc61e38491c2aafff29e430b3c5e272d51ae52fb895bc4c0fac"
+    }
+  },
+  "pyyaml": {
+    "version": "6.0.3",
+    "wheels": {
+      "pyyaml-6.0.3-cp311-cp311-macosx_10_13_x86_64.whl": "44edc647873928551a01e7a563d7452ccdebee747728c1080d881d68af7b997e",
+      "pyyaml-6.0.3-cp311-cp311-macosx_11_0_arm64.whl": "652cb6edd41e718550aad172851962662ff2681490a8a711af6a4d288dd96824",
+      "pyyaml-6.0.3-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "10892704fc220243f5305762e276552a0395f7beb4dbf9b14ec8fd43b57f126c",
+      "pyyaml-6.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "b8bb0864c5a28024fac8a632c443c87c5aa6f215c0b126c449ae1a150412f31d",
+      "pyyaml-6.0.3-cp312-cp312-macosx_10_13_x86_64.whl": "7f047e29dcae44602496db43be01ad42fc6f1cc0d8cd6c83d342306c32270196",
+      "pyyaml-6.0.3-cp312-cp312-macosx_11_0_arm64.whl": "fc09d0aa354569bc501d4e787133afc08552722d3ab34836a80547331bb5d4a0",
+      "pyyaml-6.0.3-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "9149cad251584d5fb4981be1ecde53a1ca46c891a79788c0df828d2f166bda28",
+      "pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc",
+      "pyyaml-6.0.3-cp313-cp313-macosx_10_13_x86_64.whl": "8da9669d359f02c0b91ccc01cac4a67f16afec0dac22c2ad09f46bee0697eba8",
+      "pyyaml-6.0.3-cp313-cp313-macosx_11_0_arm64.whl": "2283a07e2c21a2aa78d9c4442724ec1eb15f5e42a723b99cb3d822d48f5f7ad1",
+      "pyyaml-6.0.3-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "ee2922902c45ae8ccada2c5b501ab86c36525b883eff4255313a253a3160861c",
+      "pyyaml-6.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "0f29edc409a6392443abf94b9cf89ce99889a1dd5376d94316ae5145dfedd5d6",
+      "pyyaml-6.0.3-cp314-cp314-macosx_10_13_x86_64.whl": "8d1fab6bb153a416f9aeb4b8763bc0f22a5586065f86f7664fc23339fc1c1fac",
+      "pyyaml-6.0.3-cp314-cp314-macosx_11_0_arm64.whl": "34d5fcd24b8445fadc33f9cf348c1047101756fd760b4dacb5c3e99755703310",
+      "pyyaml-6.0.3-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "501a031947e3a9025ed4405a168e6ef5ae3126c59f90ce0cd6f2bfc477be31b7",
+      "pyyaml-6.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "c458b6d084f9b935061bc36216e8a69a7e293a2f1e68bf956dcd9e6cbcd143f5",
+      "pyyaml-6.0.3-cp314-cp314t-macosx_10_13_x86_64.whl": "02893d100e99e03eda1c8fd5c441d8c60103fd175728e23e431db1b589cf5ab3",
+      "pyyaml-6.0.3-cp314-cp314t-macosx_11_0_arm64.whl": "c1ff362665ae507275af2853520967820d9124984e0f7466736aea23d8611fba",
+      "pyyaml-6.0.3-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "6adc77889b628398debc7b65c073bcb99c4a0237b248cacaf3fe8a557563ef6c",
+      "pyyaml-6.0.3-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "00c4bdeba853cc34e7dd471f16b4114f4162dc03e6b7afcc2128711f0eca823c"
+    }
+  },
+  "ruamel-yaml": {
+    "version": "0.19.1",
+    "wheels": {
+      "ruamel_yaml-0.19.1-py3-none-any.whl": "27592957fedf6e0b62f281e96effd28043345e0e66001f97683aa9a40c667c93"
+    }
+  },
+  "setuptools": {
+    "version": "84.2.1",
+    "wheels": {
+      "setuptools-84.2.1-py3-none-any.whl": "ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2"
+    }
+  },
+  "setuptools-download": {
+    "version": "1.1.0",
+    "wheels": {
+      "setuptools_download-1.1.0-py2.py3-none-any.whl": "f11d92f40622df97390e249316366f868cbcdd1100a7569d0f22973e405028f7"
+    }
+  },
+  "setuptools-scm": {
+    "version": "10.3.4",
+    "wheels": {
+      "setuptools_scm-10.3.4-py3-none-any.whl": "82f34c3e3084fc2b57d397200637cc13f2338004052d2fee47baa5f0e902464e"
+    }
+  },
+  "vcs-versioning": {
+    "version": "2.6.0",
+    "wheels": {
+      "vcs_versioning-2.6.0-py3-none-any.whl": "f8bebd1302ebc12e67ceb30fc7dd698ec969414b6fa43b30c3f14ac9b1e72c41"
+    }
+  },
+  "virtualenv": {
+    "version": "21.15.6",
+    "wheels": {
+      "virtualenv-21.15.6-py3-none-any.whl": "4b99ab9b95ff11043939bb4cad2fa0449175fa5a478372864f62160cb6c1a7ed"
+    }
+  },
+  "wheel": {
+    "version": "0.48.0",
+    "wheels": {
+      "wheel-0.48.0-py3-none-any.whl": "3217dcc807155e45db462d7ef2431f5ddda0d7273b700d05a67b271ceb1287ab"
+    }
+  }
+}
