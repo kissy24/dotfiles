@@ -89,7 +89,7 @@ wsl.exe --shutdown
 
 以前のセットアップが作った`~/.config/gh`のディレクトリリンクは、次回セットアップ時に通常のディレクトリへ移行します。中のローカルファイルは権限を保ってコピーし、旧リンクもバックアップします。リポジトリ内に残っているGit管理対象外の`hosts.yml`などは削除しません。別の場所を指す利用者独自のディレクトリリンクは、`--force`でも変更せずスキップします。
 
-NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合は、隔離した検証環境で`:Lazy update`を実行し、更新した`lazy-lock.json`を作業コピーへ戻して差分と動作を検証し、コミットしてください。日常環境のNeovimでロックファイルを更新するとcheckoutも直接変更されるため、依存関係の公開後待機を含む検証は隔離環境で先に行ってください。Markdown表示には`render-markdown.nvim`とNeovim同梱の`markdown`・`markdown_inline`パーサーを使います。Lua、Markdown、GoのLanguage Serverはセットアップ時に検証済みの配布物から `dotfiles-lsp/native` へ導入します。Neovimはこのディレクトリの実行ファイルを使います。Neovim起動だけでLSPをインストールする処理は無効です。HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
+NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合は、隔離した検証環境で`:Lazy update`を実行し、更新した`lazy-lock.json`を作業コピーへ戻して差分と動作を検証し、コミットしてください。日常環境のNeovimでロックファイルを更新するとcheckoutも直接変更されるため、依存関係の公開後待機を含む検証は隔離環境で先に行ってください。Markdown表示には`render-markdown.nvim`とNeovim同梱の`markdown`・`markdown_inline`パーサーを使います。Lua、Markdown、GoのLanguage Serverはセットアップ時に検証済みの配布物から `dotfiles-lsp/native` へ導入します。Neovimはこのディレクトリの実行ファイルを使います。Neovim起動だけでLSPをインストールする処理は無効です。HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。 Bunで動かすLSPの作業ディレクトリは管理下の `dotfiles-lsp` に固定し、編集対象はLSPのワークスペースとして渡します。
 
 JavaScript・TypeScriptの編集に `ts_ls` は使用しません。Masonにインストール済みでも自動起動の対象外です。Bun依存を更新する際は`packages/bun-lsp/`で`bun update --minimum-release-age 604800 --lockfile-only --ignore-scripts`を実行し、公開から7日経過した候補だけを採用します。更新後は依存関係のクールダウン検査とスモークテストで、Bun上の全LSPの初期化、およびPythonの型診断を確認します。
 
@@ -232,7 +232,7 @@ GitHub ActionsでUbuntuとmacOSのセットアップスクリプトを検証し�
 pre-commit run --all-files
 ```
 
-GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定しています。検証CIの`GITHUB_TOKEN`は`contents: read`に制限し、checkout後のGit認証情報も保存しません。観測記録を更新するmain専用ジョブだけが`contents: write`を持ちます。
+GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定しています。検証CIの`GITHUB_TOKEN`にはリポジトリ内容とActions履歴の読み取り権限を付与し、checkout後のGit認証情報も保存しません。依存観測も読み取り権限で実行します。
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。加えて`Scan Secret History`はPR・mainへのPush・週次実行で全履歴を取得し、`betterleaks-history`でPR途中のコミットを含む到達可能な履歴全体を走査します。後続コミットで削除された秘密も対象です。ローカルでは`pre-commit run betterleaks-history --hook-stage manual --all-files`を使います。
 
@@ -260,9 +260,9 @@ GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-eol.sh
 
 GitHub Releaseの`created_at`、Gitのauthor/committer/tagger日時は公開日時として使いません。変更可能なタグとReleaseの古い日付だけでは、現在のコードが以前から公開されていた証明にならないため、実物確認付き観測へ回します。Releaseのないfzf-lua等もこの補助方式です。ネットワーク・APIの失敗を「7日経過済み」として扱いません。
 
-`Observe Dependency Versions`はmainのコードだけを実行し、mainと公開中PRの宣言をデータとして読みます。依存先が公開・保守中で、固定SHAが実在し、そのリポジトリのdefault branch履歴から到達できることをAPIで確認した**後**に、GitHubサーバー時刻を`verified_public_at`として記録します。PRのコードや依存コードは実行しません。リポジトリIDも保存して、同名リポジトリの作り直しを別物として扱います。公開Releaseから判定できる候補に、追加のローカル待機を課しません。
+依存関係の観測はmain専用の `Observe Dependency Versions` が行います。mainと公開PRの宣言をデータとして読み、公開リポジトリのdefault branchから到達できるSHAとリポジトリIDを検証します。検証できた組み合わせをActionsのジョブに記録し、GitHubが付与したジョブ完了時刻から7日を数えます。検査時にも依存先の公開状態、SHA、リポジトリID、観測元workflow、実行ブランチとmain履歴への到達可能性を照合します。Actionsの観測履歴が失われた場合は再観測が必要です。
 
-台帳は`chore/dependency-observations`ブランチに保存し、mainへのPush、6時間ごとの定期実行、mainからの手動実行で更新します。旧`first_seen`は実物確認の証拠として使わず、新observerで確認し直した時点から数えます。既に採用済みのGit依存だけは、移行前の承認済みmain `a83ade427f8c29ca2399615e5f74a112362f5cdb`の宣言を固定した移行承認として維持します。これは公開日時の証明ではなく、新しいSHAを追加できる包括的な免除でもありません。
+移行承認の対象は固定コミット `a83ade427f8c29ca2399615e5f74a112362f5cdb` にあるGit依存だけです。旧観測ブランチは判定・更新の対象外です。観測はmainへのPush時、6時間ごとの定期実行、mainからの手動実行で行います。
 
 セットアップはパッケージ導入・設定配備より先に管理対象のGit/npm/PyPI検査を実行し、失敗なら停止します。CIの完全セットアップも同じ入口を使います。秘密情報履歴CIもhookの導入前に検査します。APIトークンはセットアップの検査子プロセスにだけ渡し、依存のインストール処理には引き継ぎません。GitHub API制限に達する場合は、`gh auth login`済みの環境または検査用の`GITHUB_TOKEN`を利用してください。
 
@@ -270,7 +270,7 @@ GitHub Releaseの`created_at`、Gitのauthor/committer/tagger日時は公開日�
 
 緊急セキュリティ修正は、ユーザーの明示承認を得て`packages/dependency-exceptions.json`へ正確な対象・理由・承認PR URL・期限（最大7日）を記録します。Gitは`owner/repo@完全SHA`、npmは`npm:名前@固定版`、PyPIは`pypi:pre-commit@固定版`をキーとし、値には`reason`、`approval_url`、`expires_at`（タイムゾーン付きISO 8601）を指定します。検査は**main上の承認済みファイルだけ**を参照するため、依存変更PRで追加した自己承認は効きません。例外で省略できるのは待機時間だけで、存在・公開状態・integrityの検証は省略しません。現在の例外は空です。
 
-待機条件だけが未達の候補は、他の検証結果と未達理由を明記したDraft PRとして提案できます。実物観測が必要ならmainのobserverを実行し、表示された期限後に同じSHAでCIを再実行します。旧observerから新observerへの移行は、この変更がmainへマージされた後に有効になります。待機中は完全セットアップCIが停止することが正常で、成功・導入完了とは報告しません。
+待機条件だけが未達の候補は、他の検証結果と未達理由を明記したDraft PRとして提案できます。実物観測が必要ならmainのobserverを実行し、表示された期限後に同じSHAでCIを再実行します。待機中は完全セットアップCIが停止することが正常で、成功・導入完了とは報告しません。
 
 ```sh
 GITHUB_TOKEN="$(gh auth token)" ./scripts/check-dependency-cooldown.sh

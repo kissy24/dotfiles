@@ -160,14 +160,21 @@ done
 
 echo "Checking Python, HTML, CSS, and JSON language servers through Bun..."
 mkdir -p "$TMP_ROOT/bun-lsp"
+git -C "$TMP_ROOT/bun-lsp" init -q
+# An invalid project-local runtime config must not prevent any managed LSP from starting.
+printf '[invalid TOML\n' > "$TMP_ROOT/bun-lsp/bunfig.toml"
 printf '{"typeCheckingMode":"basic"}\n' > "$TMP_ROOT/bun-lsp/pyrightconfig.json"
 printf 'answer: int = "wrong"\n' > "$TMP_ROOT/bun-lsp/smoke.py"
 printf '<!doctype html><html><body>smoke</body></html>\n' > "$TMP_ROOT/bun-lsp/smoke.html"
 printf 'body { color: red; }\n' > "$TMP_ROOT/bun-lsp/smoke.css"
 printf '{"answer":42}\n' > "$TMP_ROOT/bun-lsp/smoke.json"
 for spec in pyright:py html:html cssls:css jsonls:json; do
-    DOTFILES_TEST_LSP="${spec%%:*}" ./scripts/run-nvim-check.sh \
-        'dofile("tests/test-bun-lsp.lua")' "$TMP_ROOT/bun-lsp/smoke.${spec##*:}"
+    (
+        repo_root=$PWD
+        cd "$TMP_ROOT/bun-lsp"
+        DOTFILES_TEST_LSP="${spec%%:*}" DOTFILES_TEST_ROOT="$repo_root" "$repo_root/scripts/run-nvim-check.sh" \
+            'dofile(vim.env.DOTFILES_TEST_ROOT .. "/tests/test-bun-lsp.lua")' "smoke.${spec##*:}"
+    )
 done
 
 echo "Checking Neovim Markdown rendering with bundled parsers..."
