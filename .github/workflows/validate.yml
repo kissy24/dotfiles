@@ -100,6 +100,19 @@ jobs:
             exit 1
           fi
 
+      - name: Exercise first-time Homebrew bootstrap on the disposable Ubuntu runner
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          prefix=/home/linuxbrew/.linuxbrew
+          if [ -d "$prefix" ]; then
+            sudo mv "$prefix" "$RUNNER_TEMP/preinstalled-homebrew"
+          fi
+          if command -v brew >/dev/null; then
+            echo "Unexpected preinstalled Homebrew outside the Linuxbrew prefix" >&2
+            exit 1
+          fi
+
       - name: Run complete setup
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
