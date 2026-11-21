@@ -29,7 +29,7 @@ cd dotfiles
 
 元の設定へ戻す場合は、`./uninstall.sh`で管理対象のリンクを解除してから、表示された退避先の`original`を元のパスへ移動してください。復元先にファイルやディレクトリが残っている場合は、内容を確認して別の場所へ退避してから戻します。複数のバックアップがある場合は復元したいものを選びます。Windows側の`.wslconfig`も同じ方式で退避します。
 
-パッケージの宣言は`Brewfile`、`packages/apt.txt`、`packages/bun-lsp/package.json`にあります。SheldonとMasonの依存関係は、それぞれの設定ファイルで管理します。HomebrewインストーラーのSHA・SHA256とpre-commit本体の版は`packages/bootstrap.json`で管理します。
+パッケージの宣言は`Brewfile`、`packages/apt.txt`、`packages/bun-lsp/package.json`にあります。Sheldonの依存はプラグイン設定、ネイティブLSPは `packages/native-lsp.json` と `packages/homebrew-bottles.json` で管理します。HomebrewインストーラーのSHA・SHA256とpre-commit本体の版は`packages/bootstrap.json`で管理します。
 
 ## 設定の反映とレビュー
 
@@ -89,7 +89,7 @@ wsl.exe --shutdown
 
 以前のセットアップが作った`~/.config/gh`のディレクトリリンクは、次回セットアップ時に通常のディレクトリへ移行します。中のローカルファイルは権限を保ってコピーし、旧リンクもバックアップします。リポジトリ内に残っているGit管理対象外の`hosts.yml`などは削除しません。別の場所を指す利用者独自のディレクトリリンクは、`--force`でも変更せずスキップします。
 
-NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合は、隔離した検証環境で`:Lazy update`を実行し、更新した`lazy-lock.json`を作業コピーへ戻して差分と動作を検証し、コミットしてください。日常環境のNeovimでロックファイルを更新するとcheckoutも直接変更されるため、依存関係の公開後待機を含む検証は隔離環境で先に行ってください。Markdown表示には`render-markdown.nvim`とNeovim同梱の`markdown`・`markdown_inline`パーサーを使います。Lua、Markdown、GoのLanguage ServerはMason設定内の`dotfiles_versions`で版を固定し、セットアップ時にインストール済みの版も確認・同期します。Neovim起動だけでLSPをインストールする処理は無効です。HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
+NeovimプラグインはGit管理する`.config/nvim/lazy-lock.json`に固定し、セットアップでは`Lazy! restore`で固定版を復元します。Lazy.nvim自体も初回導入時にロックファイルのコミットを取得してから読み込みます。意図的に更新する場合は、隔離した検証環境で`:Lazy update`を実行し、更新した`lazy-lock.json`を作業コピーへ戻して差分と動作を検証し、コミットしてください。日常環境のNeovimでロックファイルを更新するとcheckoutも直接変更されるため、依存関係の公開後待機を含む検証は隔離環境で先に行ってください。Markdown表示には`render-markdown.nvim`とNeovim同梱の`markdown`・`markdown_inline`パーサーを使います。Lua、Markdown、GoのLanguage Serverはセットアップ時に検証済みの配布物から `dotfiles-lsp/native` へ導入します。Neovimはこのディレクトリの実行ファイルを使います。Neovim起動だけでLSPをインストールする処理は無効です。HTML、CSS、JSON、PythonのLanguage Serverは追跡対象のBun manifestからインストールしてBunで実行します。
 
 JavaScript・TypeScriptの編集に `ts_ls` は使用しません。Masonにインストール済みでも自動起動の対象外です。Bun依存を更新する際は`packages/bun-lsp/`で`bun update --minimum-release-age 604800 --lockfile-only --ignore-scripts`を実行し、公開から7日経過した候補だけを採用します。更新後は依存関係のクールダウン検査とスモークテストで、Bun上の全LSPの初期化、およびPythonの型診断を確認します。
 
@@ -189,7 +189,7 @@ Rust/Cargoを別途利用する場合は、必要に応じて`[[ -r "$HOME/.carg
 
 ### パッケージ更新
 
-`setup.sh`はHomebrewの既存パッケージを通常アップグレードしません。新規パッケージの導入に必須な依存の変更はHomebrewの判断で発生する場合があります。日常の更新には`pkgupd`を使います。
+`setup.sh`はHomebrewの既存パッケージを通常アップグレードしません。不足するパッケージと推移依存は、GitHub Packagesに7日以上前に登録された固定のOCI索引から、OS・CPUに合うbottleを選び、SHA256を確認して導入します。対応するbottleがない場合は対象名を表示して停止します。日常の更新には`pkgupd`を使います。
 
 `pkgupd`は更新候補を検出し、**実際に取得する配布物の信頼できる公開日時から7日**経過したものだけを自動更新します。ローカルの初回検出から数える方式は廃止しました。古い`homebrew.tsv`は参照せず、削除もしません。
 
@@ -266,7 +266,7 @@ GitHub Releaseの`created_at`、Gitのauthor/committer/tagger日時は公開日�
 
 セットアップはパッケージ導入・設定配備より先に管理対象のGit/npm/PyPI検査を実行し、失敗なら停止します。CIの完全セットアップも同じ入口を使います。秘密情報履歴CIもhookの導入前に検査します。APIトークンはセットアップの検査子プロセスにだけ渡し、依存のインストール処理には引き継ぎません。GitHub API制限に達する場合は、`gh auth login`済みの環境または検査用の`GITHUB_TOKEN`を利用してください。
 
-**検査範囲には限界があります。** Homebrewの初回セットアップ、Homebrew自身、APT、Masonが解決する配布物、pre-commit/PyPIの推移依存すべての公開日時をこの検査で保証するものではありません。初回Homebrew導入は明示的な`setup.sh`実行による導入として扱い、既存パッケージの自動アップグレードはしません。これらの宣言を変更する場合も、同じ方針で公開情報・同一性・間接依存を確認し、証拠を取得できないものは手動確認対象としてPRに明記します。7日経過は安全性の保証ではなく、既知の脆弱性・EOL・署名・ハッシュ・レビューの代替にはなりません。
+初回セットアップのHomebrew用ロックは `packages/homebrew-bottles.json` です。更新PRのCIは公式レジストリのパッケージ版ID、登録日時、索引のSHA256を照合します。セットアップではロックの日時と索引を検証し、索引に記録されたbottleのSHA256と依存関係を使います。UbuntuでHomebrew自体がない場合は固定リリースからインストールします。LuaLS・MarksmanはGitHubのrelease asset ID・SHA256・公開日時と更新日時を確認し、goplsは固定bottle内の単体実行ファイルを使います。APTはOSの署名済みリポジトリとセキュリティ更新方針に従います。すでに端末にあるツールは既存の信頼対象です。
 
 緊急セキュリティ修正は、ユーザーの明示承認を得て`packages/dependency-exceptions.json`へ正確な対象・理由・承認PR URL・期限（最大7日）を記録します。Gitは`owner/repo@完全SHA`、npmは`npm:名前@固定版`、PyPIは`pypi:pre-commit@固定版`をキーとし、値には`reason`、`approval_url`、`expires_at`（タイムゾーン付きISO 8601）を指定します。検査は**main上の承認済みファイルだけ**を参照するため、依存変更PRで追加した自己承認は効きません。例外で省略できるのは待機時間だけで、存在・公開状態・integrityの検証は省略しません。現在の例外は空です。
 

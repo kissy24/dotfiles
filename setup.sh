@@ -63,7 +63,7 @@ VERIFY
         return 1
     fi
     local status=0
-    NONINTERACTIVE=1 /bin/bash "$installer" || status=$?
+    bash "$REPO_ROOT/scripts/run-homebrew-installer.sh" "$installer" "$REPO_ROOT/packages/bootstrap.json" || status=$?
     rm -f "$installer"
     return "$status"
 }
@@ -106,7 +106,7 @@ ensure_homebrew() {
 
 install_brew_packages() {
     echo "Installing Homebrew packages..."
-    HOMEBREW_NO_INSTALL_UPGRADE=1 brew bundle install --no-upgrade --file="$REPO_ROOT/Brewfile"
+    python3 "$REPO_ROOT/scripts/install_bottles.py"
 }
 
 install_bun_language_servers() {
@@ -151,7 +151,7 @@ install_pre_commit() (
     export PIP_NO_CACHE_DIR=1 VIRTUALENV_NO_PERIODIC_UPDATE=1
     version=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["pre_commit_version"])' "$REPO_ROOT/packages/bootstrap.json")
     uv --no-config --no-cache tool install --no-index --find-links "$stage/wheels" --no-build \
-        --python '>=3.11,<3.15' "pre-commit==$version"
+        --python "$(brew --prefix python@3.13)/bin/python3.13" "pre-commit==$version"
     (cd "$REPO_ROOT" && pre-commit install --install-hooks)
     (cd "$REPO_ROOT" && pre-commit install --hook-type commit-msg --install-hooks)
 )
@@ -175,9 +175,10 @@ install_bun_language_servers
 generate_zsh_caches
 install_pre_commit
 
-echo "Restoring locked Neovim plugins and initializing Mason-managed language servers..."
+echo "Installing verified native language servers..."
+python3 "$REPO_ROOT/scripts/install_native_lsp.py"
+echo "Restoring locked Neovim plugins..."
 "$REPO_ROOT/scripts/run-nvim-check.sh" 'vim.cmd("Lazy! restore")'
-"$REPO_ROOT/scripts/run-nvim-check.sh" 'dofile(vim.fn.stdpath("config") .. "/install-lsp.lua")'
 
 echo "Locking Sheldon plugins..."
 sheldon lock

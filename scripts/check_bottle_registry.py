@@ -28,7 +28,7 @@ def verify(name, record, now):
     error = age_error(name, published, now)
     if error:
         raise ValueError(error)
-    if "published_at" in record and published != record["published_at"]:
+    if published != record["published_at"]:
         raise ValueError("Registry publication date mismatch: " + name)
     return published
 

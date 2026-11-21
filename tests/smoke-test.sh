@@ -23,7 +23,7 @@ echo "Checking direct config links, live sockets, backups, and GitHub CLI migrat
 ./tests/test-config-deployment.sh
 PYTHONDONTWRITEBYTECODE=1 python3 tests/test_config_parent_links.py
 ./tests/test-setup-policy.sh
-nvim --headless -u NONE -i NONE -l tests/test-mason-pins.lua
+python3 tests/test_bootstrap_wheels.py
 
 echo "Checking Neovim failure propagation..."
 ./tests/test-nvim-check.sh
