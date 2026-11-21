@@ -71,7 +71,7 @@ def verified_bytes(url, digest, destination, headers):
         raise ValueError("SHA256 mismatch: " + destination.name)
 
 
-def stage_bottle(name, record, tags, directory, now):
+def fetch_index(name, record, directory, now):
     error = age_error(name, record.get("published_at"), now)
     if error:
         raise ValueError(error)
@@ -84,8 +84,13 @@ def stage_bottle(name, record, tags, directory, now):
     digest = record["digest"]
     verified_bytes(base + "/manifests/sha256:" + digest, digest, index,
                    headers + ["-H", "Accept: application/vnd.oci.image.index.v1+json"])
+    return json.loads(index.read_bytes()), base, headers
+
+
+def stage_bottle(name, record, tags, directory, now):
+    index, base, headers = fetch_index(name, record, directory, now)
     variants = {}
-    for manifest in json.loads(index.read_bytes())["manifests"]:
+    for manifest in index["manifests"]:
         ann = manifest["annotations"]
         match = REF.fullmatch(ann["org.opencontainers.image.ref.name"])
         if match and "sh.brew.tab" in ann:

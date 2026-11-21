@@ -5,15 +5,18 @@ import json
 from pathlib import Path
 import re
 import sys
+import tempfile
+import urllib.request
 from urllib.parse import quote
 
 from dependency_observations import GitHub
+from install_bottles import fetch_index
 from release_age import age_error
 
 PACKAGES = Path(__file__).resolve().parents[1] / "packages"
 
 
-def verify(name, record, now, capture_date=False):
+def verify(name, record, now):
     image = "core/" + name.replace("@", "/").replace("+", "x")
     api = GitHub()
     prefix = "/orgs/Homebrew/packages/container/" + quote(image, safe="")
@@ -28,16 +31,36 @@ def verify(name, record, now, capture_date=False):
     error = age_error(name, published, now)
     if error:
         raise ValueError(error)
-    if not capture_date and published != record["published_at"]:
+    if published != record["published_at"]:
         raise ValueError("Registry publication date mismatch: " + name)
     return published
+
+
+def check_bootstrap_ruby(bootstrap, now):
+    record = bootstrap["homebrew_portable_ruby"]
+    with tempfile.TemporaryDirectory(prefix="dotfiles-ruby-") as tmp:
+        index, _, _ = fetch_index("portable-ruby", record, Path(tmp), now)
+    digests = {m["annotations"]["org.opencontainers.image.ref.name"]: m["annotations"]["sh.brew.bottle.digest"]
+               for m in index["manifests"]}
+    base = "https://raw.githubusercontent.com/Homebrew/brew/" + bootstrap["homebrew_commit"] + "/Library/Homebrew/vendor/"
+    with urllib.request.urlopen(base + "portable-ruby-version", timeout=30) as response:
+        if response.read().decode().strip() != record["version"]:
+            raise ValueError("Homebrew portable Ruby version mismatch")
+    for architecture in ("arm64-linux", "x86_64-linux"):
+        with urllib.request.urlopen(base + "portable-ruby-" + architecture, timeout=30) as response:
+            values = dict(line.split("=", 1) for line in response.read().decode().splitlines())
+        if digests[record["version"] + "." + values["ruby_TAG"]] != values["ruby_SHA"]:
+            raise ValueError("Homebrew portable Ruby digest mismatch: " + architecture)
 
 
 def main():
     now = int(dt.datetime.now(dt.timezone.utc).timestamp())
     bootstrap = json.loads((PACKAGES / "bootstrap.json").read_text())
+    if sys.argv[1:] == ["--bootstrap-runtime"]:
+        check_bootstrap_ruby(bootstrap, now)
+        return
     runtime = bootstrap["homebrew_portable_ruby"]
-    print("portable-ruby", verify("portable-ruby", runtime, now, capture_date="published_at" not in runtime), flush=True)
+    print("portable-ruby", verify("portable-ruby", runtime, now), flush=True)
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
         for lock in sorted(PACKAGES.glob("homebrew-bottles*.json")):
             records = json.loads(lock.read_text())

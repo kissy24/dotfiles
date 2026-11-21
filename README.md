@@ -266,7 +266,7 @@ GitHub Releaseの`created_at`、Gitのauthor/committer/tagger日時は公開日�
 
 セットアップはパッケージ導入・設定配備より先に管理対象のGit/npm/PyPI検査を実行し、失敗なら停止します。CIの完全セットアップも同じ入口を使います。秘密情報履歴CIもhookの導入前に検査します。APIトークンはセットアップの検査子プロセスにだけ渡し、依存のインストール処理には引き継ぎません。GitHub API制限に達する場合は、`gh auth login`済みの環境または検査用の`GITHUB_TOKEN`を利用してください。
 
-初回セットアップのHomebrew用ロックは `packages/homebrew-bottles.json` です。更新PRのCIは公式レジストリのパッケージ版ID、登録日時、索引のSHA256を照合します。セットアップではロックの日時と索引を検証し、索引に記録されたbottleのSHA256と依存関係を使います。UbuntuでHomebrew自体がない場合は固定リリースからインストールします。LuaLS・MarksmanはGitHubのrelease asset ID・SHA256・公開日時と更新日時を確認し、goplsは固定bottle内の単体実行ファイルを使います。APTはOSの署名済みリポジトリとセキュリティ更新方針に従います。すでに端末にあるツールは既存の信頼対象です。
+初回セットアップのHomebrew用ロックは `packages/homebrew-bottles.json` です。更新PRのCIは公式レジストリのパッケージ版ID、登録日時、索引のSHA256を照合します。セットアップではロックの日時と索引を検証し、索引に記録されたbottleのSHA256と依存関係を使います。UbuntuでHomebrew自体がない場合は固定リリースからインストールします。Homebrewが指定するportable RubyのSHA256も、公開日時を確認した公式OCI索引と照合します。LuaLS・MarksmanはGitHubのrelease asset ID・SHA256・公開日時と更新日時を確認し、goplsは固定bottle内の単体実行ファイルを使います。APTはOSの署名済みリポジトリとセキュリティ更新方針に従います。すでに端末にあるツールは既存の信頼対象です。
 
 緊急セキュリティ修正は、ユーザーの明示承認を得て`packages/dependency-exceptions.json`へ正確な対象・理由・承認PR URL・期限（最大7日）を記録します。Gitは`owner/repo@完全SHA`、npmは`npm:名前@固定版`、PyPIは`pypi:pre-commit@固定版`をキーとし、値には`reason`、`approval_url`、`expires_at`（タイムゾーン付きISO 8601）を指定します。検査は**main上の承認済みファイルだけ**を参照するため、依存変更PRで追加した自己承認は効きません。例外で省略できるのは待機時間だけで、存在・公開状態・integrityの検証は省略しません。現在の例外は空です。
 

@@ -1,4 +1,5 @@
 import datetime as dt
+import io
 import json
 from pathlib import Path
 import sys
@@ -8,6 +9,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+import check_bottle_registry as registry
 import install_bottles as bottles
 from install_native_lsp import release_asset
 from release_age import COOLDOWN_SECONDS, epoch
@@ -74,6 +76,22 @@ class ArtifactTests(unittest.TestCase):
             self.assertIsNone(bottles.age_error(name, records[name]["published_at"], now))
         with self.assertRaisesRegex(ValueError, "published_at=null"):
             bottles.stage("missing-date", {}, [], Path("."), now)
+
+    def test_bootstrap_ruby_must_match_each_linux_digest(self):
+        bootstrap = {"homebrew_commit": "a" * 40, "homebrew_portable_ruby": {"version": "4.0.9"}}
+        tags = ["arm64_linux", "x86_64_linux"]
+        index = {"manifests": [{"annotations": {"org.opencontainers.image.ref.name": "4.0.9." + tag,
+                                                "sh.brew.bottle.digest": "b" * 64}} for tag in tags]}
+        for tag in tags:
+            with self.subTest(tag=tag):
+                files = [io.BytesIO(b"4.0.9\n")]
+                for arch in tags:
+                    digest = ("c" if arch == tag else "b") * 64
+                    files.append(io.BytesIO(f"ruby_TAG={arch}\nruby_SHA={digest}\n".encode()))
+                with patch.object(registry, "fetch_index", return_value=(index, None, None)), \
+                        patch.object(registry.urllib.request, "urlopen", side_effect=files):
+                    with self.assertRaisesRegex(ValueError, "digest mismatch"):
+                        registry.check_bootstrap_ruby(bootstrap, 0)
 
     def test_platform_selection(self):
         for tags in [["arm64_tahoe", "all"], ["sonoma", "all"], ["arm64_sonoma", "all"], ["x86_64_linux", "all"]]:

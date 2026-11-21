@@ -23,7 +23,7 @@ is_true() {
 
 collect_github_repositories() {
     {
-        printf '%s\n' Homebrew/install Homebrew/brew pre-commit/pre-commit LuaLS/lua-language-server artempyanykh/marksman golang/tools mason-org/mason-registry
+        printf '%s\n' Homebrew/install Homebrew/brew openssl/openssl pre-commit/pre-commit LuaLS/lua-language-server artempyanykh/marksman golang/tools mason-org/mason-registry
         sed -nE "s/^[[:space:]]*[{'\"]?[[:space:]]*['\"]([[:alnum:]_.-]+\/[[:alnum:]_.-]+)['\"].*/\1/p" \
             "$REPO_ROOT"/.config/nvim/lua/plugins/*.lua
         sed -nE 's/.*github[[:space:]]*=[[:space:]]*"([[:alnum:]_.-]+\/[[:alnum:]_.-]+)".*/\1/p' \
@@ -73,6 +73,14 @@ check_github_repositories() {
 check_homebrew_formulae() {
     local formula response
 
+    python3 - "$REPO_ROOT" > "$TMP_ROOT/formulae" <<'PYTHON'
+import json, pathlib, re, sys
+root = pathlib.Path(sys.argv[1])
+names = set(re.findall('^brew "([^"]+)"', (root / "Brewfile").read_text(), re.MULTILINE))
+for lock in (root / "packages").glob("homebrew-bottles*.json"):
+    names.update(json.loads(lock.read_text()))
+print("\n".join(sorted(names)))
+PYTHON
     echo "Checking Homebrew formula lifecycle metadata..."
     while IFS= read -r formula; do
         [[ -n $formula ]] || continue
@@ -91,7 +99,7 @@ check_homebrew_formulae() {
         else
             echo "OK: $formula"
         fi
-    done < <(sed -nE 's/^brew "([^"]+)".*/\1/p' "$REPO_ROOT/Brewfile")
+    done < "$TMP_ROOT/formulae"
 }
 
 check_github_repositories
