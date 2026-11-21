@@ -10,7 +10,7 @@ from urllib.parse import quote
 from dependency_observations import GitHub
 from release_age import age_error
 
-LOCK = Path(__file__).resolve().parents[1] / "packages/homebrew-bottles.json"
+PACKAGES = Path(__file__).resolve().parents[1] / "packages"
 
 
 def verify(name, record, now):
@@ -28,18 +28,19 @@ def verify(name, record, now):
     error = age_error(name, published, now)
     if error:
         raise ValueError(error)
-    if published != record["published_at"]:
+    if record.get("published_at") and published != record["published_at"]:
         raise ValueError("Registry publication date mismatch: " + name)
     return published
 
 
 def main():
-    records = json.loads(LOCK.read_text())
     now = int(dt.datetime.now(dt.timezone.utc).timestamp())
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
-        jobs = {name: pool.submit(verify, name, record, now) for name, record in records.items()}
-        for name, job in jobs.items():
-            print(name, job.result(), flush=True)
+        for lock in sorted(PACKAGES.glob("homebrew-bottles*.json")):
+            records = json.loads(lock.read_text())
+            jobs = {name: pool.submit(verify, name, record, now) for name, record in records.items()}
+            for name, job in jobs.items():
+                print(lock.stem, name, job.result(), flush=True)
 
 
 if __name__ == "__main__":
