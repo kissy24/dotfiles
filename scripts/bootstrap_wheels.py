@@ -11,7 +11,8 @@ import sys
 import urllib.request
 from urllib.parse import urlsplit
 
-from release_age import age_error
+from dependency_observations import GitHub, trusted_exceptions
+from release_age import age_error, epoch
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK = ROOT / "packages" / "bootstrap-wheels.json"
@@ -34,7 +35,11 @@ def stage_package(name, record, directory, now):
             raise ValueError("PyPI withdrew or changed " + filename)
         error = age_error(filename, item["upload_time_iso_8601"], now)
         if error:
-            raise ValueError(error)
+            # An approved exception applies only to the exact pre-commit
+            # version. Digest, yank and file identity checks are unconditional.
+            if (name != "pre-commit" or epoch(item["upload_time_iso_8601"]) > now
+                    or "pypi:pre-commit@" + version not in trusted_exceptions(GitHub(), now)):
+                raise ValueError(error)
         url = urlsplit(item["url"])
         if (url.scheme, url.netloc) != ("https", "files.pythonhosted.org"):
             raise ValueError("Unexpected wheel origin: " + filename)

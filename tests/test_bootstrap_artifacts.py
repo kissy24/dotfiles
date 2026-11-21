@@ -33,7 +33,7 @@ class ArtifactTests(unittest.TestCase):
                     archive.addfile(tarfile.TarInfo(name + "/1/.brew/" + name + ".rb"))
                 staged[name] = (bottle, deps)
             with patch.object(bottles.subprocess, "run") as run:
-                bottles.install(staged, {}, directory / "Cellar", directory)
+                bottles.install(staged, {}, directory / "Cellar", directory, native_bottles=False)
             self.assertEqual([c.args[0][1] for c in run.call_args_list], ["install", "postinstall"] * 2)
             for i, name in enumerate(["lib", "missing"]):
                 install, postinstall = run.call_args_list[i * 2:i * 2 + 2]

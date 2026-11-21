@@ -144,7 +144,7 @@ def prepare(names, installed, records, tags, directory, now):
     return staged
 
 
-def install(staged, env, cellar, pending_dir):
+def install(staged, env, cellar, pending_dir, native_bottles):
     while staged:
         ready = [name for name, (_, deps) in staged.items() if not any(dep in staged for dep in deps)]
         if not ready:
@@ -165,10 +165,20 @@ def install(staged, env, cellar, pending_dir):
             # Keep a marker until the matching keg's post-install has succeeded.
             # A failed or interrupted pour may already be listed by brew.
             marker = pending_dir / name
+            resume = marker.exists() and (cellar / recipe).is_file()
             marker.touch()
-            subprocess.run(["brew", "install", "--formula", mode, "--ignore-dependencies",
-                            "--skip-post-install", str(bottle)], env=dict(env, HOMEBREW_DEVELOPER="1"), check=True)
-            subprocess.run(["brew", "postinstall", str(cellar / recipe)], env=env, check=True)
+            options = ["--skip-link"] if name == "python@3.13" else []
+            if native_bottles and mode == "--force-bottle":
+                if resume:
+                    # A retry must re-pour verified bytes and finish post-install.
+                    subprocess.run(["brew", "reinstall", "--force-bottle", *options, str(bottle)], env=env, check=True)
+                else:
+                    subprocess.run(["brew", "install", "--formula", mode, "--ignore-dependencies",
+                                    *options, str(bottle)], env=env, check=True)
+            else:
+                subprocess.run(["brew", "install", "--formula", mode, "--ignore-dependencies",
+                                "--skip-post-install", *options, str(bottle)], env=dict(env, HOMEBREW_DEVELOPER="1"), check=True)
+                subprocess.run(["brew", "postinstall", str(cellar / recipe)], env=env, check=True)
             marker.unlink()
 
 
@@ -194,7 +204,12 @@ def main():
             installed = set(subprocess.check_output(["brew", "list", "--formula", "-1"], text=True, env=env).splitlines())
             pending = {p.name for p in pending_dir.iterdir() if p.name in records}
             staged = prepare(set(roots()) | pending, installed - pending, records, host_tags(), Path(tmp), now)
-            install(staged, env, cellar, pending_dir)
+            brew_version = subprocess.check_output(["brew", "--version"], text=True, env=env)
+            version = re.search(r"Homebrew (\d+)\.(\d+)\.(\d+)", brew_version)
+            if not version:
+                raise ValueError("Unsupported Homebrew version: " + brew_version.strip())
+            native_bottles = tuple(map(int, version.groups())) >= (7, 0, 14)
+            install(staged, env, cellar, pending_dir, native_bottles)
 
 
 if __name__ == "__main__":
