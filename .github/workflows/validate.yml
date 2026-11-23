@@ -90,7 +90,7 @@ jobs:
             exit 1
           fi
           grep -Eq '^prompt_new_tab_name[[:space:]]*=[[:space:]]*false$' .config/herdr/config.toml
-          grep -Eq '^hide_tab_bar_when_single_tab[[:space:]]*=[[:space:]]*true$' .config/herdr/config.toml
+          grep -Eq '^hide_tab_bar_when_single_tab[[:space:]]*=[[:space:]]*false$' .config/herdr/config.toml
           if grep -q '^brew "tmux"' Brewfile; then
             echo "Brewfile still contains the replaced tmux dependency." >&2
             exit 1
