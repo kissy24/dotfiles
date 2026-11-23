@@ -19,6 +19,7 @@ on:
       - scripts/release_age.py
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
