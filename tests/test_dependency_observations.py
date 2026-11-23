@@ -103,7 +103,9 @@ class PublicationTests(unittest.TestCase):
         digest = "sha512-" + "a" * 86 + "=="
         data = {"lockfileVersion": 1, "packages": {"demo": ["demo@1.0.0", "", {}, digest]}}
         files = {"packages/bun-lsp/bun.lock": json.dumps(data, indent=2)}
-        self.assertEqual(module.npm_pins(files), {("demo", "1.0.0"): digest})
+        files[".github/workflows/test.yml"] = "- uses: " + KEY
+        _, integrities = module.dependencies(files)
+        self.assertEqual(integrities, {("demo", "1.0.0"): digest})
         registry = {"time": {"1.0.0": "2026-01-01T00:00:00Z"},
                     "versions": {"1.0.0": {"dist": {"integrity": digest}}}}
         self.assertEqual(module.npm_publication(registry, "demo", "1.0.0", digest), registry["time"]["1.0.0"])

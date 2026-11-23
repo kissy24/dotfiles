@@ -50,22 +50,16 @@ update_homebrew() (
     local ELIGIBLE=$TMP_ROOT/eligible.tsv
     PYTHONDONTWRITEBYTECODE=1 python3 "$repo_root/scripts/homebrew_release_age.py" "$TMP_ROOT/outdated.json" > "$ELIGIBLE"
 
-    formulae=()
     casks=()
     while IFS=$'\t' read -r kind name; do
-        case "$kind" in
-            formula) formulae+=("$name") ;;
-            cask) casks+=("$name") ;;
-        esac
+        if [ "$kind" = cask ]; then
+            casks+=("$name")
+        fi
     done < "$ELIGIBLE"
 
-    if [ "${#formulae[@]}" -gt 0 ]; then
-        HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew upgrade --formula "${formulae[@]}"
-    fi
     if [ "${#casks[@]}" -gt 0 ]; then
         HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew upgrade --cask "${casks[@]}"
-    fi
-    if [ "${#formulae[@]}" -eq 0 ] && [ "${#casks[@]}" -eq 0 ]; then
+    else
         echo "No Homebrew packages are eligible for upgrade."
     fi
     brew cleanup

@@ -103,10 +103,9 @@ def dependencies(files, strict=True):
         if name not in repos:
             raise ValueError("Cannot map locked Neovim plugin: " + name)
         add(repos[name], pin["commit"])
-    npm = set(npm_pins(files))
     if not github:
         raise ValueError("No pinned Git dependencies found")
-    return github, npm
+    return github, npm_pins(files)
 
 
 def bun_lock_data(source):
@@ -324,7 +323,7 @@ def trusted_exceptions(api, now):
 
 def check(root):
     files = local_files(root)
-    keys, npm = dependencies(files)
+    keys, integrities = dependencies(files)
     api = GitHub()
     now = int(dt.datetime.now(dt.timezone.utc).timestamp())
     # Freeze the migration to reviewed main; PR declarations cannot add approvals.
@@ -353,10 +352,9 @@ def check(root):
                     errors.append(error)
         except (ValueError, KeyError, urllib.error.HTTPError) as error:
             errors.append(key + ": " + str(error))
-    integrities = npm_pins(files)
-    for name, version in sorted(npm):
+    for (name, version), integrity in sorted(integrities.items()):
         data = registry_json("https://registry.npmjs.org/" + urllib.parse.quote(name, safe="@/"))
-        published = npm_publication(data, name, version, integrities[(name, version)])
+        published = npm_publication(data, name, version, integrity)
         error = age_error(name + "@" + version, published, now)
         if error and "npm:" + name + "@" + version not in exceptions:
             errors.append(error)

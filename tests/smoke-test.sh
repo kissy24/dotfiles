@@ -1,6 +1,20 @@
 #!/bin/bash
 set -euo pipefail
 
+case "$#:${1-}" in
+    0:|1:--before-setup)
+        echo "Checking configuration deployment, setup policy, and dependency cooldown..."
+        ./tests/test-dotfile-links.sh
+        ./tests/test-config-deployment.sh
+        PYTHONDONTWRITEBYTECODE=1 python3 tests/test_config_parent_links.py
+        ./tests/test-setup-policy.sh
+        ./tests/test-dependency-cooldown.sh
+        if [ "$#" -eq 1 ]; then exit 0; fi
+        ;;
+    1:--after-setup) ;;
+    *) echo "Usage: $0 [--before-setup|--after-setup]" >&2; exit 2 ;;
+esac
+
 TMP_ROOT=$(mktemp -d /tmp/dotfiles-smoke.XXXXXX)
 HERDR_SESSION_NAME="dotfiles-smoke-$$"
 HERDR_SERVER_PID=""
@@ -18,11 +32,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "Checking direct config links, live sockets, backups, and GitHub CLI migration..."
-./tests/test-dotfile-links.sh
-./tests/test-config-deployment.sh
-PYTHONDONTWRITEBYTECODE=1 python3 tests/test_config_parent_links.py
-./tests/test-setup-policy.sh
 python3 tests/test_bootstrap_wheels.py
 
 echo "Checking Neovim failure propagation..."
@@ -136,9 +145,6 @@ test "$(bun -e 'console.log(1 + 1)')" = "2"
 
 echo "Checking publication-aware updates and unknown-date notifications..."
 ./tests/test-pkgupd.sh
-
-echo "Checking publication evidence, integrity, and verified Git observations..."
-./tests/test-dependency-cooldown.sh
 
 echo "Checking Go compilation and execution..."
 printf 'package main\nimport "fmt"\nfunc main() { fmt.Print("ok") }\n' > "$TMP_ROOT/main.go"
