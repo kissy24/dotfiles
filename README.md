@@ -232,6 +232,8 @@ GitHub ActionsでUbuntuとmacOSのセットアップスクリプトを検証し�
 pre-commit run --all-files
 ```
 
+スモークテストは引数なしで全項目を実行します。CIでは `--before-setup` で設定配備・セットアップ方針・依存待機のテストを先に実行し、環境構築後に `--after-setup` で残りを実行します。
+
 GitHub Actionsとpre-commit hookの外部コードはコミットSHAに固定しています。検証CIの`GITHUB_TOKEN`にはリポジトリ内容とActions履歴の読み取り権限を付与し、checkout後のGit認証情報も保存しません。依存観測も読み取り権限で実行します。
 
 pre-commitではBetterleaksがステージ済みの変更を走査し、token、APIキー、秘密鍵などの機微情報を検出するとコミットを拒否します。検出結果に機微情報そのものを出力しないよう、redactを有効にしています。CIではpre-commitの回避を考慮し、追跡対象の作業ツリー全体を再走査します。加えて`Scan Secret History`はPR・mainへのPush・週次実行で全履歴を取得し、`betterleaks-history`でPR途中のコミットを含む到達可能な履歴全体を走査します。後続コミットで削除された秘密も対象です。ローカルでは`pre-commit run betterleaks-history --hook-stage manual --all-files`を使います。

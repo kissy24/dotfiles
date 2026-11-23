@@ -131,6 +131,7 @@ grep -q 'Homebrew=1 APT=1' "$TMP_ROOT/output"
 run_linux_pkgupd update '' --homebrew-only
 test ! -s "$APT_LOG"
 EXPECTED_STATUS=0 run_linux_pkgupd '' ''
+grep -qx 'upgrade --cask demo-cask' "$BREW_LOG"
 grep -qx cleanup "$BREW_LOG"
 grep -qx 'apt-get autoclean' "$APT_LOG"
 

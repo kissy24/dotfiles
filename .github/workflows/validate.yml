@@ -50,11 +50,7 @@ jobs:
           for script in setup.sh uninstall.sh .local/bin/pkgupd scripts/*.sh scripts/lib/*.sh tests/*.sh; do
             bash -n "$script"
           done
-          ./tests/test-dotfile-links.sh
-          ./tests/test-config-deployment.sh
-          PYTHONDONTWRITEBYTECODE=1 python3 tests/test_config_parent_links.py
-          ./tests/test-setup-policy.sh
-          ./tests/test-dependency-cooldown.sh
+          ./tests/smoke-test.sh --before-setup
           ./setup.sh --help
           ./uninstall.sh --help
           if grep -Eq '^brew "(rust|node|fd|tree-sitter-cli)"' Brewfile; then
@@ -118,7 +114,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          ./setup.sh --force | tee setup_log.txt
+          ./setup.sh --force
           git diff --exit-code -- .config/nvim/lazy-lock.json
           cmp .config/nvim/lazy-lock.json "$HOME/.config/nvim/lazy-lock.json"
           # Direct links must reflect checkout changes without another deployment.
@@ -172,7 +168,7 @@ jobs:
             eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           fi
           export PATH="$HOME/.local/bin:$PATH"
-          ./tests/smoke-test.sh
+          ./tests/smoke-test.sh --after-setup
 
       - name: Run repository checks
         shell: bash
