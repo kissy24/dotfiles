@@ -8,13 +8,12 @@ assert(require("mason.settings").current.ui.icons.package_installed == "✓", "M
 local mason_lsp = require("mason-lspconfig.settings").current
 assert(vim.tbl_contains(mason_lsp.automatic_enable.exclude, "ts_ls"), "Mason must skip existing ts_ls installations")
 assert(vim.deep_equal(mason_lsp.ensure_installed, {}), "Editor startup must not install language servers")
-local pins = require("plugins.mason-lspconfig").opts.dotfiles_versions
-assert(#pins == 3, "Mason language server selection changed")
-for _, spec in ipairs(pins) do
-    assert(spec:match("^[^@]+@[^@]+$"), "Mason language server must have an exact version")
-end
-
 local lsp = vim.lsp.config
+for _, server in ipairs({ "lua_ls", "marksman", "gopls" }) do
+    local cmd = lsp[server].cmd[1]
+    assert(cmd:find("/dotfiles-lsp/native/current/", 1, true), server .. " must use the verified binary")
+    assert(vim.fn.executable(cmd) == 1, "Missing verified " .. server)
+end
 assert(lsp.lua_ls.settings.Lua.diagnostics.globals[1] == "vim", "Lua LSP settings were lost")
 assert(lsp.gopls.settings.gopls.staticcheck, "Go LSP settings were lost")
 assert(vim.lsp.protocol.make_client_capabilities().textDocument.completion.completionItem.snippetSupport,

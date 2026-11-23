@@ -1,0 +1,49 @@
+{
+  "marksman": {
+    "repository": "artempyanykh/marksman",
+    "tag": "2026-02-08",
+    "assets": {
+      "marksman-linux-arm64": {
+        "id": 352747912,
+        "sha256": "db8e124527f7f8048e3e6c91821b9c52ef173d92c01e47d221bf1337afd962fb",
+        "published_at": "2026-02-08T21:36:04Z"
+      },
+      "marksman-linux-x64": {
+        "id": 352747902,
+        "sha256": "be5098e8213219269c47fc0d916a66fa31ce0602ec967475c722260aabf26087",
+        "published_at": "2026-02-08T21:36:02Z"
+      },
+      "marksman-macos": {
+        "id": 352747961,
+        "sha256": "6a801c17b5ac0dba69787c5282b3b3bd416e66c96253fae098d311c6bbd1833b",
+        "published_at": "2026-02-08T21:36:12Z"
+      }
+    }
+  },
+  "lua": {
+    "repository": "LuaLS/lua-language-server",
+    "tag": "3.19.2",
+    "assets": {
+      "lua-language-server-3.19.2-darwin-arm64.tar.gz": {
+        "id": 635852571,
+        "sha256": "79149584320a23bd5fcd5bc31f47a1975acd8a4560a0e89036bb1016fa61687f",
+        "published_at": "2026-10-13T04:12:48Z"
+      },
+      "lua-language-server-3.19.2-darwin-x64.tar.gz": {
+        "id": 635851575,
+        "sha256": "6f2174ece5ec63bcd9d5b22b2c902445c1cd9045fafe48c62602448ebf4c09cc",
+        "published_at": "2026-10-13T04:12:16Z"
+      },
+      "lua-language-server-3.19.2-linux-arm64.tar.gz": {
+        "id": 635853508,
+        "sha256": "17b8e401a874440adeb649e5024c364f2bb9d15156c74a40e56d1ae9a1b2e4f2",
+        "published_at": "2026-10-13T04:13:19Z"
+      },
+      "lua-language-server-3.19.2-linux-x64.tar.gz": {
+        "id": 635856120,
+        "sha256": "93ad326b10f6c00911dd8c450fa098332dbd8f9f45d1052f5636a2d54479b947",
+        "published_at": "2026-10-13T04:14:33Z"
+      }
+    }
+  }
+}

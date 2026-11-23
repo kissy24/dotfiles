@@ -1,0 +1,182 @@
+{
+  "bun": {
+    "version": "1.4.0",
+    "digest": "777fcffd7ad9eff8d0eeeeeb909a0515265f31bfeea06a9c5e67d7c4733097a4",
+    "id": 1155890238,
+    "published_at": "2026-08-21T04:40:16Z"
+  },
+  "expat": {
+    "version": "2.8.3",
+    "digest": "ac82c30049fcf31c57b3e1d4fe6439a8cb4891c8f2d4064bddd5be2e886c2d88",
+    "id": 1119139807,
+    "published_at": "2026-08-11T01:47:29Z"
+  },
+  "fzf": {
+    "version": "0.74.3-1",
+    "digest": "1505af95e1991c0379744aa0e3c6e00250ae68fce1d7e234b07a525e8101c3b8",
+    "id": 1231797177,
+    "published_at": "2026-09-10T08:52:28Z"
+  },
+  "gettext": {
+    "version": "1.0-1",
+    "digest": "3911ea2ce05fa912eddf21de75bb959da6b1a45a209c1799a5cb61ec20795dd8",
+    "id": 1231675132,
+    "published_at": "2026-09-10T08:23:04Z"
+  },
+  "gh": {
+    "version": "2.98.0",
+    "digest": "fb02e3546b51aefce5f771e05b003662247eb5a60173c8baa7416a953bf97a1a",
+    "id": 1155362997,
+    "published_at": "2026-08-20T23:57:13Z"
+  },
+  "git": {
+    "version": "2.55.0",
+    "digest": "ecc5d07d646e5517ba67a425186dda0fa1e24a517d23b7488397d738d47f809a",
+    "id": 1235130343,
+    "published_at": "2026-09-10T23:23:59Z"
+  },
+  "go": {
+    "version": "1.27.0",
+    "digest": "9f5052e0aa9e069982bdcf58414e21f3580feaec7aea500aef76c93f232589c3",
+    "id": 1155926135,
+    "published_at": "2026-08-21T04:59:57Z"
+  },
+  "gopls": {
+    "version": "0.23.0",
+    "digest": "b61950d458ac29a39325bebef2a3cab3b0b48538ab91656c20e8b3de9d6c50bf",
+    "id": 1235892398,
+    "published_at": "2026-09-11T05:50:12Z"
+  },
+  "herdr": {
+    "version": "0.8.2",
+    "digest": "a2ac0c89b13b828962181fd8beefefe4afebf860c8a32eea45974c774c62a842",
+    "id": 1150848998,
+    "published_at": "2026-08-19T21:36:14Z"
+  },
+  "json-c": {
+    "version": "0.19",
+    "digest": "c21bf62af0557fdc30e91cbe501aa8e2aae9d8bbab630d157f38d6a709142734",
+    "id": 982151839,
+    "published_at": "2026-06-28T12:51:46Z"
+  },
+  "lazygit": {
+    "version": "0.64.1",
+    "digest": "ad45ef6c5f654e06b53ffb84d1bc42a02306950d10e10048e8e974525ba71258",
+    "id": 1127214073,
+    "published_at": "2026-08-13T00:22:55Z"
+  },
+  "libgit2": {
+    "version": "1.9.7",
+    "digest": "cebd35c8930c906ba2b81f3cd03681511a2a791c976735a923746fe3e5bc7f59",
+    "id": 1231965132,
+    "published_at": "2026-09-10T09:29:13Z"
+  },
+  "libssh2": {
+    "version": "1.11.1_4",
+    "digest": "4bed5874940da2c1ee29ea0cd39ac7f311f577a36441e8b37b205095b15b9251",
+    "id": 1231620965,
+    "published_at": "2026-09-10T08:09:01Z"
+  },
+  "libunistring": {
+    "version": "1.4.2",
+    "digest": "c64ab9c58ef69f52a7338e5782ff5c6219786e78f960f41acee8e31de6dbade8",
+    "id": 1231247317,
+    "published_at": "2026-09-10T06:18:03Z"
+  },
+  "libuv": {
+    "version": "1.52.1",
+    "digest": "692545212ccd8a8c284b2076c1392c40305e2af4d4131d60d83887a575793a82",
+    "id": 1232423316,
+    "published_at": "2026-09-10T11:24:26Z"
+  },
+  "luajit": {
+    "version": "2.1.1787165859",
+    "digest": "2598af8b903aaa3a2f98885a5cd210e0a1415b893ed2ecf62b354e0bf9462d34",
+    "id": 1152853472,
+    "published_at": "2026-08-20T11:06:22Z"
+  },
+  "luv": {
+    "version": "1.52.1-0",
+    "digest": "8b3a4d637a6aac7800b2c21a2af222365b4f46d737dfca06a2d0fd9f31229ca3",
+    "id": 1232901768,
+    "published_at": "2026-09-10T13:17:43Z"
+  },
+  "mpdecimal": {
+    "version": "4.0.1",
+    "digest": "9bdce57a3ab9fb1bdb0722cc5cb539d3fadad5a1ca5594e67928e342b7d605dc",
+    "id": 511250885,
+    "published_at": "2025-09-10T11:26:48Z"
+  },
+  "neovim": {
+    "version": "0.12.5",
+    "digest": "48c5a2e5d46a1b258f1a94c558b2b78f72a628f7cbc9325b35b156e85e8f092e",
+    "id": 1165585110,
+    "published_at": "2026-08-24T12:50:07Z"
+  },
+  "pcre2": {
+    "version": "10.47_1-1",
+    "digest": "28c90d3ee4a1fdaf9fe22a01882badf3d0f456dabedbaba306abdb047541ccd6",
+    "id": 1172073740,
+    "published_at": "2026-08-25T23:27:44Z"
+  },
+  "python@3.13": {
+    "version": "3.13.15",
+    "digest": "969995f8d5a439287084e12f564df6a634e28df2e9da3aea56a46aacf6b32475",
+    "id": 1231808558,
+    "published_at": "2026-09-10T08:55:15Z"
+  },
+  "readline": {
+    "version": "8.3.3",
+    "digest": "08e58ef2a495bfcc3062a4d119f0c9aecd59412e1ef26e018de4f3fca4b5745c",
+    "id": 1231252045,
+    "published_at": "2026-09-10T06:19:47Z"
+  },
+  "sheldon": {
+    "version": "0.8.5",
+    "digest": "c4cb4314dd510e2c78b7513c47a3b6b270a930571ae790eb95e6cada9d384378",
+    "id": 1241819350,
+    "published_at": "2026-09-12T23:09:25Z"
+  },
+  "sqlite": {
+    "version": "3.53.4-1",
+    "digest": "592f03e83dd6eed000af86840509f2c3e74075eb2f674d4ebc7c67ba92adb173",
+    "id": 1231560678,
+    "published_at": "2026-09-10T07:53:04Z"
+  },
+  "starship": {
+    "version": "1.26.0",
+    "digest": "16092f8d523ecc197a6bde11295874e0e04dd60283322f7755d6d0a1beb7a8da",
+    "id": 1239372918,
+    "published_at": "2026-09-11T23:07:19Z"
+  },
+  "tree-sitter": {
+    "version": "0.26.13",
+    "digest": "ea6b5160b8135e712ab408b55ac5f4c68d2a404cd0778cbd0cb4aeed55653906",
+    "id": 1162258355,
+    "published_at": "2026-08-23T10:29:49Z"
+  },
+  "unibilium": {
+    "version": "2.1.2",
+    "digest": "f92ffbab3cfe1b92ad2b852f13871e569e873bfb9f86b282c5553ed01be5c5e5",
+    "id": 511986852,
+    "published_at": "2025-09-10T23:24:09Z"
+  },
+  "utf8proc": {
+    "version": "2.11.3-1",
+    "digest": "15ffad70bf890520584ad8af549cfebb346ee71eb70fc2e4a604cee2103fd2cb",
+    "id": 1231351110,
+    "published_at": "2026-09-10T06:53:52Z"
+  },
+  "uv": {
+    "version": "0.12.5-1",
+    "digest": "d6ff3686ba4957f50e1d33d96f9518c751621afbd2012a50eecc34a220b51754",
+    "id": 1172076910,
+    "published_at": "2026-08-25T23:29:19Z"
+  },
+  "xz": {
+    "version": "5.8.3",
+    "digest": "968a0b03c9bb1f1d09f39f089a7a0a4dcb79177261b002140a861231a8788280",
+    "id": 1231243243,
+    "published_at": "2026-09-10T06:16:39Z"
+  }
+}

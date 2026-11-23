@@ -115,8 +115,8 @@ local ok, err = xpcall(function()
     -- A known visible match first confirms that the live job has run.
     open(" fg")
     keys("marker")
-    wait([[local p = test_picker(); return p and p.manager and p.manager:num_results() == 1
-        and p:get_selection().text == 'hidden marker']], "Grep included ignored or linked content")
+    wait([[local p = test_picker(); local selected = p and p:get_selection()
+        return selected and p.manager and p.manager:num_results() == 1 and selected.text == 'hidden marker']], "Grep included ignored or linked content")
     close()
     open(" ff")
     keys("oversized")

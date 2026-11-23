@@ -84,6 +84,8 @@ def dependencies(files, strict=True):
     bootstrap = json.loads(files.get("packages/bootstrap.json", "{}"))
     if bootstrap:
         add("Homebrew/install", bootstrap["homebrew_install_commit"])
+        if "homebrew_commit" in bootstrap:
+            add("Homebrew/brew", bootstrap["homebrew_commit"])
         if not re.fullmatch(r"[0-9a-f]{64}", bootstrap["homebrew_install_sha256"]):
             raise ValueError("Homebrew installer requires SHA256")
         if not re.fullmatch(r"\d+\.\d+\.\d+", bootstrap["pre_commit_version"]):

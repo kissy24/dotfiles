@@ -4,28 +4,7 @@ REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/setup-policy-test.XXXXXX")
 trap 'rm -rf "$TMP_ROOT"' EXIT
 mkdir -p "$TMP_ROOT/bin"
-# Simulate an installed older package and a missing new dependency. The installer
-# must fill the missing dependency without upgrading the existing one.
-printf 'old\n' > "$TMP_ROOT/installed"
-cat > "$TMP_ROOT/bin/brew" <<'BREW'
-#!/bin/bash
-set -euo pipefail
-no_upgrade=0
-for arg in "$@"; do
-    case "$arg" in --jobs*) echo 'Deprecated --jobs flag' >&2; exit 2 ;; esac
-    [ "$arg" != --no-upgrade ] || no_upgrade=1
-done
-if [ "$no_upgrade" = 0 ] || [ "${HOMEBREW_NO_INSTALL_UPGRADE:-0}" != 1 ]; then
-    printf 'new\n' > "$POLICY_TEST_DIR/installed"
-fi
-printf 'installed\n' > "$POLICY_TEST_DIR/missing"
-BREW
-chmod +x "$TMP_ROOT/bin/brew"
-function_text=$(sed -n '/^install_brew_packages() {/,/^}/p' "$REPO_ROOT/setup.sh")
-PATH="$TMP_ROOT/bin:$PATH" POLICY_TEST_DIR="$TMP_ROOT" \
-    bash -c 'REPO_ROOT=$1; eval "$2"; install_brew_packages' _ "$REPO_ROOT" "$function_text" >/dev/null
-grep -qx old "$TMP_ROOT/installed"
-grep -qx installed "$TMP_ROOT/missing"
+python3 "$REPO_ROOT/tests/test_bootstrap_artifacts.py"
 # Ensure the install path consumes an exact revision and verifies its bytes.
 python3 - "$REPO_ROOT" <<'PY'
 import json, pathlib, re, sys
@@ -39,7 +18,10 @@ echo 'Setup preserves installed Homebrew versions and declares exact bootstrap p
 
 # Exercise checksum verification with harmless installer bytes, including Python
 # optimization mode: a mismatch must never execute the downloaded program.
-mkdir -p "$TMP_ROOT/repo/packages"
+mkdir -p "$TMP_ROOT/repo/packages" "$TMP_ROOT/repo/scripts"
+cat > "$TMP_ROOT/repo/scripts/run-homebrew-installer.sh" <<'RUN'
+bash "$1"
+RUN
 cat > "$TMP_ROOT/installer.sh" <<'INSTALLER'
 printf installed > "$BOOTSTRAP_TEST_MARKER"
 INSTALLER
@@ -74,6 +56,23 @@ PY
     fi
 done
 echo 'Installer checksum mismatches stop execution, including with Python optimization.'
+
+# A newer upstream tag must be invisible to the real installer process.
+git init -q -b main "$TMP_ROOT/upstream"
+git -C "$TMP_ROOT/upstream" -c user.name=test -c user.email=test@example.org commit -q --allow-empty -m first
+git -C "$TMP_ROOT/upstream" tag 1.0.0
+revision=$(git -C "$TMP_ROOT/upstream" rev-parse HEAD)
+git -C "$TMP_ROOT/upstream" -c user.name=test -c user.email=test@example.org commit -q --allow-empty -m next
+git -C "$TMP_ROOT/upstream" tag 2.0.0
+sed "s|^upstream=.*|upstream=file://$TMP_ROOT/upstream|" "$REPO_ROOT/scripts/run-homebrew-installer.sh" > "$TMP_ROOT/run-installer.sh"
+printf '{"homebrew_commit":"%s","homebrew_version":"1.0.0"}\n' "$revision" > "$TMP_ROOT/release.json"
+cat > "$TMP_ROOT/check-remote.sh" <<'CHECK'
+set -euo pipefail
+result=$(git ls-remote --tags "$FIXTURE_UPSTREAM")
+test "$result" = "$(printf '%s\trefs/tags/1.0.0' "$EXPECTED_REVISION")"
+CHECK
+FIXTURE_UPSTREAM="file://$TMP_ROOT/upstream" EXPECTED_REVISION="$revision" \
+    bash "$TMP_ROOT/run-installer.sh" "$TMP_ROOT/check-remote.sh" "$TMP_ROOT/release.json"
 
 # A rejected dependency must stop the real setup entry point before any package
 # manager or deployment is called. All files and commands below are test doubles.
