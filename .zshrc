@@ -1,5 +1,21 @@
 # ~/.zshrc
+# ユーザー単位でインストールしたCLI
+[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
+[ -d "$HOME/bin" ] && export PATH="$HOME/bin:$PATH"
+
+# Homebrew (Apple Silicon, Intel macOS, Linux)
+if command -v brew >/dev/null 2>&1; then
+    eval "$(brew shellenv zsh)"
+elif [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv zsh)"
+elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
+fi
+
 # キャッシュを使いつつ、毎回権限を検査して安全でない補完を除外する。
+typeset -U fpath
 autoload -Uz compinit && compinit -i
 
 # 履歴ファイルの設定
@@ -85,28 +101,12 @@ export KEYTIMEOUT=20
 bindkey -v
 bindkey -M viins 'jj' vi-cmd-mode
 
-# ユーザー単位でインストールしたCLI
-[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
-[ -d "$HOME/bin" ] && export PATH="$HOME/bin:$PATH"
-
-
 # CLI補完はsetup.shで生成したキャッシュを優先する。
 zsh_completion_dir="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/zsh"
 if [[ -r "$zsh_completion_dir/uv.zsh" ]]; then
     source "$zsh_completion_dir/uv.zsh"
 elif command -v uv &> /dev/null; then
     eval "$(uv generate-shell-completion zsh)"
-fi
-
-# Homebrew (Apple Silicon, Intel macOS, Linux)
-if command -v brew >/dev/null 2>&1; then
-    eval "$(brew shellenv)"
-elif [[ -x /opt/homebrew/bin/brew ]]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [[ -x /usr/local/bin/brew ]]; then
-    eval "$(/usr/local/bin/brew shellenv)"
-elif [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 fi
 
 # Herdr completion

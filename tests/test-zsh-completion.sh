@@ -6,7 +6,7 @@ TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/zsh-completion-test.XXXXXX")
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
 # Exercise the actual initialization command without loading personal shell settings.
-init=$(sed -n '/^autoload -Uz compinit /p' "$REPO_ROOT/.zshrc")
+init=$(sed -n '/^typeset -U fpath$/p; /^autoload -Uz compinit /p' "$REPO_ROOT/.zshrc")
 test -n "$init"
 mkdir "$TMP_ROOT/safe" "$TMP_ROOT/unsafe"
 printf '#compdef dotfiles-safe\n_arguments "*:file:_files"\n' > "$TMP_ROOT/safe/_dotfiles_safe"
@@ -18,6 +18,15 @@ ZDOTDIR="$TMP_ROOT" zsh -dfc '
     [[ ${_comps[dotfiles-safe]} = _dotfiles_safe && ${_comps[dotfiles-unsafe]} = _dotfiles_unsafe ]]
 ' _ "$TMP_ROOT" "$init"
 test -s "$TMP_ROOT/.zcompdump"
+
+# An inherited duplicate must not trigger a rebuild on the next startup.
+echo '# dotfiles-cache-marker' >> "$TMP_ROOT/.zcompdump"
+ZDOTDIR="$TMP_ROOT" zsh -dfc '
+    fpath=("$1/safe" "$1/unsafe" "$1/safe" $fpath)
+    eval "$2"
+    [[ ${_comps[dotfiles-safe]} = _dotfiles_safe ]]
+' _ "$TMP_ROOT" "$init"
+grep -qx '# dotfiles-cache-marker' "$TMP_ROOT/.zcompdump"
 
 # A previously safe directory becomes writable by other users after caching.
 chmod o+w "$TMP_ROOT/unsafe"

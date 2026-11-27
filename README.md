@@ -65,7 +65,9 @@ fzfのZsh連携では、Ctrl-Rによる履歴検索、Ctrl-Tによるファイ�
 
 Zshの起動時間を抑えるため、セットアップ時にuvとHerdrの補完を`${XDG_CACHE_HOME:-~/.cache}/dotfiles/zsh/`へ生成し、`compinit`のdumpも更新します。CLIを個別に更新して補完内容が変わった場合は、`./setup.sh`を再実行するとキャッシュを更新できます。
 
-補完の初期化では、キャッシュがある場合も毎回ディレクトリの所有者と権限を検査します。安全でない補完は`compinit -i`で除外します。補完が使えなくなった場合は、`autoload -Uz compaudit; compaudit`で対象を確認し、所有者や他ユーザーの書き込み権限を見直してください。
+対話シェルでは`.zshrc`がHomebrewとStarshipを初期化します。`~/.zprofile`にも初期化設定がある場合は、Starshipの初期化をそこから削除し、非対話ログイン用の`brew shellenv`は`if [[ ! -o interactive ]]; then ...; fi`の中に置いてください。
+
+補完の初期化では、Homebrewを含む補完検索パスの重複を取り除いてキャッシュを再利用します。キャッシュがある場合も毎回ディレクトリの所有者と権限を検査し、安全でない補完は`compinit -i`で除外します。補完が使えなくなった場合は、`autoload -Uz compaudit; compaudit`で対象を確認し、所有者や他ユーザーの書き込み権限を見直してください。
 
 Ubuntu/WSLではUbuntu標準の`compinit`を無効化し、管理対象の`.zshrc`によるキャッシュ付き初期化だけを実行します。また、Windows版WezTermを端末として使う構成ではWSLgが不要なため、`setup.sh`はWindowsユーザーディレクトリへ`.wslconfig`をコピーしてLinux GUI VMの自動起動を無効化します。既存の`.wslconfig`はデフォルトでは変更せず、`--force`指定時だけバックアップして置き換えます。
 
