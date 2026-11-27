@@ -12,6 +12,9 @@ return {
             },
             custom_highlights = function(colors)
                 local highlights = {
+                    OilFloat = { fg = colors.text, bg = colors.mantle },
+                    OilFloatBorder = { fg = colors.overlay1, bg = colors.mantle },
+                    OilFloatTitle = { fg = colors.lavender, bg = colors.mantle, bold = true },
                     RenderMarkdownBullet = { fg = colors.subtext0 },
                     RenderMarkdownTableHead = { fg = colors.lavender, bold = true },
                     RenderMarkdownTableRow = { fg = colors.overlay1 },

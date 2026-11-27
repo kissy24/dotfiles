@@ -1,3 +1,8 @@
+local float_win_options = {
+    winblend = 0,
+    winhighlight = "Normal:OilFloat,NormalFloat:OilFloat,FloatBorder:OilFloatBorder,FloatTitle:OilFloatTitle",
+}
+
 return {
     'stevearc/oil.nvim',
     dependencies = {
@@ -17,6 +22,15 @@ return {
             conceallevel = 3,
             concealcursor = "nvic",
         },
+        float = {
+            max_width = 0.8,
+            max_height = 0.8,
+            border = "rounded",
+            win_options = float_win_options,
+        },
+        preview_win = {
+            win_options = float_win_options,
+        },
         delete_to_trash = true,
         skip_confirm_for_simple_edits = true,
         view_options = {
@@ -24,33 +38,7 @@ return {
         },
         keymaps = {
             ["g?"] = "actions.show_help",
-            -- Enterの挙動をカスタマイズ
-            ["<CR>"] = {
-                desc = "Open file in the window to the right",
-                callback = function()
-                    local oil = require("oil")
-                    local entry = oil.get_cursor_entry()
-                    if not entry then
-                        return
-                    end
-
-                    if entry.type == "directory" then
-                        -- ディレクトリならそのままoil内で展開
-                        oil.select()
-                    else
-                        -- ファイルなら右側のウィンドウに移動して開く
-                        local path = oil.get_current_dir() .. entry.name
-                        vim.cmd("wincmd l") -- 右のウィンドウへ移動
-
-                        -- 右側に編集ウィンドウがなければ、splitrightによらず右に作る
-                        if vim.bo.filetype == "oil" then
-                            vim.cmd("rightbelow vsplit")
-                        end
-
-                        vim.cmd("edit " .. vim.fn.fnameescape(path))
-                    end
-                end,
-            },
+            ["<CR>"] = "actions.select",
             ["<C-s>"] = "actions.select_vsplit",
             ["<C-h>"] = "actions.select_split",
             ["<C-t>"] = "actions.select_tab",
@@ -72,28 +60,9 @@ return {
         {
             "<leader>j",
             function()
-                local oil = require("oil")
-                local found_win = nil
-
-                -- 全てのウィンドウをチェックして oil バッファを探す
-                for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-                    local buf = vim.api.nvim_win_get_buf(win)
-                    if vim.bo[buf].filetype == "oil" then
-                        found_win = win
-                        break
-                    end
-                end
-
-                if found_win then
-                    -- oil バッファが見つかったらそのウィンドウを閉じる
-                    vim.api.nvim_win_close(found_win, true)
-                else
-                    -- 見つからなければ新しくサイドバーとして開く
-                    vim.cmd("topleft vsplit | vertical resize 30")
-                    oil.open()
-                end
+                require("oil").toggle_float()
             end,
-            desc = "Toggle Oil sidebar",
+            desc = "Toggle Oil floating explorer",
         },
     },
 }
