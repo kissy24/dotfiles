@@ -188,10 +188,10 @@ mkdir -p "$TMP_ROOT/markdown"
 cp tests/fixtures/markdown.md "$TMP_ROOT/markdown/smoke.md"
 ./scripts/run-nvim-check.sh 'dofile("tests/test-markdown-render.lua")' "$TMP_ROOT/markdown/smoke.md"
 
-echo "Checking the Oil left sidebar and file navigation..."
+echo "Checking the Oil floating explorer and file navigation..."
 mkdir -p "$TMP_ROOT/oil/child"
-printf 'Oil sidebar test\n' > "$TMP_ROOT/oil/child/file with spaces.txt"
+printf 'Oil float test\n' > "$TMP_ROOT/oil/child/file with spaces.txt"
 DOTFILES_OIL_TEST_DIR="$TMP_ROOT/oil" ./scripts/run-nvim-check.sh \
-    'dofile("tests/test-oil-sidebar.lua")'
+    'dofile("tests/test-oil-float.lua")'
 
 echo "All smoke tests passed."
