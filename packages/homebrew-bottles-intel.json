@@ -143,12 +143,6 @@
     "id": 1231560678,
     "published_at": "2026-09-10T07:53:04Z"
   },
-  "starship": {
-    "version": "1.26.0",
-    "digest": "16092f8d523ecc197a6bde11295874e0e04dd60283322f7755d6d0a1beb7a8da",
-    "id": 1239372918,
-    "published_at": "2026-09-11T23:07:19Z"
-  },
   "tree-sitter": {
     "version": "0.26.13",
     "digest": "ea6b5160b8135e712ab408b55ac5f4c68d2a404cd0778cbd0cb4aeed55653906",

@@ -53,9 +53,10 @@ echo "Checking CLI startup..."
 git --version >/dev/null
 lazygit --version >/dev/null
 gh --version >/dev/null
-STARSHIP_CONFIG="$PWD/.config/starship.toml" \
-    starship prompt --cmd-duration 500 >/dev/null
 sheldon source >/dev/null
+
+echo "Checking the Zsh prompt..."
+ZDOTDIR="$TMP_ROOT" zsh -df tests/test-zsh-prompt.zsh "$TMP_ROOT"
 
 echo "Checking cached Zsh completions..."
 ZSH_COMPLETION_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/dotfiles/zsh"

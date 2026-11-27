@@ -1,5 +1,4 @@
 brew "git"
-brew "starship"
 brew "sheldon"
 brew "lazygit"
 brew "ripgrep"

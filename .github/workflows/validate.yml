@@ -133,7 +133,7 @@ jobs:
           fi
           export PATH="$HOME/.local/bin:$PATH"
 
-          for tool in zsh nvim starship lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
+          for tool in zsh nvim lazygit sheldon gh herdr zoxide fzf go uv bun pre-commit; do
             command -v "$tool"
           done
 
@@ -152,7 +152,6 @@ jobs:
             "$HOME/.zshenv" \
             "$HOME/.local/bin/pkgupd" \
             "$HOME/.config/herdr/config.toml" \
-            "$HOME/.config/starship.toml" \
             "$HOME/.config/nvim" \
             "$HOME/.config/wezterm" \
             "$HOME/.config/sheldon" \

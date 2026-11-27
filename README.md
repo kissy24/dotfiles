@@ -54,7 +54,7 @@ git worktree add -b review/example ../dotfiles-review origin/main
 
 ## 導入する環境
 
-- Zsh向けのStarship、Sheldon、zoxide、fzf連携
+- Zsh標準機能による2行プロンプトと、Sheldon、zoxide、fzf連携
 - Herdrによる永続セッション、ワークスペース、タブ、ペイン、AIエージェント状態の管理
 - Lazy.nvim、補完、Telescope、Oil、Git連携、LSP、Markdownレンダリングを備えた安定版Neovim
 - Bunに統一したJavaScript/TypeScript環境（Node.jsとnpmはインストールしません）
@@ -65,7 +65,9 @@ fzfのZsh連携では、Ctrl-Rによる履歴検索、Ctrl-Tによるファイ�
 
 Zshの起動時間を抑えるため、セットアップ時にuvとHerdrの補完を`${XDG_CACHE_HOME:-~/.cache}/dotfiles/zsh/`へ生成し、`compinit`のdumpも更新します。CLIを個別に更新して補完内容が変わった場合は、`./setup.sh`を再実行するとキャッシュを更新できます。
 
-対話シェルでは`.zshrc`がHomebrewとStarshipを初期化します。`~/.zprofile`にも初期化設定がある場合は、Starshipの初期化をそこから削除し、非対話ログイン用の`brew shellenv`は`if [[ ! -o interactive ]]; then ...; fi`の中に置いてください。
+プロンプトの1行目にはディレクトリとGitブランチを表示し、未追跡・変更・ステージ済みのファイルがあるときはブランチ名に `*` が付きます。右端には日本時間と、直前のコマンドに0.5秒以上かかった場合はその実行時間を表示します。2行目の `❯` は成功時に緑、失敗時に赤になります。
+
+旧設定で `~/.zprofile` などに `starship init zsh` を追加していた場合は、その行を削除してください。対話シェルでは `.zshrc` がHomebrewを初期化するため、非対話ログイン用の `brew shellenv` は`if [[ ! -o interactive ]]; then ...; fi`の中に置いてください。
 
 補完の初期化では、Homebrewを含む補完検索パスの重複を取り除いてキャッシュを再利用します。キャッシュがある場合も毎回ディレクトリの所有者と権限を検査し、安全でない補完は`compinit -i`で除外します。補完が使えなくなった場合は、`autoload -Uz compaudit; compaudit`で対象を確認し、所有者や他ユーザーの書き込み権限を見直してください。
 
@@ -83,7 +85,7 @@ wsl.exe --shutdown
 
 ## 管理する設定
 
-`setup.sh`はUbuntuでZshを導入し、`.zshrc`、Herdr、Starship、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。GitHub CLIも`~/.config/gh/config.yml`だけを管理し、認証情報の`hosts.yml`などは保持します。
+`setup.sh`はUbuntuでZshを導入し、`.zshrc`、Herdr、Neovim、WezTerm、Sheldon、Lazygit、GitHub CLIの設定へシンボリックリンクを作成します。Herdrはログも`~/.config/herdr/`へ保存するため、ディレクトリ全体ではなく`config.toml`だけを管理します。GitHub CLIも`~/.config/gh/config.yml`だけを管理し、認証情報の`hosts.yml`などは保持します。
 
 以前の`~/.config`全体がcheckoutの`.config`を指す構成は、そのまま保持します。親リンクを実ディレクトリへ変換したり、その配下をコピー・置換したりしません。**Herdrを起動したまま設定リンクを更新できます。** ソケット・ログ・セッションの保存先は変わらず、サービスの停止やソケットの削除は行いません。Herdr本体のバージョン更新後に必要な再起動は、下記のHerdr節を参照してください。
 
