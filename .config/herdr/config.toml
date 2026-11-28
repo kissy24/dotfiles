@@ -13,6 +13,22 @@ new_cwd = "follow"
 prefix = "ctrl+b"
 reload_config = "prefix+shift+r"
 
+[[keys.command]]
+key = "prefix+ctrl+g"
+type = "popup"
+command = "lazygit"
+description = "Open lazygit"
+width = "90%"
+height = "85%"
+
+[[keys.command]]
+key = "prefix+ctrl+e"
+type = "popup"
+command = """nvim -c 'lua require("oil").open(".")'"""
+description = "Browse files in Neovim"
+width = "90%"
+height = "85%"
+
 [ui]
 mouse_capture = true
 copy_on_select = true

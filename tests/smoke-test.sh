@@ -103,6 +103,24 @@ test "$(printf 'apple\nbanana\n' | fzf --filter=banana)" = "banana"
 echo "Checking Herdr configuration and session lifecycle..."
 mkdir -p "$TMP_ROOT/config/herdr" "$TMP_ROOT/project"
 cp "$PWD/.config/herdr/config.toml" "$HERDR_TEST_CONFIG"
+
+editor_popup=$(bun -e '
+    import assert from "node:assert/strict";
+    import config from "./.config/herdr/config.toml";
+    assert.equal(config.keys.prefix, "ctrl+b");
+    for (const [key, tool] of [["prefix+ctrl+g", "lazygit"], ["prefix+ctrl+e", "nvim"]]) {
+        const bindings = config.keys.command.filter(binding => binding.key === key);
+        assert.equal(bindings.length, 1, key);
+        assert.equal(bindings[0].type, "popup", key);
+        assert.equal(bindings[0].command.split(" ")[0], tool, key);
+        if (tool === "nvim") console.log(bindings[0].command);
+    }
+')
+(
+    cd "$TMP_ROOT/project"
+    sh -c "$editor_popup \"\$@\"" _ --headless -i NONE \
+        -c 'if &filetype !=# "oil" || bufname() !=# "oil://" . getcwd() . "/" | cquit 1 | endif' -c qa
+)
 HERDR_CONFIG_PATH="$HERDR_TEST_CONFIG" \
     XDG_CONFIG_HOME="$TMP_ROOT/config" \
     herdr --session "$HERDR_SESSION_NAME" server >/dev/null 2>&1 &
