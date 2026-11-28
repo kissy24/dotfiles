@@ -177,10 +177,6 @@ install_pre_commit
 
 echo "Installing verified native language servers..."
 python3 "$REPO_ROOT/scripts/install_native_lsp.py"
-echo "Restoring locked Neovim plugins..."
-"$REPO_ROOT/scripts/run-nvim-check.sh" 'vim.cmd("Lazy! restore")'
-
-echo "Locking Sheldon plugins..."
-sheldon lock
+"$REPO_ROOT/scripts/restore-plugins.sh"
 
 echo "Setup complete. Restart your terminal."

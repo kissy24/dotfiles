@@ -4,6 +4,7 @@ set -euo pipefail
 case "$#:${1-}" in
     0:|1:--before-setup)
         echo "Checking configuration deployment, setup policy, and dependency cooldown..."
+        ./tests/test-plugin-restore.sh
         ./tests/test-dotfile-links.sh
         ./tests/test-config-deployment.sh
         PYTHONDONTWRITEBYTECODE=1 python3 tests/test_config_parent_links.py

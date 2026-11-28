@@ -12,9 +12,9 @@ usage() {
     cat <<'EOF'
 Usage: ./uninstall.sh [--packages]
 
-By default only managed symlinks are removed.
+Remove managed symlinks and the Windows .wslconfig if its contents match.
 
-  --packages  Also uninstall packages declared in the Brewfile
+  --packages  Also remove pre-commit, managed LSPs, and installed Brewfile formulae
   --help      Show this help
 EOF
 }
@@ -40,15 +40,17 @@ remove_brew_packages() {
     done < <(brew_packages_from "$REPO_ROOT/Brewfile")
 }
 
+if [ "$REMOVE_PACKAGES" -eq 1 ]; then
+    echo "This removes managed configuration, LSPs, pre-commit, and Brewfile packages, including pre-existing packages."
+    read -r -p "Continue? (y/N): " reply || reply=
+    case "$reply" in [Yy]) ;; *) echo "Uninstallation cancelled."; exit 0 ;; esac
+fi
+
 remove_symlinks "${XDG_DATA_HOME:-$HOME/.local/share}/dotfiles/current" "$HOME"
 remove_symlinks "$REPO_ROOT" "$HOME"
 "$REPO_ROOT/scripts/install-wsl-config.sh" remove
 
 if [ "$REMOVE_PACKAGES" -eq 1 ]; then
-    echo "This removes declared packages even if they existed before setup."
-    read -r -p "Continue? (y/N): " reply
-    case "$reply" in [Yy]) ;; *) echo "Package removal cancelled."; exit 0 ;; esac
-
     if ! command -v brew >/dev/null 2>&1 && [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
         eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     fi
