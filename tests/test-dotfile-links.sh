@@ -104,4 +104,20 @@ remove_symlinks "$fixture_repo" "$external_home" >/dev/null
 test "$(readlink "$external_home/.config/gh")" = "$TMP_ROOT/other-gh"
 grep -qx 'external config' "$TMP_ROOT/other-gh/config.yml"
 
+# Refusing package removal must leave both Unix links and Windows config in place.
+cancel_home="$TMP_ROOT/cancel"
+mkdir -p "$cancel_home"
+ln -s "$REPO_ROOT/.zshrc" "$cancel_home/.zshrc"
+cp "$REPO_ROOT/.wslconfig" "$cancel_home/.wslconfig"
+for answer in N ''; do
+    HOME="$cancel_home" DOTFILES_TEST_WSL=1 WSL_CONFIG_DEST="$cancel_home/.wslconfig" \
+        "$REPO_ROOT/uninstall.sh" --packages <<< "$answer"
+    test -L "$cancel_home/.zshrc"
+    cmp "$REPO_ROOT/.wslconfig" "$cancel_home/.wslconfig"
+done
+HOME="$cancel_home" DOTFILES_TEST_WSL=1 WSL_CONFIG_DEST="$cancel_home/.wslconfig" \
+    "$REPO_ROOT/uninstall.sh"
+test ! -L "$cancel_home/.zshrc"
+test ! -e "$cancel_home/.wslconfig"
+
 echo "Dotfile backup, migration, and uninstall tests passed."
