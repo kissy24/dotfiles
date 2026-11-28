@@ -100,8 +100,8 @@ class ParentLinkTests(unittest.TestCase):
 
     def test_unmigrated_uninstall_does_not_write_through_parent(self):
         (self.home / '.config').symlink_to(str(self.repo / '.config') + '/')
-        (self.repo / '.config/starship.toml').unlink()
-        (self.repo / '.config/starship.toml').symlink_to(self.repo / '.config/nvim/init.txt')
+        (self.repo / '.config/herdr/config.toml').unlink()
+        (self.repo / '.config/herdr/config.toml').symlink_to(self.repo / '.config/nvim/init.txt')
         before = signature(self.repo)
         self.assert_success(self.shell('remove_symlinks'))
         self.assertEqual(signature(self.repo), before)

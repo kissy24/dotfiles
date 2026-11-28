@@ -14,7 +14,6 @@ managed_dotfile_paths() {
 .zshenv
 .local/bin/pkgupd
 .config/herdr/config.toml
-.config/starship.toml
 .config/nvim
 .config/wezterm
 .config/sheldon

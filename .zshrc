@@ -120,8 +120,65 @@ unset zsh_completion_dir
 # fzf標準連携 (Ctrl-R: 履歴、Ctrl-T: ファイル、Alt-C: ディレクトリ)
 source <(fzf --zsh)
 
+# 1行目にパス・Git・時刻、2行目に直前の終了状態を表示する。
+autoload -Uz add-zsh-hook
+zmodload zsh/datetime
+unsetopt PROMPT_SUBST PROMPT_BANG
+
+_dotfiles_prompt_preexec() {
+    typeset -gF _dotfiles_command_started=$EPOCHREALTIME
+}
+
+_dotfiles_prompt_precmd() {
+    local last_status=$?
+    local path_label=${(%):-%4~} root branch dirty='' elapsed='' marker_color='#a6e3a1'
+    local TZ=Asia/Tokyo
+    local clock_time
+    strftime -s clock_time '%H:%M' "$EPOCHSECONDS"
+
+    if [[ -n ${_dotfiles_command_started:-} ]]; then
+        local -F seconds=$(( EPOCHREALTIME - _dotfiles_command_started ))
+        if (( seconds >= 0.5 )); then
+            printf -v elapsed ' %.1fs  ' "$seconds"
+        fi
+        unset _dotfiles_command_started
+    fi
+
+    root=$(git rev-parse --show-toplevel 2>/dev/null) || root=''
+    if [[ -n $root ]]; then
+        local relative=${PWD:A}
+        relative=${relative#"$root"}
+        local repo_path="${root:t}${relative}"
+        local -a parts=( "${(@s:/:)repo_path}" )
+        path_label=$repo_path
+        (( $#parts > 4 )) && path_label=" ${(j:/:)parts[-4,-1]}"
+        branch=$(git symbolic-ref --short -q HEAD 2>/dev/null) ||
+            branch=$(git rev-parse --short HEAD 2>/dev/null)
+        branch=${branch[1,32]}
+        [[ -n $(git --no-optional-locks status --porcelain=v1 --untracked-files=normal 2>/dev/null) ]] && dirty=' *'
+    fi
+    [[ -w . ]] || path_label+=' 󰌾'
+    path_label=${(V)path_label}
+    branch=${(V)branch}
+    local left=$path_label styled="%F{#89b4fa}${path_label//\%/%%}%f"
+    if [[ -n $branch ]]; then
+        left+="   $branch$dirty"
+        styled+="  %F{#f38ba8} ${branch//\%/%%}%f%F{#fab387}${dirty}%f"
+    fi
+    local clock_text=" $clock_time"
+    local right="$elapsed$clock_text"
+    local -i gap=$(( COLUMNS - 1 - ${(m)#left} - ${(m)#right} ))
+    if (( gap > 0 )); then
+        styled+="${(l:$gap:: :)}%F{#f9e2af}${elapsed}%f%F{#a6adc8}${clock_text}%f"
+    fi
+    (( last_status == 0 )) || marker_color='#f38ba8'
+    PROMPT="$styled"$'\n'"%B%F{$marker_color}❯%f%b "
+}
+
+add-zsh-hook preexec _dotfiles_prompt_preexec
+add-zsh-hook precmd _dotfiles_prompt_precmd
+
 # init plugins
-eval "$(starship init zsh)"
 eval "$(sheldon source)"
 eval "$(zoxide init zsh)"
 
