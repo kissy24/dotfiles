@@ -130,6 +130,15 @@ hrw ~/Projects/docfiles docs
 | サイドバー表示切替 | `Ctrl-b b` |
 | 設定再読み込み | `Ctrl-b Shift-r` |
 
+Herdr内でCodex CLIを使っているときは、次のキーで作業中のペインにポップアップを開けます。キーは順に押します。
+
+| キー | 用途 | Codexに戻る操作 |
+| --- | --- | --- |
+| `Ctrl-b` → `Ctrl-g` | lazygitで作業ツリーの差分を確認 | メイン画面で `q` |
+| `Ctrl-b` → `Ctrl-e` | NeovimのOilでファイルを選ぶ | `:qa`（編集を保存する場合は `:wqa`） |
+
+対象のリポジトリやworktreeに移動してから `codex` を起動すると、Herdrがペインから取得した作業ディレクトリでツールが開きます。設定更新後は `Ctrl-b` → `Shift-r` で反映できます。
+
 Codexのセッション識別とHerdr再起動後のネイティブ復元を有効にする場合は、`herdr integration install codex`を一度実行します。この操作は`~/.codex`のhook設定を更新するため、共通セットアップからは自動実行しません。
 
 ### Neovimの検索（Telescope）
